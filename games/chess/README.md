@@ -97,7 +97,7 @@ Um jogo de xadrez premium e dinâmico, desenvolvido para rodar diretamente no se
 O jogo requer apenas **Python 3** instalado:
 
 ```bash
-cd chess
+cd games/chess
 python server.py
 ```
 
