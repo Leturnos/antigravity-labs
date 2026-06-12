@@ -728,3 +728,250 @@ class ChessGame {
   }
 }
 
+/**
+ * Static evaluation function.
+ * Evaluates the board from White's perspective.
+ * Includes: material, PST, endgame king PST, and mobility bonus.
+ */
+function evaluateBoard(game) {
+  const board = game.board;
+  const isEndgame = game.isEndgame();
+  let score = 0;
+  let wMobility = 0;
+  let bMobility = 0;
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (piece) {
+        let val = PIECE_VALUES[piece.type];
+        let pstVal = 0;
+
+        const rowLookUp = piece.color === 'w' ? r : 7 - r;
+        switch (piece.type) {
+          case 'p': pstVal = PAWN_PST[rowLookUp][c]; break;
+          case 'n': pstVal = KNIGHT_PST[rowLookUp][c]; break;
+          case 'b': pstVal = BISHOP_PST[rowLookUp][c]; break;
+          case 'r': pstVal = ROOK_PST[rowLookUp][c]; break;
+          case 'q': pstVal = QUEEN_PST[rowLookUp][c]; break;
+          case 'k':
+            pstVal = isEndgame
+              ? KING_ENDGAME_PST[rowLookUp][c]
+              : KING_PST[rowLookUp][c];
+            break;
+        }
+
+        const total = val + pstVal;
+        if (piece.color === 'w') {
+          score += total;
+        } else {
+          score -= total;
+        }
+
+        if (piece.type !== 'k' && piece.type !== 'p') {
+          const moves = game.getPseudoMoves(r, c);
+          if (piece.color === 'w') {
+            wMobility += moves.length;
+          } else {
+            bMobility += moves.length;
+          }
+        }
+      }
+    }
+  }
+
+  score += (wMobility - bMobility) * 3;
+
+  return score;
+}
+
+/**
+ * Quiescence Search - continues evaluating captures beyond the search horizon
+ * to avoid the "horizon effect" where the engine stops in the middle of a capture sequence.
+ */
+function quiescenceSearch(game, alpha, beta, isMaximizing) {
+  const standPat = evaluateBoard(game);
+
+  if (isMaximizing) {
+    if (standPat >= beta) return beta;
+    if (standPat > alpha) alpha = standPat;
+  } else {
+    if (standPat <= alpha) return alpha;
+    if (standPat < beta) beta = standPat;
+  }
+
+  const color = isMaximizing ? 'w' : 'b';
+  const captures = game.getLegalCaptures(color);
+
+  captures.sort((a, b) => {
+    const aVal = a.captured ? PIECE_VALUES[a.captured.type] - PIECE_VALUES[a.piece.type] / 100 : 0;
+    const bVal = b.captured ? PIECE_VALUES[b.captured.type] - PIECE_VALUES[b.piece.type] / 100 : 0;
+    return bVal - aVal;
+  });
+
+  if (isMaximizing) {
+    for (const move of captures) {
+      game.makeMove(move);
+      const score = quiescenceSearch(game, alpha, beta, false);
+      game.undoMove();
+      if (score > alpha) alpha = score;
+      if (alpha >= beta) break;
+    }
+    return alpha;
+  } else {
+    for (const move of captures) {
+      game.makeMove(move);
+      const score = quiescenceSearch(game, alpha, beta, true);
+      game.undoMove();
+      if (score < beta) beta = score;
+      if (alpha >= beta) break;
+    }
+    return beta;
+  }
+}
+
+/**
+ * Minimax with Alpha-Beta Pruning and Quiescence Search.
+ * Uses Transposition Table for previously evaluated positions.
+ */
+function minimax(game, depth, alpha, beta, isMaximizing) {
+  // Check transposition table
+  const hash = game.zobristHash;
+  const ttEntry = ttLookup(hash);
+  if (ttEntry && ttEntry.depth >= depth) {
+    if (ttEntry.flag === TT_EXACT) return ttEntry.score;
+    if (ttEntry.flag === TT_BETA && ttEntry.score >= beta) return ttEntry.score;
+    if (ttEntry.flag === TT_ALPHA && ttEntry.score <= alpha) return ttEntry.score;
+  }
+
+  if (depth === 0) {
+    return quiescenceSearch(game, alpha, beta, isMaximizing);
+  }
+
+  const color = isMaximizing ? 'w' : 'b';
+  const moves = game.getLegalMoves(color);
+
+  if (moves.length === 0) {
+    if (game.isInCheck(color)) {
+      // Checkmate. Prefer faster mates, so factor in depth.
+      return isMaximizing ? (-25000 + (5 - depth)) : (25000 - (5 - depth));
+    }
+    return 0; // Stalemate
+  }
+
+  // Move ordering: TT best move first, then captures (MVV-LVA), then quiet moves
+  const ttBestMove = ttEntry ? ttEntry.bestMove : null;
+  moves.sort((a, b) => {
+    // TT best move first
+    if (ttBestMove) {
+      const aIsTT = a.from.r === ttBestMove.from.r && a.from.c === ttBestMove.from.c &&
+                    a.to.r === ttBestMove.to.r && a.to.c === ttBestMove.to.c;
+      const bIsTT = b.from.r === ttBestMove.from.r && b.from.c === ttBestMove.from.c &&
+                    b.to.r === ttBestMove.to.r && b.to.c === ttBestMove.to.c;
+      if (aIsTT) return -1;
+      if (bIsTT) return 1;
+    }
+    const aVal = a.captured ? PIECE_VALUES[a.captured.type] * 10 - PIECE_VALUES[a.piece.type] : 0;
+    const bVal = b.captured ? PIECE_VALUES[b.captured.type] * 10 - PIECE_VALUES[b.piece.type] : 0;
+    return bVal - aVal;
+  });
+
+  let bestMove = moves[0];
+
+  if (isMaximizing) {
+    let maxEval = -Infinity;
+    for (const move of moves) {
+      game.makeMove(move);
+      const ev = minimax(game, depth - 1, alpha, beta, false);
+      game.undoMove();
+      if (ev > maxEval) {
+        maxEval = ev;
+        bestMove = move;
+      }
+      alpha = Math.max(alpha, ev);
+      if (beta <= alpha) break; // Prune
+    }
+    // Store in TT
+    const flag = maxEval <= alpha ? TT_ALPHA : maxEval >= beta ? TT_BETA : TT_EXACT;
+    ttStore(hash, depth, maxEval, flag, bestMove);
+    return maxEval;
+  } else {
+    let minEval = Infinity;
+    for (const move of moves) {
+      game.makeMove(move);
+      const ev = minimax(game, depth - 1, alpha, beta, true);
+      game.undoMove();
+      if (ev < minEval) {
+        minEval = ev;
+        bestMove = move;
+      }
+      beta = Math.min(beta, ev);
+      if (beta <= alpha) break; // Prune
+    }
+    // Store in TT
+    const flag = minEval >= beta ? TT_BETA : minEval <= alpha ? TT_ALPHA : TT_EXACT;
+    ttStore(hash, depth, minEval, flag, bestMove);
+    return minEval;
+  }
+}
+
+/**
+ * Finds the best move using Iterative Deepening with Alpha-Beta Pruning.
+ * Starts from depth 1 and goes up to the target depth.
+ * Returns { move, score }.
+ */
+function getBestMove(game, depth = 3) {
+  const color = game.turn;
+  const moves = game.getLegalMoves(color);
+  if (moves.length === 0) return { move: null, score: 0 };
+
+  const isWhite = color === 'w';
+  let bestMove = moves[0];
+  let bestScore = isWhite ? -Infinity : Infinity;
+
+  // Iterative Deepening: search from depth 1 to target depth
+  for (let d = 1; d <= depth; d++) {
+    let currentBest = null;
+    let currentScore = isWhite ? -Infinity : Infinity;
+
+    // Order moves: use previous iteration's best move first
+    if (bestMove) {
+      moves.sort((a, b) => {
+        const aIsBest = a.from.r === bestMove.from.r && a.from.c === bestMove.from.c &&
+                        a.to.r === bestMove.to.r && a.to.c === bestMove.to.c;
+        const bIsBest = b.from.r === bestMove.from.r && b.from.c === bestMove.from.c &&
+                        b.to.r === bestMove.to.r && b.to.c === bestMove.to.c;
+        if (aIsBest) return -1;
+        if (bIsBest) return 1;
+        const aVal = a.captured ? PIECE_VALUES[a.captured.type] : 0;
+        const bVal = b.captured ? PIECE_VALUES[b.captured.type] : 0;
+        return bVal - aVal;
+      });
+    }
+
+    for (const move of moves) {
+      game.makeMove(move);
+      const score = minimax(game, d - 1, -Infinity, Infinity, !isWhite);
+      game.undoMove();
+
+      if (isWhite) {
+        if (score > currentScore) {
+          currentScore = score;
+          currentBest = move;
+        }
+      } else {
+        if (score < currentScore) {
+          currentScore = score;
+          currentBest = move;
+        }
+      }
+    }
+
+    if (currentBest) {
+      bestMove = currentBest;
+      bestScore = currentScore;
+    }
+  }
+
+  return { move: bestMove, score: bestScore };
+}
