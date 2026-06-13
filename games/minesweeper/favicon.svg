@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Classic retro pixelated mine design -->
+  <!-- Background transparent -->
+  <!-- Mine body -->
+  <circle cx="16" cy="16" r="8" fill="#21242e" stroke="#3d4f97" stroke-width="2"/>
+  <!-- Spikes -->
+  <rect x="15" y="3" width="2" height="6" fill="#f68d1f" />
+  <rect x="15" y="23" width="2" height="6" fill="#f68d1f" />
+  <rect x="3" y="15" width="6" height="2" fill="#f68d1f" />
+  <rect x="23" y="15" width="6" height="2" fill="#f68d1f" />
+  
+  <line x1="7" y1="7" x2="11" y2="11" stroke="#f68d1f" stroke-width="2" />
+  <line x1="21" y1="11" x2="25" y2="7" stroke="#f68d1f" stroke-width="2" />
+  <line x1="7" y1="25" x2="11" y2="21" stroke="#f68d1f" stroke-width="2" />
+  <line x1="21" y1="21" x2="25" y2="25" stroke="#f68d1f" stroke-width="2" />
+  
+  <!-- Highlight -->
+  <circle cx="13" cy="13" r="2.5" fill="#ffffff" />
+</svg>
