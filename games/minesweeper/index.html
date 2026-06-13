@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether-Sweeper // 8-Bit Retro Edition</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- Retro pixel and display fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Outfit:wght@400;700;900&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Main console container -->
+  <div class="console-container">
+    
+    <!-- Masthead / Brand Header -->
+    <header class="console-masthead">
+      <div class="logo-area">
+        <div class="logo-pill">
+          <span>AETHER</span>
+        </div>
+        <span class="game-subtitle">AETHER-SWEEPER</span>
+      </div>
+      <!-- Search/Mascot speech bubble simulation -->
+      <div class="mascot-area">
+        <div class="mascot-speech">
+          WELCOME TO AETHER-SWEEPER! WATCH YOUR STEP!
+        </div>
+        <div class="mascot-avatar">
+          <!-- Retro 8-bit space invader pixel icon -->
+          <svg viewBox="0 0 11 8" width="28" height="28" fill="#e60012">
+            <rect x="2" y="0" width="1" height="1"/>
+            <rect x="8" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/>
+            <rect x="7" y="1" width="1" height="1"/>
+            <rect x="2" y="2" width="7" height="1"/>
+            <rect x="1" y="3" width="2" height="1"/>
+            <rect x="4" y="3" width="3" height="1"/>
+            <rect x="8" y="3" width="2" height="1"/>
+            <rect x="0" y="4" width="11" height="1"/>
+            <rect x="0" y="5" width="1" height="1"/>
+            <rect x="2" y="5" width="7" height="1"/>
+            <rect x="10" y="5" width="1" height="1"/>
+            <rect x="0" y="6" width="1" height="1"/>
+            <rect x="2" y="6" width="1" height="1"/>
+            <rect x="8" y="6" width="1" height="1"/>
+            <rect x="10" y="6" width="1" height="1"/>
+            <rect x="4" y="7" width="3" height="1"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Carbon Navigation Bar -->
+    <nav class="carbon-nav">
+      <div class="nav-links">
+        <button class="nav-btn active" id="btn-easy">FÁCIL</button>
+        <button class="nav-btn" id="btn-medium">MÉDIO</button>
+        <button class="nav-btn" id="btn-hard">DIFÍCIL</button>
+      </div>
+      <div class="nav-utilities">
+        <button class="utility-chip" id="btn-sound-toggle">SOM: ON</button>
+      </div>
+    </nav>
+
+    <!-- Subnav strip -->
+    <div class="subnav-strip">
+      <span class="interactive-label" id="theme-selector">PALETA: CLÁSSICA (PERIWINKLE)</span>
+      <span class="bullet-separator">•</span>
+      <span>CÓDIGO DE JOGO: AS-198X</span>
+      <span class="bullet-separator">•</span>
+      <span>SCORE PERSISTENCE: API CONNECTED</span>
+    </div>
+
+    <!-- Main Console Body Section -->
+    <main class="console-body">
+      
+      <!-- Left column: The Game Screen Screenplate -->
+      <section class="screen-column">
+        <div class="screen-chassis">
+          
+          <!-- Screen Header / Status Bar -->
+          <div class="screen-status-bar">
+            <!-- Mine Counter -->
+            <div class="digital-display-wrapper">
+              <span class="display-label">MINAS</span>
+              <div class="digital-display" id="mine-counter">010</div>
+            </div>
+
+            <!-- Face Reset Button -->
+            <button class="smiley-btn" id="btn-reset" aria-label="Reiniciar Jogo">
+              <span class="smiley-icon">🙂</span>
+            </button>
+
+            <!-- Timer -->
+            <div class="digital-display-wrapper">
+              <span class="display-label">TEMPO</span>
+              <div class="digital-display" id="game-timer">000</div>
+            </div>
+          </div>
+
+          <!-- Board Grid Area -->
+          <div class="board-viewport">
+            <div class="mines-grid" id="mines-grid">
+              <!-- Grid generated dynamically by JS -->
+            </div>
+          </div>
+          
+        </div>
+      </section>
+
+      <!-- Right column: Action Rail Buttons & Stats -->
+      <aside class="action-rail">
+        
+        <!-- Scoreboard Info Box -->
+        <div class="info-box">
+          <div class="info-tab">ESTATÍSTICAS</div>
+          <div class="info-body">
+            <div class="stat-row">
+              <span class="stat-label">Vitórias:</span>
+              <span class="stat-value" id="stats-wins">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Derrotas:</span>
+              <span class="stat-value" id="stats-losses">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Recorde:</span>
+              <span class="stat-value" id="stats-record">-- s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Controls Slabs -->
+        <div class="control-group">
+          <button class="rail-btn" id="btn-show-scores">
+            <span class="btn-icon">🏆</span> VER PLACAR
+          </button>
+          <button class="rail-btn" id="btn-reset-scores">
+            <span class="btn-icon">🔄</span> ZERAR PLACAR
+          </button>
+          <button class="rail-btn btn-orange" id="btn-how-to">
+            <span class="btn-icon">❓</span> COMO JOGAR
+          </button>
+        </div>
+
+        <!-- Retro Cartridge Design element -->
+        <div class="cartridge-mock">
+          <div class="cartridge-label">
+            <span class="title">AETHER-SWEEPER</span>
+            <span class="model">MODEL: ATH-MIN-8X</span>
+          </div>
+          <div class="cartridge-grips">
+            <div></div><div></div><div></div><div></div>
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+
+    <!-- How to Play Modal (hidden by default) -->
+    <div class="modal-overlay hidden" id="modal-how-to">
+      <div class="modal-card">
+        <div class="section-label-bar">
+          <span>≡ INSTRUÇÕES DE JOGO</span>
+          <button class="modal-close-btn" id="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Objetivo:</strong> Revelar todos os quadrados do tabuleiro que não contêm minas sem detonar nenhuma.</p>
+          <p><strong>Controles:</strong></p>
+          <ul>
+            <li><span class="control-badge">Clique Esquerdo</span>: Revela um quadrado.</li>
+            <li><span class="control-badge">Clique Direito</span>: Marca/Desmarca com bandeira (sinaliza uma mina).</li>
+            <li><span class="control-badge">Clique Duplo / Rolagem</span>: Revela vizinhos seguros (se o número de bandeiras coincidir com o número do quadrado).</li>
+          </ul>
+          <p><strong>Dica de Mestre:</strong> Os números indicam quantas minas estão adjacentes àquele quadrado. Use o raciocínio lógico para deduzir onde as minas estão e divirta-se com os efeitos sonoros sintetizados retro!</p>
+          
+          <div class="dotted-divider"></div>
+          
+          <button class="modal-btn-close" id="modal-btn-close-ok">ENTENDIDO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game End Modal (hidden by default) -->
+    <div class="modal-overlay hidden" id="modal-game-end">
+      <div class="modal-card">
+        <div class="section-label-bar" id="game-end-bar">
+          <span id="game-end-title">≡ ARCADE STATUS</span>
+          <button class="modal-close-btn" id="modal-game-end-close">×</button>
+        </div>
+        <div class="modal-body" style="text-align: center; gap: 16px; padding: 20px 16px;">
+          <h2 id="game-end-heading" style="font-family: var(--font-display); font-weight: 900; font-size: 24px; color: var(--color-primary); letter-spacing: -0.5px;">FIM DE JOGO</h2>
+          <p id="game-end-msg" style="font-size: 13px; font-weight: bold; color: var(--color-ink);"></p>
+          <div class="dotted-divider"></div>
+          <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+            <button class="modal-btn-close" id="modal-btn-retry" style="flex: 1;">TENTAR NOVAMENTE</button>
+            <button class="modal-btn-close" id="modal-btn-close" style="flex: 1; background-color: var(--color-carbon); border-color: var(--color-chrome-indigo);">FECHAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Footer / Bottom Bevel Plate -->
+    <footer class="console-footer">
+      <div class="esrb-area">
+        <div class="esrb-badge">8-BIT</div>
+        <span class="esrb-text">RETRO FUN CLASSIC</span>
+      </div>
+      <div class="footer-copyright">
+        © 198X AETHER CORP. RETRO ARCADE HARDWARE. MODEL NO. ATH-001
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Main Game logic script -->
+  <script src="js/sounds.js"></script>
+  <script src="js/app.js" type="module"></script>
+</body>
+</html>
