@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#010102" />
+  <!-- A hairline border similar to the Linear design -->
+  <rect x="0.5" y="0.5" width="31" height="31" rx="5.5" fill="none" stroke="#23252a" stroke-width="1" />
+  <!-- T-piece Tetris block in the center, colored in Linear Lavender #5e6ad2 -->
+  <path d="M12 12h8v4h-8zm4 4h4v4h-4z" fill="#5e6ad2" />
+  <!-- Accent shadows and highlights for depth -->
+  <rect x="12" y="12" width="8" height="1" fill="#828fff" />
+  <rect x="16" y="16" width="4" height="1" fill="#828fff" />
+</svg>

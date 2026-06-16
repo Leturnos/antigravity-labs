@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Tetris // Edição Linear</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Google Fonts: Inter for clean UI, JetBrains Mono for numbers/stats -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+
+  <!-- Main Console Layout (class game-idle is added when in lobby state) -->
+  <div class="aether-container game-idle" id="aether-container">
+    
+    <!-- Top Navigation Header (Never wraps, even on small screens) -->
+    <header class="aether-header">
+      <div class="brand-logo">
+        <div class="logo-symbol">Æ</div>
+        <div class="logo-text">
+          <span class="brand-name">Aether</span>
+          <span class="brand-badge">TETRIS</span>
+        </div>
+      </div>
+
+      <!-- Header Utilities -->
+      <div class="header-utilities">
+        <button class="utility-btn" id="btn-sound-toggle" title="Alternar Som">
+          <span class="icon">🔊</span> <span class="label">Som: LIGADO</span>
+        </button>
+        <button class="utility-btn" id="btn-info" title="Como Jogar">
+          <span class="icon">❓</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Secondary Settings/Status Bar (Hidden when game is not running) -->
+    <div class="settings-bar" id="settings-bar">
+      <div class="active-mode-indicator">
+        <span class="indicator-label">MODO ATUAL:</span>
+        <span class="indicator-value" id="lbl-active-mode-name">CLÁSSICO</span>
+      </div>
+      
+      <div class="settings-right">
+        <!-- API Connection Status -->
+        <div class="status-indicator">
+          <span class="dot pulse"></span>
+          <span class="status-text" id="api-status">API CONECTADA</span>
+        </div>
+        
+        <!-- Home/Lobby Button (exits game, only shown during play) -->
+        <button class="utility-btn btn-menu-lobby" id="btn-menu-lobby" title="Menu Inicial">
+          <span class="icon">🏠</span> <span class="label">Menu</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Game Grid Layout -->
+    <main class="game-layout" id="game-layout">
+      
+      <!-- Left Panel: Held Piece (Hold) & Mode Display -->
+      <aside class="panel panel-left">
+        <div class="panel-header">SEGURAR</div>
+        <div class="panel-body hold-container">
+          <canvas id="canvas-hold" width="100" height="100"></canvas>
+        </div>
+        
+        <!-- Active Mode Card -->
+        <div class="score-card">
+          <div class="score-title">MODO ATUAL</div>
+          <div class="score-value mode-display" id="val-current-mode">CLÁSSICO</div>
+        </div>
+      </aside>
+
+      <!-- Center: Game Board (Main Canvas) -->
+      <section class="board-section">
+        <div class="board-frame" id="board-frame">
+          <canvas id="canvas-board" width="300" height="600"></canvas>
+          
+          <!-- Pause Overlay -->
+          <div class="board-overlay hidden" id="pause-overlay">
+            <div class="overlay-content">
+              <h2>PAUSADO</h2>
+              <p>Pressione P ou clique abaixo para continuar</p>
+              <button class="aether-btn btn-primary" id="btn-resume">CONTINUAR</button>
+            </div>
+          </div>
+          
+          <!-- Start Game Lobby Overlay -->
+          <div class="board-overlay" id="start-overlay">
+            <div class="overlay-content start-lobby">
+              <h2>AETHER TETRIS</h2>
+              <p class="lobby-subtitle">Configuração do Jogo</p>
+              
+              <!-- Game Mode Cards -->
+              <div class="lobby-section">
+                <span class="lobby-label">MODO DE JOGO</span>
+                <div class="lobby-modes">
+                  <button class="lobby-mode-card active" id="lobby-btn-mode-classic" data-mode="classico">
+                    <span class="mode-icon">🕹️</span>
+                    <div class="mode-details">
+                      <span class="mode-title">Clássico</span>
+                      <span class="mode-desc">Velocidade crescente, maior pontuação</span>
+                    </div>
+                  </button>
+                  <button class="lobby-mode-card" id="lobby-btn-mode-timeattack" data-mode="contrarrelogio">
+                    <span class="mode-icon">⏱️</span>
+                    <div class="mode-details">
+                      <span class="mode-title">Contrarrelógio</span>
+                      <span class="mode-desc">Limpe 40 linhas o mais rápido possível</span>
+                    </div>
+                  </button>
+                  <button class="lobby-mode-card" id="lobby-btn-mode-zen" data-mode="zen">
+                    <span class="mode-icon">🧘</span>
+                    <div class="mode-details">
+                      <span class="mode-title">Zen</span>
+                      <span class="mode-desc">Sem Game Over, velocidade constante</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Starting Level Selector -->
+              <div class="lobby-section">
+                <span class="lobby-label">NÍVEL INICIAL</span>
+                <div class="lobby-level-selector">
+                  <button class="lobby-lvl-btn" id="lobby-btn-lvl-dec">-</button>
+                  <span class="lobby-lvl-value" id="lobby-lbl-start-level">1</span>
+                  <button class="lobby-lvl-btn" id="lobby-btn-lvl-inc">+</button>
+                </div>
+              </div>
+
+              <button class="aether-btn btn-primary btn-lobby-start" id="btn-start">INICIAR JOGO</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Next Piece & Game Stats -->
+      <aside class="panel panel-right">
+        <div class="panel-header">PRÓXIMO</div>
+        <div class="panel-body next-container">
+          <canvas id="canvas-next" width="100" height="100"></canvas>
+        </div>
+
+        <!-- Gameplay Stats -->
+        <div class="stats-panel">
+          
+          <div class="stat-box">
+            <div class="stat-label">PONTOS</div>
+            <div class="stat-number" id="lbl-score">000000</div>
+          </div>
+
+          <div class="stat-box" id="stat-lines-box">
+            <div class="stat-label" id="lbl-lines-title">LINHAS</div>
+            <div class="stat-number" id="lbl-lines">0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">NÍVEL</div>
+            <div class="stat-number" id="lbl-level">1</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label" id="lbl-time-title">TEMPO</div>
+            <div class="stat-number" id="lbl-time">00:00</div>
+          </div>
+          
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- Mobile Touch Controls (Hidden on Desktop) -->
+    <div class="mobile-controls-container">
+      <div class="control-dpad">
+        <button class="ctrl-btn btn-left" id="ctrl-left" aria-label="Mover Esquerda">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>
+        </button>
+        <button class="ctrl-btn btn-down" id="ctrl-down" aria-label="Queda Suave">
+          <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" fill="currentColor"/></svg>
+        </button>
+        <button class="ctrl-btn btn-right" id="ctrl-right" aria-label="Mover Direita">
+          <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>
+        </button>
+      </div>
+      
+      <div class="control-actions">
+        <button class="ctrl-btn btn-action" id="ctrl-hold" aria-label="Segurar Peça">
+          <span class="btn-text">SEGURAR</span>
+        </button>
+        <button class="ctrl-btn btn-action btn-rotate" id="ctrl-rotate-ccw" aria-label="Girar Anti-horário">
+          <svg viewBox="0 0 24 24" width="20" height="20" style="transform: scaleX(-1);"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="currentColor"/></svg>
+        </button>
+        <button class="ctrl-btn btn-action btn-rotate" id="ctrl-rotate" aria-label="Girar Horário">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="currentColor"/></svg>
+        </button>
+        <button class="ctrl-btn btn-action btn-hard" id="ctrl-drop" aria-label="Queda Rápida">
+          <span class="btn-text">QUEDA RÁPIDA</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer: High Scores Records -->
+    <footer class="aether-footer">
+      <div class="high-scores-row">
+        <div class="record-item">
+          <span class="record-label">RECORD CLÁSSICO:</span>
+          <span class="record-value" id="val-record-classic">0 pts</span>
+        </div>
+        <div class="record-divider">|</div>
+        <div class="record-item">
+          <span class="record-label">RECORD CONTRARRELÓGIO (40 LINHAS):</span>
+          <span class="record-value" id="val-record-timeattack">-- s</span>
+        </div>
+      </div>
+      
+      <div class="footer-actions">
+        <button class="aether-btn btn-secondary btn-sm" id="btn-reset-scores">Zerar Placar</button>
+      </div>
+
+      <div class="footer-copyright">
+        © 2026 AETHER LABS. DESIGN INSPIRADO EM LINEAR.APP.
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- How to Play Modal (Info) -->
+  <div class="modal-overlay hidden" id="modal-info">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">INSTRUÇÕES DE JOGO</span>
+        <button class="modal-close" id="modal-info-close">×</button>
+      </div>
+      <div class="modal-body">
+        <h3>Objetivo</h3>
+        <p>Preencha linhas horizontais completas com os blocos que caem. Linhas preenchidas são eliminadas e rendem pontos.</p>
+        
+        <h3>Modos de Jogo</h3>
+        <ul>
+          <li><strong>Clássico:</strong> Tente conseguir a maior pontuação possível. A velocidade aumenta a cada 10 linhas.</li>
+          <li><strong>Contrarrelógio:</strong> Limpe 40 linhas o mais rápido possível! O recorde é o menor tempo gasto.</li>
+          <li><strong>Zen:</strong> Sem aceleração e sem fim de jogo. Jogue para relaxar.</li>
+        </ul>
+
+        <h3>Controles do Teclado</h3>
+        <table class="controls-table">
+          <thead>
+            <tr>
+              <th>Tecla</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><kbd>←</kbd> / <kbd>→</kbd></td>
+              <td>Mover Peça para Esquerda / Direita</td>
+            </tr>
+            <tr>
+              <td><kbd>↑</kbd> / <kbd>X</kbd></td>
+              <td>Girar Horário</td>
+            </tr>
+            <tr>
+              <td><kbd>Z</kbd> / <kbd>Ctrl</kbd></td>
+              <td>Girar Anti-horário</td>
+            </tr>
+            <tr>
+              <td><kbd>↓</kbd></td>
+              <td>Queda Suave (Acelera queda)</td>
+            </tr>
+            <tr>
+              <td><kbd>Espaço</kbd></td>
+              <td>Queda Rápida (Cai e fixa na hora)</td>
+            </tr>
+            <tr>
+              <td><kbd>C</kbd> / <kbd>Shift</kbd></td>
+              <td>Segurar Peça (Guarda na reserva)</td>
+            </tr>
+            <tr>
+              <td><kbd>P</kbd> / <kbd>Esc</kbd></td>
+              <td>Pausar / Continuar</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="modal-footer">
+          <button class="aether-btn btn-primary" id="btn-info-close-ok">ENTENDIDO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over / Victory Modal -->
+  <div class="modal-overlay hidden" id="modal-gameover">
+    <div class="modal-card">
+      <div class="modal-header" id="gameover-header">
+        <span class="modal-title" id="gameover-title">FIM DE JOGO</span>
+        <button class="modal-close" id="modal-gameover-close">×</button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="gameover-status-icon" id="gameover-status-icon">💀</div>
+        <h2 id="gameover-heading">Fim de Jogo!</h2>
+        <p id="gameover-message">Você bateu no teto no modo Clássico.</p>
+        
+        <div class="stats-summary">
+          <div class="summary-row">
+            <span class="summary-label">Pontuação:</span>
+            <span class="summary-value" id="sum-score">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Linhas Eliminadas:</span>
+            <span class="summary-value" id="sum-lines">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Nível Alcançado:</span>
+            <span class="summary-value" id="sum-level">1</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Tempo de Jogo:</span>
+            <span class="summary-value" id="sum-time">00:00</span>
+          </div>
+        </div>
+
+        <div class="record-notice hidden" id="record-notice">
+          🎉 NOVO RECORDE! 🎉
+        </div>
+
+        <div class="modal-footer-buttons">
+          <button class="aether-btn btn-primary" id="btn-retry">JOGAR NOVAMENTE</button>
+          <button class="aether-btn btn-secondary" id="btn-gameover-close-ok">FECHAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal (Replaces browser confirm) -->
+  <div class="modal-overlay hidden" id="modal-confirm">
+    <div class="modal-card modal-confirm-card">
+      <div class="modal-header confirm-header">
+        <span class="modal-title">CONFIRMAR AÇÃO</span>
+      </div>
+      <div class="modal-body text-center">
+        <div class="confirm-icon">⚠️</div>
+        <h3 id="confirm-heading">Tem certeza?</h3>
+        <p id="confirm-message">Esta ação não poderá ser desfeita.</p>
+        <div class="modal-footer-buttons">
+          <button class="aether-btn btn-danger" id="btn-confirm-yes">CONFIRMAR</button>
+          <button class="aether-btn btn-secondary" id="btn-confirm-no">CANCELAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/sounds.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
