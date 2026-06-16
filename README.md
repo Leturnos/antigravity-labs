@@ -16,7 +16,8 @@ antigravity-labs/
 ├── backend/     # APIs, microsserviços e utilitários de servidor (.gitkeep)
 ├── games/       # Jogos interativos e experiências visuais
 │   ├── chess/   # Aether Chess - Xadrez Premium com IA local
-│   └── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
+│   ├── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
+│   └── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 └── tools/       # Ferramentas, scripts de automação e utilitários (.gitkeep)
 ```
 
@@ -33,6 +34,7 @@ flowchart LR
 
     Games --> Chess["♟️ Aether Chess"]
     Games --> Sweeper["💣 Aether-Sweeper"]
+    Games --> Tetris["🌌 Aether Tetris"]
 
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
     style Games fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff
@@ -41,6 +43,7 @@ flowchart LR
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
     style Chess fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Sweeper fill:#e60012,stroke:#fff,stroke-width:1px,color:#fff
+    style Tetris fill:#5e6ad2,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
 ---
@@ -53,6 +56,7 @@ flowchart LR
 | :--- | :--- | :--- | :--- | :--- |
 | **Aether Chess ♟️** | [games/chess](./games/chess) | `Concluído` | Xadrez premium contra IA minimax local, glassmorphism, áudio sintetizado offline e suporte a temas. | HTML5, CSS3, JS, Python |
 | **Aether-Sweeper 💣** | [games/minesweeper](./games/minesweeper) | `Concluído` | Campo Minado com estética 8-bit retro arcade, primeiro clique seguro, chording, rumbles de explosão, confetes e som sintetizado offline. | HTML5, CSS3, JS, Python |
+| **Aether Tetris 🌌** | [games/tetris](./games/tetris) | `Concluído` | Jogo de Tetris premium inspirado no design da Linear.app. Conta com 3 modos (Clássico, Contrarrelógio e Zen), seleção de níveis e áudio chiptune sintetizado offline. | HTML5, CSS3, JS, Python |
 
 > Para detalhes completos sobre os jogos, consulte as documentações dedicadas em seus respectivos arquivos README.md.
 
@@ -74,6 +78,15 @@ O servidor local de campo minado também pode ser inicializado diretamente a par
 
 ```bash
 python games/minesweeper/server.py
+```
+
+Acesse no navegador: [http://localhost:8000/](http://localhost:8000/)
+
+### 🌌 Rodando o Aether Tetris
+O servidor local do Tetris pode ser inicializado diretamente a partir da raiz do repositório:
+
+```bash
+python games/tetris/server.py
 ```
 
 Acesse no navegador: [http://localhost:8000/](http://localhost:8000/)
