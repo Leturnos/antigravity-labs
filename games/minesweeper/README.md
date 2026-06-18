@@ -16,8 +16,7 @@ Um jogo de campo minado premium e imersivo, desenvolvido para simular a faceplat
   ├── favicon.svg            # Ícone SVG personalizado com mina pixelada.
   ├── index.html             # Estrutura HTML5 semântica e esqueleto do console portátil.
   ├── README.md              # Documentação do projeto (este arquivo).
-  ├── scores.json            # Placar local persistente em JSON (gerado no primeiro jogo).
-  └── server.py              # Servidor HTTP Python com API REST (GET/POST/DELETE) para scores.
+  └── js/                    # Scripts do jogo.
 ```
 
 ---
@@ -53,14 +52,13 @@ Todos os sons são gerados na hora através da síntese de ondas puras (sem depe
 
 ## 🚀 Como Executar
 
-O jogo requer apenas **Python 3** instalado:
+O jogo agora é executado a partir do **Servidor Central** na raiz do repositório:
 
 ```bash
-cd games/minesweeper
 python server.py
 ```
 
-Acesse no navegador: [http://localhost:8000/](http://localhost:8000/)
+Acesse no navegador: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/)
 
 ---
 

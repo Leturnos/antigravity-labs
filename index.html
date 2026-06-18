@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Games Suite</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --color-bg: #0b0f19;
+      --color-card-bg: rgba(20, 26, 46, 0.45);
+      --color-border: rgba(255, 255, 255, 0.07);
+      --color-text: #f3f4f6;
+      --color-text-muted: #9ca3af;
+      
+      --color-chess: #8b5cf6;
+      --color-chess-glow: rgba(139, 92, 246, 0.3);
+      --color-sweeper: #e60012;
+      --color-sweeper-glow: rgba(230, 0, 18, 0.3);
+      --color-tetris: #0ea5e9;
+      --color-tetris-glow: rgba(14, 165, 233, 0.3);
+      
+      --font-sans: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains+Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+      background-attachment: fixed;
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .logo {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 30%, #38bdf8 70%, #c084fc 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.3));
+    }
+
+    header p {
+      font-size: 1.125rem;
+      color: var(--color-text-muted);
+      font-weight: 400;
+      max-width: 600px;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 4rem;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    .game-card {
+      background: var(--color-card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--color-border);
+      border-radius: 24px;
+      padding: 2.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 440px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    /* Game-specific glows and styles */
+    .game-card.chess:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-chess);
+      box-shadow: 0 12px 30px var(--color-chess-glow);
+    }
+    .game-card.sweeper:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-sweeper);
+      box-shadow: 0 12px 30px var(--color-sweeper-glow);
+    }
+    .game-card.tetris:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-tetris);
+      box-shadow: 0 12px 30px var(--color-tetris-glow);
+    }
+
+    .game-card .top-section {
+      position: relative;
+      z-index: 2;
+    }
+
+    .game-card .icon-box {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+
+    .game-card h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    
+    .game-card.chess h2 { color: #c084fc; }
+    .game-card.sweeper h2 { color: #f87171; }
+    .game-card.tetris h2 { color: #38bdf8; }
+
+    .game-card p.description {
+      font-size: 0.975rem;
+      line-height: 1.6;
+      color: var(--color-text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .game-stats {
+      margin-top: auto;
+      margin-bottom: 1.75rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.825rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+
+    .btn-launch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.875rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    .game-card.chess .btn-launch {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .game-card.chess .btn-launch:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.5);
+    }
+
+    .game-card.sweeper .btn-launch {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+    .game-card.sweeper .btn-launch:hover {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.5);
+    }
+
+    .game-card.tetris .btn-launch {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .game-card.tetris .btn-launch:hover {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.5);
+    }
+
+    .global-stats-container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--color-card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--color-border);
+      border-radius: 24px;
+      padding: 2.25rem;
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+
+    .global-stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 1rem;
+    }
+
+    .global-stats-header h3 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #e5e7eb;
+    }
+
+    .btn-reset-all {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset-all:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-dashboard-card {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-dashboard-card h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .stat-dashboard-card .val {
+      font-family: var(--font-mono);
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    footer {
+      margin-top: auto;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      padding: 2rem 0;
+    }
+
+    /* Keyframe Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">AETHER GAMES SUITE</div>
+    <p>Uma coleção exclusiva de jogos clássicos premium com design glassmorphic e áudio sintetizado em tempo real.</p>
+  </header>
+
+  <main class="games-grid">
+    <!-- Aether Chess -->
+    <div class="game-card chess" onclick="location.href='games/chess/'">
+      <div class="top-section">
+        <div class="icon-box">♟️</div>
+        <h2>Aether Chess</h2>
+        <p class="description">Enfrente uma IA minimax avançada rodando localmente com alpha-beta, quiescence e transposição. Apresenta relógio Fischer, setas táticas e temas exclusivos.</p>
+      </div>
+      <div class="game-stats" id="stats-chess-txt">
+        Vitórias: -- | Derrotas: --<br>
+        Empates: --
+      </div>
+      <a href="games/chess/" class="btn-launch" onclick="event.stopPropagation()">
+        Jogar Aether Chess
+      </a>
+    </div>
+
+    <!-- Aether-Sweeper -->
+    <div class="game-card sweeper" onclick="location.href='games/minesweeper/'">
+      <div class="top-section">
+        <div class="icon-box">💣</div>
+        <h2>Aether-Sweeper</h2>
+        <p class="description">Campo Minado retro arcade 8-bit com clique inicial seguro, mecânica de chording, rumbles de explosão na tela e confetes festivos de comemoração.</p>
+      </div>
+      <div class="game-stats" id="stats-sweeper-txt">
+        Vitórias: -- | Derrotas: --<br>
+        Tempo Recorde: -- s
+      </div>
+      <a href="games/minesweeper/" class="btn-launch" onclick="event.stopPropagation()">
+        Jogar Aether-Sweeper
+      </a>
+    </div>
+
+    <!-- Aether Tetris -->
+    <div class="game-card tetris" onclick="location.href='games/tetris/'">
+      <div class="top-section">
+        <div class="icon-box">🌌</div>
+        <h2>Aether Tetris</h2>
+        <p class="description">Tetris premium inspirado no design minimalista do Linear.app. Inclui 3 modos de jogo (Clássico, Zen, Contrarrelógio) e previews hold/next.</p>
+      </div>
+      <div class="game-stats" id="stats-tetris-txt">
+        Recorde Clássico: --<br>
+        Recorde Contrarrelógio: --
+      </div>
+      <a href="games/tetris/" class="btn-launch" onclick="event.stopPropagation()">
+        Jogar Aether Tetris
+      </a>
+    </div>
+  </main>
+
+  <section class="global-stats-container">
+    <div class="global-stats-header">
+      <h3>Placar Geral Consolidado</h3>
+      <button class="btn-reset-all" id="btn-reset-all">Zerar Todas as Estatísticas</button>
+    </div>
+    <div class="dashboard-grid">
+      <div class="stat-dashboard-card">
+        <h4>Total de Vitórias</h4>
+        <div class="val" id="dashboard-total-wins">0</div>
+      </div>
+      <div class="stat-dashboard-card">
+        <h4>Total de Partidas</h4>
+        <div class="val" id="dashboard-total-games">0</div>
+      </div>
+      <div class="stat-dashboard-card">
+        <h4>Recorde de Tetris</h4>
+        <div class="val" id="dashboard-tetris-record">--</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Aether Games Suite &copy; 2026. Desenvolvido com HTML5, CSS Vanilla e Python.</p>
+  </footer>
+
+  <script>
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/score');
+        if (response.ok) {
+          const db = await response.json();
+          
+          // Render Chess stats
+          const chess = db.chess || { vitorias: 0, derrotas: 0, empates: 0 };
+          document.getElementById('stats-chess-txt').innerHTML = `
+            Vitórias: ${chess.vitorias} | Derrotas: ${chess.derrotas}<br>
+            Empates: ${chess.empates}
+          `;
+          
+          // Render Sweeper stats
+          const sweeper = db.minesweeper || { vitorias: 0, derrotas: 0, tempo_recorde: 0 };
+          document.getElementById('stats-sweeper-txt').innerHTML = `
+            Vitórias: ${sweeper.vitorias} | Derrotas: ${sweeper.derrotas}<br>
+            Tempo Recorde: ${sweeper.tempo_recorde > 0 ? sweeper.tempo_recorde + ' s' : '-- s'}
+          `;
+          
+          // Render Tetris stats
+          const tetris = db.tetris || { classico: { pontuacao_maxima: 0 }, contrarrelogio: { tempo_recorde: 0 } };
+          const tetrisClassico = tetris.classico || { pontuacao_maxima: 0, vitorias: 0, derrotas: 0 };
+          const tetrisCR = tetris.contrarrelogio || { tempo_recorde: 0 };
+          document.getElementById('stats-tetris-txt').innerHTML = `
+            Recorde Clássico: ${tetrisClassico.pontuacao_maxima.toLocaleString('pt-BR')} pts<br>
+            Recorde Contrarrelógio: ${tetrisCR.tempo_recorde > 0 ? formatTime(tetrisCR.tempo_recorde) : '-- s'}
+          `;
+
+          // Global dashboard stats calculation
+          const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0);
+          const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0);
+          const totalGames = totalWins + totalLosses + chess.empates;
+          
+          document.getElementById('dashboard-total-wins').textContent = totalWins;
+          document.getElementById('dashboard-total-games').textContent = totalGames;
+          document.getElementById('dashboard-tetris-record').textContent = tetrisClassico.pontuacao_maxima > 0 
+            ? `${tetrisClassico.pontuacao_maxima.toLocaleString('pt-BR')} pts` 
+            : '--';
+        }
+      } catch (err) {
+        console.error('Falha ao carregar placar do servidor.', err);
+      }
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    document.getElementById('btn-reset-all').addEventListener('click', async () => {
+      if (!confirm('Deseja realmente zerar TODAS as estatísticas de TODOS os jogos?')) return;
+      try {
+        await fetch('/api/score?game=chess', { method: 'DELETE' });
+        await fetch('/api/score?game=minesweeper', { method: 'DELETE' });
+        await fetch('/api/score?game=tetris', { method: 'DELETE' });
+        loadStats();
+      } catch (err) {
+        console.error('Erro ao resetar scores.', err);
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadStats);
+  </script>
+</body>
+</html>

@@ -17,8 +17,7 @@ Um jogo de Tetris premium e imersivo, desenvolvido com a estética moderna e ref
   │   └── system_explanation.md # Explicação técnica e arquitetura do jogo.
   ├── favicon.svg              # Ícone personalizado em formato SVG.
   ├── index.html               # Estrutura HTML5 semântica e containers do console.
-  ├── scores.json              # Placar persistente local em JSON.
-  └── server.py                # Servidor HTTP Python com API REST (GET/POST/DELETE) para scores.
+  └── js/                      # Scripts do jogo.
 ```
 
 ---
@@ -58,17 +57,13 @@ Em telas de tablets ou smartphones, o layout se reorganiza: os painéis laterais
 
 ## 🚀 Como Executar
 
-O jogo necessita apenas de **Python 3** instalado na sua máquina:
+O jogo agora é executado a partir do **Servidor Central** na raiz do repositório:
 
-1. Abra o terminal na pasta do jogo:
-   ```bash
-   cd games/tetris
-   ```
-2. Inicie o servidor:
-   ```bash
-   python server.py
-   ```
-3. Abra no navegador: [http://localhost:8000/](http://localhost:8000/)
+```bash
+python server.py
+```
+
+Acesse no navegador: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/)
 
 *Dica: Se você não iniciar o servidor Python e abrir o `index.html` diretamente no navegador, o jogo funcionará normalmente salvando as estatísticas no `localStorage`.*
 

@@ -87,21 +87,20 @@ Um jogo de xadrez premium e dinâmico, desenvolvido para rodar diretamente no se
 
 ### 📊 Placar Local Persistente
 
-- Armazenamento em `scores.json` (vitórias, derrotas, empates).
-- API REST completa: `GET /api/score`, `POST /api/score`, `DELETE /api/score` (reset).
+- Armazenamento persistente centralizado no arquivo de banco de dados unificado `scores_db.json` na raiz do repositório.
+- API REST centralizada: `GET /api/score?game=chess`, `POST /api/score?game=chess`, `DELETE /api/score?game=chess` (reset).
 
 ---
 
 ## 🚀 Como Executar
 
-O jogo requer apenas **Python 3** instalado:
+O jogo agora é executado a partir do **Servidor Central** na raiz do repositório:
 
 ```bash
-cd games/chess
 python server.py
 ```
 
-Acesse: [http://localhost:8000/](http://localhost:8000/)
+Acesse no navegador: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/)
 
 ---
 

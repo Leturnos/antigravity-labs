@@ -18,7 +18,7 @@ Thumbs.db
 *.swp
 
 # Database
-scores.json
+scores_db.json
 
 # Scratch folder
 scratch/

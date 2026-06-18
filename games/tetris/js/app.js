@@ -205,7 +205,7 @@ class AetherTetris {
   // Fetch record stats from local Python backend API
   async loadHighScores() {
     try {
-      const response = await fetch('/api/score');
+      const response = await fetch('/api/score?game=tetris');
       if (response.ok) {
         const data = await response.json();
         this.highScores = {
@@ -288,7 +288,7 @@ class AetherTetris {
     };
 
     // Send score update to the server in the background
-    fetch('/api/score', {
+    fetch('/api/score?game=tetris', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -314,7 +314,7 @@ class AetherTetris {
       'Tem certeza de que deseja zerar todos os recordes salvos? Esta ação não poderá ser desfeita.',
       async () => {
         try {
-          const response = await fetch('/api/score', { method: 'DELETE' });
+          const response = await fetch('/api/score?game=tetris', { method: 'DELETE' });
           if (response.ok) {
             const data = await response.json();
             this.highScores = data.scores;

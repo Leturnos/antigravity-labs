@@ -16,6 +16,14 @@ let hintTimeout = null;
 let isGameActive = false;
 let isAnimating = false;
 
+let aiWorker = null;
+function getAiWorker() {
+  if (!aiWorker) {
+    aiWorker = new Worker('js/chess-ai-worker.js');
+  }
+  return aiWorker;
+}
+
 let timerEnabled = false;
 let timerWhite = 0; // milliseconds
 let timerBlack = 0;
@@ -758,12 +766,15 @@ function triggerCpuMove() {
 
   const depth = parseInt(difficultySelect.value) || 3;
 
-  setTimeout(() => {
-    const result = getBestMove(game, depth);
+  const worker = getAiWorker();
+  worker.onmessage = function(e) {
+    const result = e.data;
+    isCpuThinking = false;
+    opponentStatus.classList.remove('pulse');
+    undoBtn.disabled = false;
+    resignBtn.disabled = false;
     
-    if (!result.move) {
-      isCpuThinking = false;
-      resignBtn.disabled = false;
+    if (!result || !result.move) {
       return;
     }
 
@@ -792,11 +803,6 @@ function triggerCpuMove() {
     const isCheckmate = status === 'checkmate';
     result.move.notation = getMoveNotation(result.move, isCheck, isCheckmate);
 
-    isCpuThinking = false;
-    opponentStatus.classList.remove('pulse');
-    undoBtn.disabled = false;
-    resignBtn.disabled = false;
-
     updateBoardDOM();
 
     if (status !== 'active') {
@@ -804,7 +810,17 @@ function triggerCpuMove() {
     } else if (isCheck) {
       ChessSounds.playCheck();
     }
-  }, 400);
+  };
+
+  worker.postMessage({
+    board: game.board,
+    turn: game.turn,
+    castlingRights: game.castlingRights,
+    enPassant: game.enPassant,
+    halfmoveClock: game.halfmoveClock,
+    history: game.history.map(h => ({ hash: h.hash })),
+    depth: depth
+  });
 }
 
 /**
@@ -887,7 +903,7 @@ function handleGameOver(status) {
  */
 async function fetchScoreboard() {
   try {
-    const res = await fetch('/api/score');
+    const res = await fetch('/api/score?game=chess');
     const scores = await res.json();
     document.getElementById('score-wins').innerText = scores.vitorias || 0;
     document.getElementById('score-losses').innerText = scores.derrotas || 0;
@@ -899,7 +915,7 @@ async function fetchScoreboard() {
 
 async function submitMatchResult(result) {
   try {
-    const res = await fetch('/api/score', {
+    const res = await fetch('/api/score?game=chess', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ result })
@@ -1250,8 +1266,9 @@ hintBtn.addEventListener('click', () => {
 
   const depth = parseInt(difficultySelect.value) || 3;
 
-  setTimeout(() => {
-    const result = getBestMove(game, depth);
+  const worker = getAiWorker();
+  worker.onmessage = function(e) {
+    const result = e.data;
     hintBtn.disabled = false;
     hintBtn.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
@@ -1261,7 +1278,7 @@ hintBtn.addEventListener('click', () => {
       Pedir Dica
     `;
 
-    if (result.move) {
+    if (result && result.move) {
       const squares = boardEl.querySelectorAll('.square');
       squares.forEach(sq => {
         const r = parseInt(sq.dataset.row);
@@ -1277,7 +1294,17 @@ hintBtn.addEventListener('click', () => {
 
       hintTimeout = setTimeout(clearHintHighlights, 3500);
     }
-  }, 100);
+  };
+
+  worker.postMessage({
+    board: game.board,
+    turn: game.turn,
+    castlingRights: game.castlingRights,
+    enPassant: game.enPassant,
+    halfmoveClock: game.halfmoveClock,
+    history: game.history.map(h => ({ hash: h.hash })),
+    depth: depth
+  });
 });
 
 function clearHintHighlights() {

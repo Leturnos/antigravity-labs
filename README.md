@@ -64,32 +64,20 @@ flowchart LR
 
 ## 🚀 Como Executar
 
-### ♟️ Rodando o Aether Chess
-O servidor local de xadrez pode ser inicializado diretamente a partir da raiz do repositório:
+O repositório agora utiliza um **Servidor Central Unificado** em Python para servir todos os jogos e um Painel Dashboard Launcher na raiz.
+
+### Inicializando o Servidor Central
+Execute a partir do diretório raiz:
 
 ```bash
-python games/chess/server.py
+python server.py
 ```
 
-Acesse no navegador: [http://localhost:8000/](http://localhost:8000/)
-
-### 💣 Rodando o Aether-Sweeper
-O servidor local de campo minado também pode ser inicializado diretamente a partir da raiz do repositório:
-
-```bash
-python games/minesweeper/server.py
-```
-
-Acesse no navegador: [http://localhost:8000/](http://localhost:8000/)
-
-### 🌌 Rodando o Aether Tetris
-O servidor local do Tetris pode ser inicializado diretamente a partir da raiz do repositório:
-
-```bash
-python games/tetris/server.py
-```
-
-Acesse no navegador: [http://localhost:8000/](http://localhost:8000/)
+Acesse no navegador:
+- **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/)
+- **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/)
+- **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/)
+- **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/)
 
 ---
 
