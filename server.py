@@ -28,6 +28,11 @@ DEFAULT_SCORES = {
         "contrarrelogio": {
             "tempo_recorde": 0
         }
+    },
+    "snake": {
+        "pontuacao_maxima": 0,
+        "comprimento_maximo": 0,
+        "partidas_jogadas": 0
     }
 }
 
@@ -47,11 +52,14 @@ def load_db():
 
 def save_db(data):
     try:
-        os.makedirs(os.path.dirname(SCORE_FILE), exist_ok=True)
+        dir_name = os.path.dirname(SCORE_FILE)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
         with open(SCORE_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Error saving database: {e}")
         return False
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
@@ -153,6 +161,24 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
                     self.wfile.write(json.dumps({"success": True, "scores": db['tetris']}).encode('utf-8'))
+                    
+                elif game == 'snake':
+                    score = data.get('score', 0)
+                    length = data.get('length', 0)
+                    
+                    db['snake']['partidas_jogadas'] += 1
+                    
+                    if score > db['snake'].get('pontuacao_maxima', 0):
+                        db['snake']['pontuacao_maxima'] = score
+                    if length > db['snake'].get('comprimento_maximo', 0):
+                        db['snake']['comprimento_maximo'] = length
+                        
+                    save_db(db)
+                    
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": True, "scores": db['snake']}).encode('utf-8'))
                     
                 else:
                     self.send_response(400)
