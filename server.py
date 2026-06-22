@@ -33,6 +33,11 @@ DEFAULT_SCORES = {
         "pontuacao_maxima": 0,
         "comprimento_maximo": 0,
         "partidas_jogadas": 0
+    },
+    "tictactoe": {
+        "vitorias": 0,
+        "derrotas": 0,
+        "empates": 0
     }
 }
 
@@ -179,6 +184,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
                     self.wfile.write(json.dumps({"success": True, "scores": db['snake']}).encode('utf-8'))
+                    
+                elif game == 'tictactoe':
+                    result = data.get('result')
+                    if result == 'win':
+                        db['tictactoe']['vitorias'] += 1
+                    elif result == 'loss':
+                        db['tictactoe']['derrotas'] += 1
+                    elif result == 'draw':
+                        db['tictactoe']['empates'] += 1
+                    save_db(db)
+                    
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": True, "scores": db['tictactoe']}).encode('utf-8'))
                     
                 else:
                     self.send_response(400)

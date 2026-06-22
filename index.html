@@ -25,6 +25,8 @@
       --color-tetris-glow: rgba(14, 165, 233, 0.3);
       --color-snake: #10b981;
       --color-snake-glow: rgba(16, 185, 129, 0.3);
+      --color-tictactoe: #f43f5e;
+      --color-tictactoe-glow: rgba(244, 63, 94, 0.3);
       
       --font-sans: 'Outfit', sans-serif;
       --font-mono: 'JetBrains+Mono', monospace;
@@ -140,6 +142,11 @@
       border-color: var(--color-snake);
       box-shadow: 0 12px 30px var(--color-snake-glow);
     }
+    .game-card.tictactoe:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-tictactoe);
+      box-shadow: 0 12px 30px var(--color-tictactoe-glow);
+    }
 
     .game-card .top-section {
       position: relative;
@@ -161,10 +168,12 @@
       letter-spacing: -0.02em;
     }
     
+    .game-card.snake:hover h2 { color: #34d399; } /* keep original color active on hover if desired, or let's see how it was: */
     .game-card.chess h2 { color: #c084fc; }
     .game-card.sweeper h2 { color: #f87171; }
     .game-card.tetris h2 { color: #38bdf8; }
     .game-card.snake h2 { color: #34d399; }
+    .game-card.tictactoe h2 { color: #fb7185; }
 
     .game-card p.description {
       font-size: 0.975rem;
@@ -237,6 +246,15 @@
     .game-card.snake .btn-launch:hover {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       box-shadow: 0 6px 16px rgba(5, 150, 105, 0.5);
+    }
+
+    .game-card.tictactoe .btn-launch {
+      background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+    }
+    .game-card.tictactoe .btn-launch:hover {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      box-shadow: 0 6px 16px rgba(225, 29, 72, 0.5);
     }
 
     .global-stats-container {
@@ -421,6 +439,22 @@
         Jogar Aether Snake
       </a>
     </div>
+
+    <!-- Aether Tic-Tac-Toe -->
+    <div class="game-card tictactoe" onclick="location.href='games/tictactoe/'">
+      <div class="top-section">
+        <div class="icon-box">❌</div>
+        <h2>Aether Tic-Tac-Toe</h2>
+        <p class="description">Enfrente uma IA imbatível baseada no algoritmo Minimax com poda Alpha-Beta, dispute no modo local PvP ou observe o duelo em simulação contínua com controle de velocidade.</p>
+      </div>
+      <div class="game-stats" id="stats-tictactoe-txt">
+        Vitórias: -- | Derrotas: --<br>
+        Empates: --
+      </div>
+      <a href="games/tictactoe/" class="btn-launch" onclick="event.stopPropagation()">
+        Jogar Tic-Tac-Toe
+      </a>
+    </div>
   </main>
 
   <section class="global-stats-container">
@@ -485,10 +519,17 @@
             Comprimento Máximo: ${snake.comprimento_maximo} blocos
           `;
 
+          // Render Tic-Tac-Toe stats
+          const tictactoe = db.tictactoe || { vitorias: 0, derrotas: 0, empates: 0 };
+          document.getElementById('stats-tictactoe-txt').innerHTML = `
+            Vitórias: ${tictactoe.vitorias} | Derrotas: ${tictactoe.derrotas}<br>
+            Empates: ${tictactoe.empates}
+          `;
+
           // Global dashboard stats calculation
-          const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0);
-          const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0);
-          const totalGames = totalWins + totalLosses + chess.empates + (snake.partidas_jogadas || 0);
+          const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias;
+          const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas;
+          const totalGames = totalWins + totalLosses + chess.empates + tictactoe.empates + (snake.partidas_jogadas || 0);
           
           document.getElementById('dashboard-total-wins').textContent = totalWins;
           document.getElementById('dashboard-total-games').textContent = totalGames;
@@ -514,6 +555,7 @@
         await fetch('/api/score?game=minesweeper', { method: 'DELETE' });
         await fetch('/api/score?game=tetris', { method: 'DELETE' });
         await fetch('/api/score?game=snake', { method: 'DELETE' });
+        await fetch('/api/score?game=tictactoe', { method: 'DELETE' });
         loadStats();
       } catch (err) {
         console.error('Erro ao resetar scores.', err);

@@ -37,6 +37,7 @@ flowchart LR
     Games --> Sweeper["💣 Aether-Sweeper"]
     Games --> Snake["🐍 Aether Snake"]
     Games --> Tetris["🌌 Aether Tetris"]
+    Games --> TicTacToe["❌ Aether Tic-Tac-Toe"]
 
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
     style Games fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff
@@ -47,6 +48,7 @@ flowchart LR
     style Sweeper fill:#e60012,stroke:#fff,stroke-width:1px,color:#fff
     style Snake fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style Tetris fill:#5e6ad2,stroke:#fff,stroke-width:1px,color:#fff
+    style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
 ---
@@ -61,6 +63,7 @@ flowchart LR
 | **Aether-Sweeper 💣** | [games/minesweeper](./games/minesweeper) | `Concluído` | Campo Minado com estética 8-bit retro arcade, primeiro clique seguro, chording, rumbles de explosão, confetes e som sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Tetris 🌌** | [games/tetris](./games/tetris) | `Concluído` | Jogo de Tetris premium inspirado no design da Linear.app. Conta com 3 modos (Clássico, Contrarrelógio e Zen), seleção de níveis e áudio chiptune sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Snake 🐍** | [games/snake](./games/snake) | `Concluído` | Jogo da cobrinha com IA de busca de caminho (BFS + segurança e desvio de cauda) ou manual. | HTML5, CSS3, JS, Python |
+| **Aether Tic-Tac-Toe ❌** | [games/tictactoe](./games/tictactoe) | `Concluído` | Jogo da velha com IA Minimax e Poda Alpha-Beta, modo PvP local, simulação e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 
 > Para detalhes completos sobre os jogos, consulte suas respectivas documentações.
 
@@ -83,6 +86,7 @@ Acesse no navegador:
 - **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/)
 - **Aether Snake**: [http://localhost:8000/games/snake/](http://localhost:8000/games/snake/)
 - **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/)
+- **Aether Tic-Tac-Toe**: [http://localhost:8000/games/tictactoe/](http://localhost:8000/games/tictactoe/)
 
 ---
 

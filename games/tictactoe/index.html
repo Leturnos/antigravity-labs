@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Tic-Tac-Toe // Edição Comando</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Google Fonts: Inter and JetBrains Mono for stats/diagnostics -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Main Console Layout -->
+  <div class="aether-container game-idle" id="aether-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="aether-header">
+      <div class="brand-logo">
+        <div class="logo-symbol">Æ</div>
+        <div class="logo-text">
+          <span class="brand-name">Aether</span>
+          <span class="brand-badge">TIC-TAC-TOE</span>
+        </div>
+      </div>
+
+      <!-- Header Utilities -->
+      <div class="header-utilities">
+        <button class="utility-btn" id="btn-sound-toggle" title="Alternar Som">
+          <span class="icon">🔊</span> <span class="label">Som: LIGADO</span>
+        </button>
+        <button class="utility-btn" id="btn-info" title="Como Jogar">
+          <span class="icon">❓</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Secondary Settings/Status Bar -->
+    <div class="settings-bar" id="settings-bar">
+      <div class="active-mode-indicator">
+        <span class="indicator-label">MODO ATUAL:</span>
+        <span class="indicator-value" id="lbl-active-mode-name">VS INTELIGÊNCIA ARTIFICIAL</span>
+      </div>
+      
+      <div class="settings-right">
+        <!-- API Connection Status -->
+        <div class="status-indicator">
+          <span class="dot pulse"></span>
+          <span class="status-text" id="api-status">API CONECTADA</span>
+        </div>
+        
+        <!-- Home/Lobby Button (back to main index) -->
+        <button class="utility-btn btn-menu-lobby" id="btn-menu-lobby" onclick="location.href='../../'" title="Voltar ao Menu Principal">
+          <span class="icon">🏠</span> <span class="label">Portal</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Game Grid Layout -->
+    <main class="game-layout" id="game-layout">
+      
+      <!-- Left Panel: Controls & Options -->
+      <aside class="panel panel-left">
+        <div class="panel-header">CONTROLES</div>
+        
+        <div class="control-group">
+          <span class="group-label">MODO DE JOGO</span>
+          <div class="toggle-buttons select-3">
+            <button class="toggle-btn active" id="btn-mode-ai" data-mode="ai">HUMANO VS IA</button>
+            <button class="toggle-btn" id="btn-mode-pvp" data-mode="pvp">PvP LOCAL</button>
+            <button class="toggle-btn" id="btn-mode-sim" data-mode="sim">SIMULAÇÃO</button>
+          </div>
+        </div>
+
+        <div class="control-group" id="grp-difficulty">
+          <span class="group-label">DIFICULDADE DA IA</span>
+          <div class="speed-selector select-3">
+            <button class="speed-btn" id="diff-easy" data-diff="easy">Fácil</button>
+            <button class="speed-btn" id="diff-medium" data-diff="medium">Médio</button>
+            <button class="speed-btn active" id="diff-impossible" data-diff="impossible">Impossível</button>
+          </div>
+        </div>
+
+        <div class="control-group" id="grp-order">
+          <span class="group-label">QUEM COMEÇA</span>
+          <div class="toggle-buttons">
+            <button class="toggle-btn active" id="btn-start-player" data-starter="player">JOGADOR</button>
+            <button class="toggle-btn" id="btn-start-ai" data-starter="ai">IA</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="group-label">TEMA VISUAL</span>
+          <select class="aether-select" id="theme-selector">
+            <option value="cyberpunk">Cyberpunk (Magenta/Ciano)</option>
+            <option value="modern-glow">Neon Glow (Moderno)</option>
+            <option value="retro-green">Retro Arcade (Verde)</option>
+            <option value="classic">Glass Sólido (Minimalista)</option>
+          </select>
+        </div>
+
+        <div class="control-group hidden" id="grp-sim-speed">
+          <span class="group-label">VELOCIDADE DE SIMULAÇÃO</span>
+          <div class="speed-selector">
+            <button class="speed-btn" id="speed-slow" data-speed="slow">Lento</button>
+            <button class="speed-btn active" id="speed-normal" data-speed="normal">Normal</button>
+            <button class="speed-btn" id="speed-fast" data-speed="fast">Rápido</button>
+            <button class="speed-btn" id="speed-hyper" data-speed="hyper">Hyper</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: Game Board -->
+      <section class="board-section">
+        <div class="board-frame" id="board-frame">
+          
+          <!-- Glowing Grid lines structure -->
+          <div class="tictactoe-grid-lines">
+            <div class="grid-line vertical line-v1"></div>
+            <div class="grid-line vertical line-v2"></div>
+            <div class="grid-line horizontal line-h1"></div>
+            <div class="grid-line horizontal line-h2"></div>
+          </div>
+
+          <!-- Board cells -->
+          <div class="tictactoe-board" id="tictactoe-board">
+            <div class="board-cell" data-index="0" id="cell-0"></div>
+            <div class="board-cell" data-index="1" id="cell-1"></div>
+            <div class="board-cell" data-index="2" id="cell-2"></div>
+            <div class="board-cell" data-index="3" id="cell-3"></div>
+            <div class="board-cell" data-index="4" id="cell-4"></div>
+            <div class="board-cell" data-index="5" id="cell-5"></div>
+            <div class="board-cell" data-index="6" id="cell-6"></div>
+            <div class="board-cell" data-index="7" id="cell-7"></div>
+            <div class="board-cell" data-index="8" id="cell-8"></div>
+          </div>
+
+          <!-- Winning Line overlay -->
+          <svg class="winning-line-svg" id="winning-line-svg" viewBox="0 0 300 300">
+            <line id="winning-line" x1="0" y1="0" x2="0" y2="0" stroke="transparent" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          
+          <!-- Pause Overlay -->
+          <div class="board-overlay hidden" id="pause-overlay">
+            <div class="overlay-content">
+              <h2>PAUSADO</h2>
+              <p>Pressione <kbd class="kbd-inline">Espaço</kbd> ou clique abaixo para continuar</p>
+              <button class="aether-btn btn-primary" id="btn-resume">CONTINUAR</button>
+            </div>
+          </div>
+          
+          <!-- Start Game Lobby Overlay -->
+          <div class="board-overlay" id="start-overlay">
+            <div class="overlay-content start-lobby">
+              <h2>AETHER TIC-TAC-TOE</h2>
+              <p class="lobby-subtitle">Minimax AI com Poda Alpha-Beta</p>
+              
+              <div class="lobby-description">
+                Enfrente uma Inteligência Artificial programada matematicamente para prever todos os cenários possíveis. Ajuste a dificuldade ou coloque duas IAs para simular.
+              </div>
+
+              <div class="lobby-actions">
+                <button class="aether-btn btn-primary btn-lobby-start" id="btn-start">INICIAR PARTIDA</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Game Stats & Debug Info -->
+      <aside class="panel panel-right">
+        <div class="panel-header">DIAGNÓSTICOS</div>
+
+        <div class="stats-panel">
+          <div class="stat-box">
+            <div class="stat-label">VITÓRIAS (SESSÃO)</div>
+            <div class="stat-number" id="lbl-score-wins">0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">DERROTAS (SESSÃO)</div>
+            <div class="stat-number" id="lbl-score-losses">0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">EMPATES (SESSÃO)</div>
+            <div class="stat-number" id="lbl-score-draws">0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">STREAK DE VITÓRIAS</div>
+            <div class="stat-number font-mono" id="lbl-score-streak">0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">ALGORITMO IA</div>
+            <div class="stat-number font-mono" id="lbl-ai-algo">MINIMAX + ALPHA-BETA</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">NÓS ANALISADOS</div>
+            <div class="stat-number font-mono" id="lbl-nodes-searched">0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">TEMPO DE CÁLCULO</div>
+            <div class="stat-number font-mono" id="lbl-calc-time">0 ms</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">DECISÃO DA IA</div>
+            <div class="stat-number font-mono" id="lbl-ai-decision">--</div>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- Footer: Keyboard Shortcuts and High Scores -->
+    <footer class="aether-footer">
+      <div class="footer-shortcuts">
+        <span class="shortcut-item"><kbd>Espaço</kbd> Pausar / Continuar</span>
+        <span class="shortcut-item"><kbd>R</kbd> Reiniciar Tabuleiro</span>
+        <span class="shortcut-item"><kbd>S</kbd> Alternar Som</span>
+      </div>
+
+      <div class="high-scores-row">
+        <div class="record-item">
+          <span class="record-label">VITÓRIAS GLOBAIS:</span>
+          <span class="record-value" id="val-record-wins">0</span>
+        </div>
+        <div class="record-divider">|</div>
+        <div class="record-item">
+          <span class="record-label">DERROTAS GLOBAIS:</span>
+          <span class="record-value" id="val-record-losses">0</span>
+        </div>
+        <div class="record-divider">|</div>
+        <div class="record-item">
+          <span class="record-label">EMPATES GLOBAIS:</span>
+          <span class="record-value" id="val-record-draws">0</span>
+        </div>
+      </div>
+      
+      <div class="footer-actions">
+        <button class="aether-btn btn-secondary btn-sm" id="btn-reset-scores">Zerar Placar Global</button>
+      </div>
+
+      <div class="footer-copyright">
+        © 2026 AETHER LABS. DESIGN INSPIRADO EM RAYCAST.COM.
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- How to Play Modal (Info) -->
+  <div class="modal-overlay hidden" id="modal-info">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">COMO FUNCIONA O AETHER TIC-TAC-TOE</span>
+        <button class="modal-close" id="modal-info-close">×</button>
+      </div>
+      <div class="modal-body">
+        <h3>Modos de Execução</h3>
+        <ul>
+          <li><strong>Humano vs IA:</strong> Você disputa contra o motor inteligente. Se configurado para o modo "Impossível", o jogo será um teste de resiliência, pois a IA jogará com perfeição.</li>
+          <li><strong>PvP Local:</strong> Jogue contra um amigo localmente no mesmo teclado ou tela, alternando as jogadas.</li>
+          <li><strong>Simulação:</strong> Assista a duas IAs jogarem de forma contínua com controle de velocidade. Ideal para inspecionar os cálculos de decisão em tempo real.</li>
+        </ul>
+
+        <h3>A Inteligência Artificial (Minimax)</h3>
+        <p>A IA simula todas as sequências de jogadas possíveis a partir do estado atual da partida usando uma árvore de decisão recursiva:</p>
+        <ul>
+          <li><strong>Minimax:</strong> Avalia as células vazias atribuindo notas: +10 para vitórias da IA, -10 para vitórias do humano, e 0 para empates. A IA tenta maximizar sua nota enquanto assume que o humano tentará minimizá-la.</li>
+          <li><strong>Poda Alpha-Beta:</strong> Descarta caminhos de busca redundantes que comprovadamente não afetarão o resultado final da jogada, otimizando o processamento para menos de 1 milissegundo.</li>
+        </ul>
+
+        <h3>Controles Globais</h3>
+        <table class="controls-table">
+          <thead>
+            <tr>
+              <th>Tecla</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><kbd>Espaço</kbd></td>
+              <td>Pausar / Retomar Jogo ou Simulação</td>
+            </tr>
+            <tr>
+              <td><kbd>R</kbd></td>
+              <td>Reiniciar Partida Atual</td>
+            </tr>
+            <tr>
+              <td><kbd>S</kbd></td>
+              <td>Ativar ou Desativar Som Synthesizer</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="modal-footer">
+          <button class="aether-btn btn-primary" id="btn-info-close-ok">ENTENDIDO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div class="modal-overlay hidden" id="modal-gameover">
+    <div class="modal-card">
+      <div class="modal-body text-center">
+        <div class="gameover-status-icon" id="gameover-status-icon">🏆</div>
+        <h2 id="gameover-heading">Você Venceu!</h2>
+        <p id="gameover-message">Excelente jogada estratégica.</p>
+        
+        <div class="stats-summary">
+          <div class="summary-row">
+            <span class="summary-label">Modo:</span>
+            <span class="summary-value" id="sum-mode">HUMANO VS IA</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Resultado:</span>
+            <span class="summary-value" id="sum-result">VITÓRIA</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Streak de Vitórias:</span>
+            <span class="summary-value" id="sum-streak">3</span>
+          </div>
+        </div>
+
+        <div class="modal-footer-buttons">
+          <button class="aether-btn btn-primary" id="btn-retry">JOGAR NOVAMENTE</button>
+          <button class="aether-btn btn-secondary" id="btn-gameover-close-ok">FECHAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal -->
+  <div class="modal-overlay hidden" id="modal-confirm">
+    <div class="modal-card modal-confirm-card">
+      <div class="modal-header confirm-header">
+        <span class="modal-title">CONFIRMAR AÇÃO</span>
+      </div>
+      <div class="modal-body text-center">
+        <div class="confirm-icon">⚠️</div>
+        <h3 id="confirm-heading">Zerar pontuações globais?</h3>
+        <p id="confirm-message">Esta ação apagará permanentemente o histórico do servidor.</p>
+        <div class="modal-footer-buttons">
+          <button class="aether-btn btn-danger" id="btn-confirm-yes">CONFIRMAR</button>
+          <button class="aether-btn btn-secondary" id="btn-confirm-no">CANCELAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="../shared/js/retro-audio.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
