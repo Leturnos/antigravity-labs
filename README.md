@@ -17,6 +17,7 @@ antigravity-labs/
 ├── games/       # Jogos interativos e experiências visuais
 │   ├── chess/   # Aether Chess - Xadrez Premium com IA local
 │   ├── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
+│   ├── poker/   # Aether Poker - Texas Hold'em com bots inteligentes e side pots
 │   ├── snake/   # Aether Snake - Cobrinha com IA Autopilot (BFS + Cauda) e modo Manual
 │   └── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 └── tools/       # Ferramentas, scripts de automação e utilitários (.gitkeep)
@@ -35,6 +36,7 @@ flowchart LR
 
     Games --> Chess["♟️ Aether Chess"]
     Games --> Sweeper["💣 Aether-Sweeper"]
+    Games --> Poker["♦️ Aether Poker"]
     Games --> Snake["🐍 Aether Snake"]
     Games --> Tetris["🌌 Aether Tetris"]
     Games --> TicTacToe["❌ Aether Tic-Tac-Toe"]
@@ -46,6 +48,7 @@ flowchart LR
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
     style Chess fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Sweeper fill:#e60012,stroke:#fff,stroke-width:1px,color:#fff
+    style Poker fill:#ffc533,stroke:#fff,stroke-width:1px,color:#fff
     style Snake fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style Tetris fill:#5e6ad2,stroke:#fff,stroke-width:1px,color:#fff
     style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
@@ -62,6 +65,7 @@ flowchart LR
 | **Aether Chess ♟️** | [games/chess](./games/chess) | `Concluído` | Xadrez premium contra IA minimax local, glassmorphism, áudio sintetizado offline e suporte a temas. | HTML5, CSS3, JS, Python |
 | **Aether-Sweeper 💣** | [games/minesweeper](./games/minesweeper) | `Concluído` | Campo Minado com estética 8-bit retro arcade, primeiro clique seguro, chording, rumbles de explosão, confetes e som sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Tetris 🌌** | [games/tetris](./games/tetris) | `Concluído` | Jogo de Tetris premium inspirado no design da Linear.app. Conta com 3 modos (Clássico, Contrarrelógio e Zen), seleção de níveis e áudio chiptune sintetizado offline. | HTML5, CSS3, JS, Python |
+| **Aether Poker ♦️** | [games/poker](./games/poker) | `Concluído` | Jogo de Texas Hold'em premium com bots de perfis psicológicos (shark, fish, caller), side pots robustos e áudio sintetizado. | HTML5, CSS3, JS, Python |
 | **Aether Snake 🐍** | [games/snake](./games/snake) | `Concluído` | Jogo da cobrinha com IA de busca de caminho (BFS + segurança e desvio de cauda) ou manual. | HTML5, CSS3, JS, Python |
 | **Aether Tic-Tac-Toe ❌** | [games/tictactoe](./games/tictactoe) | `Concluído` | Jogo da velha com IA Minimax e Poda Alpha-Beta, modo PvP local, simulação e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 
@@ -84,6 +88,7 @@ Acesse no navegador:
 - **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/)
 - **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/)
 - **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/)
+- **Aether Poker**: [http://localhost:8000/games/poker/](http://localhost:8000/games/poker/)
 - **Aether Snake**: [http://localhost:8000/games/snake/](http://localhost:8000/games/snake/)
 - **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/)
 - **Aether Tic-Tac-Toe**: [http://localhost:8000/games/tictactoe/](http://localhost:8000/games/tictactoe/)
