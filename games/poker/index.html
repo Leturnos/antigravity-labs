@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Poker // Edição Comando</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Google Fonts: Inter with ss03 support, Outfit for labels, JetBrains Mono for stats -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Main Console Layout -->
+  <div class="aether-container game-idle" id="aether-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="aether-header">
+      <div class="brand-logo">
+        <div class="logo-symbol">Æ</div>
+        <div class="logo-text">
+          <span class="brand-name">Aether</span>
+          <span class="brand-badge">POKER</span>
+        </div>
+      </div>
+
+      <!-- Header Utilities -->
+      <div class="header-utilities">
+        <button class="utility-btn" id="btn-sound-toggle" title="Alternar Som">
+          <span class="icon">🔊</span> <span class="label">Som: LIGADO</span>
+        </button>
+        <button class="utility-btn" id="btn-info" title="Regras & Como Jogar">
+          <span class="icon">❓</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Secondary Settings/Status Bar -->
+    <div class="settings-bar" id="settings-bar">
+      <div class="active-mode-indicator">
+        <span class="indicator-label">MODO ATUAL:</span>
+        <span class="indicator-value" id="lbl-active-mode-name">CONFIGURAÇÃO DE PARTIDA</span>
+      </div>
+      
+      <div class="settings-right">
+        <!-- API Connection Status -->
+        <div class="status-indicator">
+          <span class="dot pulse"></span>
+          <span class="status-text" id="api-status">API CONECTADA</span>
+        </div>
+        
+        <!-- Home/Lobby Button -->
+        <button class="utility-btn btn-menu-lobby" id="btn-menu-lobby" onclick="location.href='../../'" title="Voltar ao Launcher Principal">
+          <span class="icon">🏠</span> <span class="label">Portal</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Game Board Area -->
+    <main class="game-layout" id="game-layout">
+      
+      <!-- Side Panel: Stats and Controls -->
+      <aside class="panel panel-left">
+        <div class="panel-header">DIAGNÓSTICOS & INFO</div>
+        
+        <div class="stats-panel">
+          <div class="stat-box">
+            <div class="stat-label">MODO ATIVO</div>
+            <div class="stat-number font-mono" id="panel-game-mode">CASH GAME</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">BLINDS ATUAIS</div>
+            <div class="stat-number font-mono" id="panel-blinds">$10 / $20</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">POTE ATUAL</div>
+            <div class="stat-number font-mono highlight-gold" id="panel-pot">$0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">APOSTA MÍNIMA (CALL)</div>
+            <div class="stat-number font-mono" id="panel-current-call">$0</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">RODADA DA MÃO</div>
+            <div class="stat-number font-mono status-good" id="panel-hand-round">PRE-FLOP</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-label">MÃO NÚMERO</div>
+            <div class="stat-number font-mono" id="panel-hand-count">1</div>
+          </div>
+        </div>
+
+        <!-- Cash Game Specific Actions -->
+        <div class="cash-actions-panel hidden" id="cash-actions-panel">
+          <button class="aether-btn btn-secondary btn-full" id="btn-cashout">Sair com Lucro</button>
+        </div>
+      </aside>
+
+      <!-- Center Table Area -->
+      <section class="board-section">
+        <div class="board-frame" id="board-frame">
+          
+          <!-- Outer 3D Table Container -->
+          <div class="table-container">
+            <!-- The Elliptical Poker Table Felt -->
+            <div class="poker-table-felt">
+              <div class="felt-inner-glow"></div>
+              
+              <!-- Center Board: Community Cards & Pot -->
+              <div class="community-board-area">
+                <div class="pot-display-table">
+                  <span class="pot-title font-mono">POTE</span>
+                  <span class="pot-val font-mono" id="table-pot-val">$0</span>
+                </div>
+                
+                <!-- Community Cards Grid -->
+                <div class="community-cards-container" id="community-cards">
+                  <!-- Generated dynamically: 5 cards -->
+                  <div class="card-placeholder"></div>
+                  <div class="card-placeholder"></div>
+                  <div class="card-placeholder"></div>
+                  <div class="card-placeholder"></div>
+                  <div class="card-placeholder"></div>
+                </div>
+              </div>
+
+              <!-- Seat Positions for Player & Bots (Pos 0 to 5) -->
+              <div class="table-seats" id="table-seats">
+                <!-- Seat 0: Player (Bottom Center) -->
+                <div class="player-seat seat-position-0 active-turn" id="seat-0" data-seat="0">
+                  <div class="seat-badge active-turn-glow"></div>
+                  <div class="seat-info-card glass-panel">
+                    <div class="seat-header">
+                      <span class="seat-name">Jogador (Você)</span>
+                      <span class="action-bubble hidden" id="action-bubble-0">CHECK</span>
+                    </div>
+                    <div class="seat-stack font-mono" id="stack-val-0">$1,000</div>
+                    <div class="seat-bet font-mono" id="bet-val-0">$0</div>
+                    <!-- Player Cards -->
+                    <div class="seat-cards-container" id="cards-0"></div>
+                    <div class="hand-strength-indicator font-mono hidden" id="hand-strength-0">High Card</div>
+                  </div>
+                </div>
+
+                <!-- Seat 1: Bot (Left Bottom) -->
+                <div class="player-seat seat-position-1" id="seat-1" data-seat="1">
+                  <div class="seat-badge"></div>
+                  <div class="seat-info-card glass-panel">
+                    <div class="seat-header">
+                      <span class="seat-name" id="name-1">Bot-1</span>
+                      <span class="action-bubble hidden" id="action-bubble-1">FOLD</span>
+                    </div>
+                    <div class="seat-stack font-mono" id="stack-val-1">$1,000</div>
+                    <div class="seat-bet font-mono" id="bet-val-1">$0</div>
+                    <div class="seat-cards-container" id="cards-1"></div>
+                  </div>
+                </div>
+
+                <!-- Seat 2: Bot (Left Top) -->
+                <div class="player-seat seat-position-2" id="seat-2" data-seat="2">
+                  <div class="seat-badge"></div>
+                  <div class="seat-info-card glass-panel">
+                    <div class="seat-header">
+                      <span class="seat-name" id="name-2">Bot-2</span>
+                      <span class="action-bubble hidden" id="action-bubble-2">BET $40</span>
+                    </div>
+                    <div class="seat-stack font-mono" id="stack-val-2">$1,000</div>
+                    <div class="seat-bet font-mono" id="bet-val-2">$0</div>
+                    <div class="seat-cards-container" id="cards-2"></div>
+                  </div>
+                </div>
+
+                <!-- Seat 3: Bot (Top Center) -->
+                <div class="player-seat seat-position-3" id="seat-3" data-seat="3">
+                  <div class="seat-badge"></div>
+                  <div class="seat-info-card glass-panel">
+                    <div class="seat-header">
+                      <span class="seat-name" id="name-3">Bot-3</span>
+                      <span class="action-bubble hidden" id="action-bubble-3">CALL</span>
+                    </div>
+                    <div class="seat-stack font-mono" id="stack-val-3">$1,000</div>
+                    <div class="seat-bet font-mono" id="bet-val-3">$0</div>
+                    <div class="seat-cards-container" id="cards-3"></div>
+                  </div>
+                </div>
+
+                <!-- Seat 4: Bot (Right Top) -->
+                <div class="player-seat seat-position-4" id="seat-4" data-seat="4">
+                  <div class="seat-badge"></div>
+                  <div class="seat-info-card glass-panel">
+                    <div class="seat-header">
+                      <span class="seat-name" id="name-4">Bot-4</span>
+                      <span class="action-bubble hidden" id="action-bubble-4">CHECK</span>
+                    </div>
+                    <div class="seat-stack font-mono" id="stack-val-4">$1,000</div>
+                    <div class="seat-bet font-mono" id="bet-val-4">$0</div>
+                    <div class="seat-cards-container" id="cards-4"></div>
+                  </div>
+                </div>
+
+                <!-- Seat 5: Bot (Right Bottom) -->
+                <div class="player-seat seat-position-5" id="seat-5" data-seat="5">
+                  <div class="seat-badge"></div>
+                  <div class="seat-info-card glass-panel">
+                    <div class="seat-header">
+                      <span class="seat-name" id="name-5">Bot-5</span>
+                      <span class="action-bubble hidden" id="action-bubble-5">FOLD</span>
+                    </div>
+                    <div class="seat-stack font-mono" id="stack-val-5">$1,000</div>
+                    <div class="seat-bet font-mono" id="bet-val-5">$0</div>
+                    <div class="seat-cards-container" id="cards-5"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Player Controls Bar -->
+          <div class="player-controls-bar hidden" id="player-controls">
+            <div class="controls-glow-bg"></div>
+            <div class="controls-content">
+              <!-- Fold Button -->
+              <button class="action-btn btn-fold" id="btn-fold">
+                <span class="btn-label">FOLD</span>
+              </button>
+              
+              <!-- Check/Call Button -->
+              <button class="action-btn btn-call" id="btn-call">
+                <span class="btn-label" id="lbl-btn-call">CALL</span>
+                <span class="btn-subtext font-mono" id="lbl-btn-call-val">$0</span>
+              </button>
+              
+              <!-- Raise Action Container -->
+              <div class="raise-action-container">
+                <button class="action-btn btn-raise" id="btn-raise">
+                  <span class="btn-label">RAISE</span>
+                  <span class="btn-subtext font-mono" id="lbl-btn-raise-val">$40</span>
+                </button>
+                
+                <!-- Raise Adjustment Panel (expands on raise hover or focus) -->
+                <div class="raise-slider-panel glass-panel" id="raise-slider-panel">
+                  <div class="raise-values font-mono">
+                    <span class="min-raise-val" id="lbl-min-raise">$40</span>
+                    <input type="number" class="raise-input font-mono" id="input-raise-val" min="40" step="10">
+                    <span class="max-raise-val" id="lbl-max-raise">$1,000</span>
+                  </div>
+                  <input type="range" class="aether-slider" id="slider-raise-val" min="40" max="1000" step="10">
+                  <div class="quick-raise-buttons">
+                    <button class="btn-quick-raise" id="btn-raise-min">MIN</button>
+                    <button class="btn-quick-raise" id="btn-raise-half">1/2 POTE</button>
+                    <button class="btn-quick-raise" id="btn-raise-pot">POTE</button>
+                    <button class="btn-quick-raise" id="btn-raise-allin">ALL-IN</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Setting/Lobby Overlay -->
+          <div class="board-overlay" id="start-overlay">
+            <div class="overlay-content start-lobby glass-panel">
+              <h2>AETHER POKER</h2>
+              <p class="lobby-subtitle font-mono">Simulador de Hold'em e Rede Neural</p>
+              
+              <div class="lobby-config-grid">
+                <!-- Modo de Jogo -->
+                <div class="config-row">
+                  <label class="config-label">MODO DE JOGO</label>
+                  <div class="toggle-buttons-group">
+                    <button class="lobby-toggle-btn active" id="btn-lobby-mode-cash" data-mode="cash">Cash Game</button>
+                    <button class="lobby-toggle-btn" id="btn-lobby-mode-tournament" data-mode="tournament">Torneio Sit&Go</button>
+                  </div>
+                </div>
+
+                <!-- Quantidade de Bots -->
+                <div class="config-row">
+                  <label class="config-label">OPONENTES BOTS</label>
+                  <div class="speed-selector">
+                    <button class="qty-btn" data-qty="1">1 Bot</button>
+                    <button class="qty-btn" data-qty="2">2 Bots</button>
+                    <button class="qty-btn active" data-qty="3">3 Bots</button>
+                    <button class="qty-btn" data-qty="4">4 Bots</button>
+                    <button class="qty-btn" data-qty="5">5 Bots</button>
+                  </div>
+                </div>
+
+                <!-- Nivel IA -->
+                <div class="config-row">
+                  <label class="config-label">ESTRATÉGIA DA IA</label>
+                  <div class="toggle-buttons-group">
+                    <button class="lobby-toggle-btn active" id="btn-lobby-ai-smart" data-ai="smart">IA Inteligente</button>
+                    <button class="lobby-toggle-btn" id="btn-lobby-ai-random" data-ai="random">IA Aleatória</button>
+                  </div>
+                </div>
+
+                <!-- Stack Inicial -->
+                <div class="config-row">
+                  <label class="config-label">STACK INICIAL</label>
+                  <div class="speed-selector">
+                    <button class="stack-btn" data-stack="500">$500</button>
+                    <button class="stack-btn active" data-stack="1000">$1,000</button>
+                    <button class="stack-btn" data-stack="2000">$2,000</button>
+                    <button class="stack-btn" data-stack="5000">$5,000</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lobby-actions">
+                <button class="aether-btn btn-primary btn-lobby-start" id="btn-start">INICIAR PARTIDA</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Between Hands Overlay (Show winner, details, and Next Hand button) -->
+          <div class="board-overlay hidden" id="next-hand-overlay">
+            <div class="overlay-content next-hand-lobby glass-panel">
+              <h2 id="next-hand-title">MÃO FINALIZADA</h2>
+              <div class="winner-message font-mono" id="next-hand-message">Jogador venceu com Dois Pares!</div>
+              
+              <div class="payout-summary" id="payout-summary">
+                <!-- Dynamic display of payouts -->
+              </div>
+              
+              <div class="lobby-actions">
+                <button class="aether-btn btn-primary" id="btn-next-hand">PRÓXIMA MÃO</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game Over Modal (inside board) -->
+          <div class="board-overlay hidden" id="gameover-overlay">
+            <div class="overlay-content gameover-lobby glass-panel">
+              <div class="gameover-status-icon" id="gameover-status-icon">💀</div>
+              <h2 id="gameover-heading">Fim da Simulação</h2>
+              <p id="gameover-message">Você ficou sem fichas!</p>
+              
+              <div class="stats-summary" id="gameover-stats-summary">
+                <!-- Dynamically populated summary -->
+              </div>
+              
+              <div class="modal-footer-buttons">
+                <button class="aether-btn btn-primary" id="btn-retry">JOGAR NOVAMENTE</button>
+                <button class="aether-btn btn-secondary" onclick="location.href='../../'">FECHAR</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer: Keyboard Shortcuts and High Scores -->
+    <footer class="aether-footer">
+      <div class="footer-shortcuts">
+        <span class="shortcut-item"><kbd>F</kbd> Fold</span>
+        <span class="shortcut-item"><kbd>C</kbd> Call / Check</span>
+        <span class="shortcut-item"><kbd>R</kbd> Raise</span>
+        <span class="shortcut-item"><kbd>Setas ↑↓</kbd> Ajustar Slider de Raise</span>
+      </div>
+
+      <div class="high-scores-row">
+        <div class="record-item">
+          <span class="record-label">MAIOR STACK POKER:</span>
+          <span class="record-value" id="val-record-stack">$0</span>
+        </div>
+        <div class="record-divider">|</div>
+        <div class="record-item">
+          <span class="record-label">CASH GAMES V/D:</span>
+          <span class="record-value" id="val-record-cash">0 / 0</span>
+        </div>
+        <div class="record-divider">|</div>
+        <div class="record-item">
+          <span class="record-label">TORNEIOS V/D:</span>
+          <span class="record-value" id="val-record-tournament">0 / 0</span>
+        </div>
+      </div>
+      
+      <div class="footer-actions">
+        <button class="aether-btn btn-secondary btn-sm" id="btn-reset-scores">Zerar Placar</button>
+      </div>
+
+      <div class="footer-copyright">
+        © 2026 AETHER LABS. DESIGN INSPIRADO EM RAYCAST.COM.
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- How to Play Modal (Info) -->
+  <div class="modal-overlay hidden" id="modal-info">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">COMO FUNCIONA O AETHER POKER</span>
+        <button class="modal-close" id="modal-info-close">×</button>
+      </div>
+      <div class="modal-body">
+        <h3>Modos de Execução</h3>
+        <ul>
+          <li><strong>Cash Game (Mesa Infinita):</strong> Você define seu stack inicial e joga rodadas contínuas com blinds fixas. Se falir, pode recarregar seu stack. Se sair com lucro, sua pontuação máxima de stack é registrada!</li>
+          <li><strong>Torneio Sit & Go:</strong> Você e todos os bots começam com o mesmo stack. As blinds dobram a cada 5 mãos. Jogadores que perdem todas as fichas são eliminados permanentemente. Vença todos para vencer o torneio!</li>
+        </ul>
+
+        <h3>A Inteligência Artificial dos Bots</h3>
+        <p>A IA analisa a mesa e o pote de forma probabilística:</p>
+        <ol>
+          <li><strong>Força da Mão (Hand Strength):</strong> Avalia a combinação atual e simula a força pré-flop (0 a 1) e pós-flop contra combinações possíveis.</li>
+          <li><strong>Pot Odds:</strong> Calcula se o valor a pagar pelo Call compensa matematicamente o prêmio do pote acumulado.</li>
+          <li><strong>Personalidades (IA Inteligente):</strong>
+            <ul>
+              <li><strong>Tubarão (Shark):</strong> Tight-aggressive. Joga apenas mãos fortes, mas aumenta apostas de forma agressiva.</li>
+              <li><strong>Peixe (Fish):</strong> Loose-aggressive. Entra em muitas mãos e tenta blefar no River (25% de chance).</li>
+              <li><strong>Estação (Caller):</strong> Passivo. Não aumenta apostas, mas adora dar Call se tiver qualquer chance.</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>Controles do Jogador</h3>
+        <table class="controls-table">
+          <thead>
+            <tr>
+              <th>Tecla / Botão</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><kbd>F</kbd></td>
+              <td>Fold (Desistir da mão)</td>
+            </tr>
+            <tr>
+              <td><kbd>C</kbd></td>
+              <td>Check / Call (Igualar aposta)</td>
+            </tr>
+            <tr>
+              <td><kbd>R</kbd></td>
+              <td>Raise (Abrir/Aumentar aposta)</td>
+            </tr>
+            <tr>
+              <td><kbd>Setas ↑↓</kbd></td>
+              <td>Aumenta ou diminui o valor do slider de Raise</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="modal-footer">
+          <button class="aether-btn btn-primary" id="btn-info-close-ok">ENTENDIDO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal -->
+  <div class="modal-overlay hidden" id="modal-confirm">
+    <div class="modal-card modal-confirm-card">
+      <div class="modal-header confirm-header">
+        <span class="modal-title">CONFIRMAR AÇÃO</span>
+      </div>
+      <div class="modal-body text-center">
+        <div class="confirm-icon">⚠️</div>
+        <h3 id="confirm-heading">Zerar pontuações?</h3>
+        <p id="confirm-message">Esta ação apagará permanentemente o recorde do servidor.</p>
+        <div class="modal-footer-buttons">
+          <button class="aether-btn btn-danger" id="btn-confirm-yes">CONFIRMAR</button>
+          <button class="aether-btn btn-secondary" id="btn-confirm-no">CANCELAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="../shared/js/retro-audio.js?v=1.0.1"></script>
+  <script src="js/sounds.js?v=1.0.1"></script>
+  <script src="js/evaluator.js?v=1.0.1"></script>
+  <script src="js/ai.js?v=1.0.1"></script>
+  <script src="js/poker.js?v=1.0.1"></script>
+</body>
+</html>

@@ -147,6 +147,11 @@
       border-color: var(--color-tictactoe);
       box-shadow: 0 12px 30px var(--color-tictactoe-glow);
     }
+    .game-card.poker:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-poker);
+      box-shadow: 0 12px 30px var(--color-poker-glow);
+    }
 
     .game-card .top-section {
       position: relative;
@@ -174,6 +179,7 @@
     .game-card.tetris h2 { color: #38bdf8; }
     .game-card.snake h2 { color: #34d399; }
     .game-card.tictactoe h2 { color: #fb7185; }
+    .game-card.poker h2 { color: #34d399; }
 
     .game-card p.description {
       font-size: 0.975rem;
@@ -255,6 +261,15 @@
     .game-card.tictactoe .btn-launch:hover {
       background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
       box-shadow: 0 6px 16px rgba(225, 29, 72, 0.5);
+    }
+    
+    .game-card.poker .btn-launch {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+    .game-card.poker .btn-launch:hover {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.5);
     }
 
     .global-stats-container {
@@ -455,6 +470,22 @@
         Jogar Tic-Tac-Toe
       </a>
     </div>
+
+    <!-- Aether Poker -->
+    <div class="game-card poker" onclick="location.href='games/poker/'" style="--color-poker: #10b981; --color-poker-glow: rgba(16, 185, 129, 0.3);">
+      <div class="top-section">
+        <div class="icon-box">🃏</div>
+        <h2>Aether Poker</h2>
+        <p class="description">Jogue Texas Hold'em contra bots com IA inteligente e personalidades customizadas. Escolha entre Cash Game ou Torneio Sit & Go, com stacks e blinds customizáveis.</p>
+      </div>
+      <div class="game-stats" id="stats-poker-txt">
+        Cash - Vitórias: -- | Derrotas: --<br>
+        Torneio - Vitórias: -- | Maior Stack: --
+      </div>
+      <a href="games/poker/" class="btn-launch" onclick="event.stopPropagation()">
+        Jogar Aether Poker
+      </a>
+    </div>
   </main>
 
   <section class="global-stats-container">
@@ -526,9 +557,16 @@
             Empates: ${tictactoe.empates}
           `;
 
+          // Render Poker stats
+          const poker = db.poker || { cash: { vitorias: 0, derrotas: 0 }, torneio: { vitorias: 0, derrotas: 0 }, maior_stack: 0 };
+          document.getElementById('stats-poker-txt').innerHTML = `
+            Cash - V: ${poker.cash.vitorias} | D: ${poker.cash.derrotas}<br>
+            Torneio - V: ${poker.torneio.vitorias} | Maior Stack: $${poker.maior_stack.toLocaleString('pt-BR')}
+          `;
+
           // Global dashboard stats calculation
-          const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias;
-          const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas;
+          const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias + poker.cash.vitorias + poker.torneio.vitorias;
+          const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas + poker.cash.derrotas + poker.torneio.derrotas;
           const totalGames = totalWins + totalLosses + chess.empates + tictactoe.empates + (snake.partidas_jogadas || 0);
           
           document.getElementById('dashboard-total-wins').textContent = totalWins;
@@ -556,6 +594,7 @@
         await fetch('/api/score?game=tetris', { method: 'DELETE' });
         await fetch('/api/score?game=snake', { method: 'DELETE' });
         await fetch('/api/score?game=tictactoe', { method: 'DELETE' });
+        await fetch('/api/score?game=poker', { method: 'DELETE' });
         loadStats();
       } catch (err) {
         console.error('Erro ao resetar scores.', err);

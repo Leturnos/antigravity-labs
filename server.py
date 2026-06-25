@@ -38,6 +38,17 @@ DEFAULT_SCORES = {
         "vitorias": 0,
         "derrotas": 0,
         "empates": 0
+    },
+    "poker": {
+        "cash": {
+            "vitorias": 0,
+            "derrotas": 0
+        },
+        "torneio": {
+            "vitorias": 0,
+            "derrotas": 0
+        },
+        "maior_stack": 0
     }
 }
 
@@ -200,6 +211,32 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({"success": True, "scores": db['tictactoe']}).encode('utf-8'))
                     
+                elif game == 'poker':
+                    mode = data.get('mode') # 'cash' or 'torneio'
+                    result = data.get('result') # 'win' or 'loss'
+                    stack = data.get('stack', 0)
+                    
+                    if mode == 'cash':
+                        if result == 'win':
+                            db['poker']['cash']['vitorias'] += 1
+                        elif result == 'loss':
+                            db['poker']['cash']['derrotas'] += 1
+                    elif mode in ('torneio', 'tournament'):
+                        if result == 'win':
+                            db['poker']['torneio']['vitorias'] += 1
+                        elif result == 'loss':
+                            db['poker']['torneio']['derrotas'] += 1
+                            
+                    if stack > db['poker'].get('maior_stack', 0):
+                        db['poker']['maior_stack'] = stack
+                        
+                    save_db(db)
+                    
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": True, "scores": db['poker']}).encode('utf-8'))
+                    
                 else:
                     self.send_response(400)
                     self.end_headers()
@@ -245,6 +282,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         super().end_headers()
 
     def do_OPTIONS(self):
