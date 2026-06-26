@@ -18,6 +18,7 @@ Thumbs.db
 *.swp
 
 # Database
+*.db
 scores_db.json
 
 # Scratch folder
@@ -25,3 +26,7 @@ scratch/
 
 # Design-md folder
 design-md/
+
+# Virtual environment
+.venv/
+.env

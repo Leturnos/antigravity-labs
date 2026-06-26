@@ -13,7 +13,8 @@ Este repositório foi estruturado para organizar os projetos por escopo de desen
 ```text
 antigravity-labs/
 ├── ai/          # Projetos e modelos envolvendo Inteligência Artificial (.gitkeep)
-├── backend/     # APIs, microsserviços e utilitários de servidor (.gitkeep)
+├── backend/     # APIs, microsserviços e utilitários de servidor
+│   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
 │   ├── chess/   # Aether Chess - Xadrez Premium com IA local
 │   ├── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
@@ -41,6 +42,8 @@ flowchart LR
     Games --> Tetris["🌌 Aether Tetris"]
     Games --> TicTacToe["❌ Aether Tic-Tac-Toe"]
 
+    Backend --> LibraryAPI["📚 Library API"]
+
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
     style Games fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff
     style Backend fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
@@ -52,6 +55,7 @@ flowchart LR
     style Snake fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style Tetris fill:#5e6ad2,stroke:#fff,stroke-width:1px,color:#fff
     style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
+    style LibraryAPI fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
 ---
@@ -70,6 +74,12 @@ flowchart LR
 | **Aether Tic-Tac-Toe ❌** | [games/tictactoe](./games/tictactoe) | `Concluído` | Jogo da velha com IA Minimax e Poda Alpha-Beta, modo PvP local, simulação e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 
 > Para detalhes completos sobre os jogos, consulte suas respectivas documentações.
+
+### Backend (APIs e Microsserviços)
+
+| Projeto | Caminho | Status | Descrição | Tecnologias |
+| :--- | :--- | :--- | :--- | :--- |
+| **Library API 📚** | [backend/library_api](./backend/library_api) | `Em Desenvolvimento (Etapa 1)` | API RESTful para gerenciamento de biblioteca (livros, autores, categorias). | Python, FastAPI, SQLite, SQLAlchemy, Pytest |
 
 ---
 
