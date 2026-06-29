@@ -62,22 +62,24 @@ backend/library_api/
 ├── database.py       # Configuração da conexão SQLite e instanciamento da sessão ORM
 ├── models.py         # Modelos de tabelas SQLAlchemy (Authors, Categories, Books, Users)
 ├── schemas.py        # Modelos Pydantic para tipagem e validação nas rotas (inclui Users)
-├── security.py       # Utilidades de segurança e criptografia de senhas (bcrypt)
+├── security.py       # Utilidades de segurança, hashing (bcrypt) e tokens JWT
 ├── crud.py           # Funções auxiliares contendo queries e lógica de persistência (com hashing de senhas)
 ├── main.py           # Inicialização do FastAPI, tabelas e roteadores
-├── requirements.txt  # Lista de dependências do projeto (inclui passlib[bcrypt])
+├── requirements.txt  # Lista de dependências do projeto (FastAPI, SQLAlchemy, PyJWT, passlib, etc.)
 ├── routes/           # Módulo de controllers / rotas da API
 │   ├── __init__.py
+│   ├── auth.py       # Login e geração de Token JWT
 │   ├── authors.py    # CRUD de Autores
 │   ├── categories.py # CRUD de Categorias
 │   ├── books.py      # CRUD de Livros
 │   └── users.py      # CRUD de Usuários/Leitores
 └── tests/            # Suíte de testes automatizados (TDD)
     ├── conftest.py   # Configuração de banco em memória sqlite para isolamento
+    ├── test_auth.py  # Testes de autenticação, login e controle de papéis (RBAC)
     ├── test_database.py
     ├── test_models.py
     ├── test_schemas.py
-    ├── test_security.py
+    ├── test_security.py # Testes locais de hashing de senha
     ├── test_crud.py
     ├── test_routes.py
     ├── test_users.py
@@ -86,35 +88,38 @@ backend/library_api/
 
 ---
 
-## 🗺️ Endpoints Disponíveis (Etapas 1 & 2)
+## 🗺️ Endpoints Disponíveis (Etapas 1, 2 & 3)
+
+### Autenticação (`/api/v1/auth`)
+* `POST /login` - Recebe e-mail (`username`) e senha (Form Data), retorna o Token de Acesso JWT.
 
 ### Autores (`/api/v1/authors`)
-* `POST /` - Cria um novo autor.
+* `POST /` `[Protegido - Autenticado]` - Cria um novo autor.
 * `GET /` - Retorna a lista de autores (paginada).
 * `GET /{author_id}` - Retorna detalhes de um autor específico.
-* `PUT /{author_id}` - Atualiza um autor.
-* `DELETE /{author_id}` - Exclui um autor (bloqueado se houver livros associados).
+* `PUT /{author_id}` `[Protegido - Admin]` - Atualiza um autor.
+* `DELETE /{author_id}` `[Protegido - Admin]` - Exclui um autor (bloqueado se houver livros associados).
 
 ### Categorias (`/api/v1/categories`)
-* `POST /` - Cria uma nova categoria.
+* `POST /` `[Protegido - Admin]` - Cria uma nova categoria.
 * `GET /` - Retorna a lista de categorias.
 * `GET /{category_id}` - Retorna detalhes de uma categoria.
-* `PUT /{category_id}` - Atualiza uma categoria.
-* `DELETE /{category_id}` - Exclui uma categoria (bloqueado se houver livros associados).
+* `PUT /{category_id}` `[Protegido - Admin]` - Atualiza uma categoria.
+* `DELETE /{category_id}` `[Protegido - Admin]` - Exclui uma categoria (bloqueado se houver livros associados).
 
 ### Livros (`/api/v1/books`)
-* `POST /` - Cria um novo livro associado a um autor e categoria existentes.
+* `POST /` `[Protegido - Autenticado]` - Cria um novo livro associado a um autor e categoria existentes.
 * `GET /` - Retorna a lista de livros (suporta filtros de busca por título, autor e categoria).
 * `GET /{book_id}` - Retorna detalhes do livro e aninha os objetos completos do Autor e Categoria associados.
-* `PUT /{book_id}` - Atualiza os dados do livro.
-* `DELETE /{book_id}` - Remove o livro do catálogo.
+* `PUT /{book_id}` `[Protegido - Admin]` - Atualiza os dados do livro.
+* `DELETE /{book_id}` `[Protegido - Admin]` - Remove o livro do catálogo.
 
 ### Usuários (`/api/v1/users`)
-* `POST /` - Cria um novo usuário/leitor (com hash bcrypt automático da senha).
-* `GET /` - Retorna a lista de todos os usuários (paginada).
-* `GET /{user_id}` - Retorna detalhes de um usuário específico (não expõe o hash ou a senha).
-* `PUT /{user_id}` - Atualiza dados do usuário (nome, e-mail, senha).
-* `DELETE /{user_id}` - Deleta um usuário do sistema.
+* `POST /` (Cadastro de Leitores) - Cria um novo usuário/leitor (com hash bcrypt automático da senha).
+* `GET /` `[Protegido - Admin]` - Retorna a lista de todos os usuários (paginada).
+* `GET /{user_id}` `[Protegido - Perfil Próprio ou Admin]` - Retorna detalhes de um usuário específico.
+* `PUT /{user_id}` `[Protegido - Perfil Próprio ou Admin]` - Atualiza dados do usuário (nome, e-mail, senha).
+* `DELETE /{user_id}` `[Protegido - Admin]` - Deleta um usuário do sistema.
 
 ---
 
@@ -122,5 +127,5 @@ backend/library_api/
 
 * [x] **Etapa 1:** CRUD básico de Livros, Autores e Categorias com SQLite e testes integrados.
 * [x] **Etapa 2:** Cadastro de Leitores/Membros da biblioteca.
-* [ ] **Etapa 3:** Autenticação JWT e proteção de rotas administrativas.
+* [x] **Etapa 3:** Autenticação JWT e proteção de rotas administrativas.
 * [ ] **Etapa 4:** Registro, Devolução e Controle de Empréstimos de livros com atualização automática de estoque.

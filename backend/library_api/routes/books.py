@@ -1,14 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
+from security import get_current_active_user, check_admin_role
 import schemas
 import crud
+import models
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
+
 @router.post("/", response_model=schemas.BookResponse)
-def create_book(book: schemas.BookCreate, db: Session = Depends(get_db)):
+def create_book(
+    book: schemas.BookCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_active_user)
+):
     db_author = crud.get_author(db, author_id=book.author_id)
     if not db_author:
         raise HTTPException(status_code=400, detail="Author does not exist")
@@ -23,6 +30,7 @@ def create_book(book: schemas.BookCreate, db: Session = Depends(get_db)):
             
     return crud.create_book(db=db, book=book)
 
+
 @router.get("/", response_model=List[schemas.BookResponse])
 def read_books(
     skip: int = 0, 
@@ -34,6 +42,7 @@ def read_books(
 ):
     return crud.get_books(db, skip=skip, limit=limit, title=title, author_id=author_id, category_id=category_id)
 
+
 @router.get("/{book_id}", response_model=schemas.BookDetailResponse)
 def read_book(book_id: int, db: Session = Depends(get_db)):
     db_book = crud.get_book(db, book_id=book_id)
@@ -41,8 +50,14 @@ def read_book(book_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Book not found")
     return db_book
 
+
 @router.put("/{book_id}", response_model=schemas.BookResponse)
-def update_book(book_id: int, book: schemas.BookUpdate, db: Session = Depends(get_db)):
+def update_book(
+    book_id: int, 
+    book: schemas.BookUpdate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(check_admin_role)
+):
     if book.author_id:
         db_author = crud.get_author(db, author_id=book.author_id)
         if not db_author:
@@ -57,8 +72,13 @@ def update_book(book_id: int, book: schemas.BookUpdate, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Book not found")
     return db_book
 
+
 @router.delete("/{book_id}")
-def delete_book(book_id: int, db: Session = Depends(get_db)):
+def delete_book(
+    book_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(check_admin_role)
+):
     success = crud.delete_book(db, book_id=book_id)
     if not success:
         raise HTTPException(status_code=404, detail="Book not found")
