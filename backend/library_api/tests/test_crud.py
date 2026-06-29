@@ -1,4 +1,3 @@
-import pytest
 from schemas import AuthorCreate, CategoryCreate, BookCreate, UserCreate, UserUpdate
 import crud
 

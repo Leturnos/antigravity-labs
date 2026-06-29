@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from schemas import AuthorCreate, CategoryCreate, BookCreate, BookDetailResponse, UserCreate, UserResponse
+from schemas import AuthorCreate, BookDetailResponse, UserCreate, UserResponse
 
 def test_author_schema_validation():
     with pytest.raises(ValidationError):

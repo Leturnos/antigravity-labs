@@ -1,10 +1,13 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from database import Base, get_db
+from database import get_db
 from routes.authors import router as authors_router
 from routes.categories import router as categories_router
 from routes.books import router as books_router
+
+import models
+from security import get_current_active_user, check_admin_role
 
 # Setup test app
 app = FastAPI()
@@ -19,7 +22,13 @@ def client(db_session):
             yield db_session
         finally:
             pass
+    
+    def mock_get_current_user():
+        return models.User(id=1, email="admin@example.com", name="Admin User", role="admin", is_active=True)
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_active_user] = mock_get_current_user
+    app.dependency_overrides[check_admin_role] = mock_get_current_user
     yield TestClient(app)
     app.dependency_overrides.clear()
 

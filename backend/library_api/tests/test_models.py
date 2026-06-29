@@ -1,4 +1,3 @@
-import pytest
 from models import Author, Category, Book, User
 
 def test_create_and_link_models(db_session):
