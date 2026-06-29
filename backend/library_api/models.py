@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
+
 
 class Author(Base):
     __tablename__ = "authors"
@@ -11,6 +12,7 @@ class Author(Base):
 
     books = relationship("Book", back_populates="author", cascade="all, delete-orphan")
 
+
 class Category(Base):
     __tablename__ = "categories"
 
@@ -19,6 +21,7 @@ class Category(Base):
     description = Column(String, nullable=True)
 
     books = relationship("Book", back_populates="category", cascade="all, delete-orphan")
+
 
 class Book(Base):
     __tablename__ = "books"
@@ -33,3 +36,14 @@ class Book(Base):
 
     author = relationship("Author", back_populates="books")
     category = relationship("Category", back_populates="books")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, default="reader", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)

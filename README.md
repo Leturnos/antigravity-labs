@@ -79,7 +79,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
-| **Library API 📚** | [backend/library_api](./backend/library_api) | `Em Desenvolvimento (Etapa 1)` | API RESTful para gerenciamento de biblioteca (livros, autores, categorias). | Python, FastAPI, SQLite, SQLAlchemy, Pytest |
+| **Library API 📚** | [backend/library_api](./backend/library_api) | `Em Desenvolvimento (Etapa 2)` | API RESTful para gerenciamento de biblioteca (livros, autores, categorias). | Python, FastAPI, SQLite, SQLAlchemy, Pytest |
 
 ---
 

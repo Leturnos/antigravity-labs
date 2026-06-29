@@ -1,5 +1,5 @@
 import pytest
-from models import Author, Category, Book
+from models import Author, Category, Book, User
 
 def test_create_and_link_models(db_session):
     # Create Author
@@ -29,3 +29,20 @@ def test_create_and_link_models(db_session):
     assert book.category.name == "Fantasy"
     assert author.books[0].title == "Harry Potter and the Philosopher's Stone"
     assert category.books[0].title == "Harry Potter and the Philosopher's Stone"
+
+def test_create_user_model(db_session):
+    user = User(
+        name="John Doe",
+        email="john@example.com",
+        hashed_password="fakehashedpassword",
+        role="reader",
+        is_active=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    
+    db_user = db_session.query(User).filter(User.email == "john@example.com").first()
+    assert db_user is not None
+    assert db_user.name == "John Doe"
+    assert db_user.role == "reader"
+    assert db_user.is_active is True

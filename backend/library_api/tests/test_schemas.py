@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from schemas import AuthorCreate, CategoryCreate, BookCreate, BookDetailResponse
+from schemas import AuthorCreate, CategoryCreate, BookCreate, BookDetailResponse, UserCreate, UserResponse
 
 def test_author_schema_validation():
     with pytest.raises(ValidationError):
@@ -27,3 +27,16 @@ def test_book_detail_response_schema():
     )
     assert book_detail.author.name == "Tolkien"
     assert book_detail.category.name == "Fantasy"
+
+def test_user_schema_validation():
+    # email must be valid
+    with pytest.raises(ValidationError):
+        UserCreate(name="John", email="invalid-email", password="123")
+        
+    user_in = UserCreate(name="John", email="john@example.com", password="mysecretpassword", role="reader")
+    assert user_in.password == "mysecretpassword"
+
+    user_out = UserResponse(id=1, name="John", email="john@example.com", role="reader", is_active=True)
+    assert hasattr(user_out, "id")
+    assert not hasattr(user_out, "password")
+    assert not hasattr(user_out, "hashed_password")

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional, List
 
 # Author Schemas
@@ -65,3 +65,25 @@ class BookResponse(BookBase):
 class BookDetailResponse(BookResponse):
     author: AuthorResponse
     category: CategoryResponse
+
+# User Schemas
+class UserBase(BaseModel):
+    name: str
+    email: EmailStr
+    role: Optional[str] = "reader"
+    is_active: Optional[bool] = True
+
+class UserCreate(UserBase):
+    password: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class UserResponse(UserBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)

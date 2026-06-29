@@ -60,29 +60,33 @@ uvicorn main:app --reload --port 8000
 ```text
 backend/library_api/
 ├── database.py       # Configuração da conexão SQLite e instanciamento da sessão ORM
-├── models.py         # Modelos de tabelas SQLAlchemy (Authors, Categories, Books)
-├── schemas.py        # Modelos Pydantic para tipagem e validação nas rotas
-├── crud.py           # Funções auxiliares contendo queries e lógica de persistência
-├── main.py           # Inicialização do FastAPI e importação de rotas e tabelas
-├── requirements.txt  # Lista de dependências do projeto
+├── models.py         # Modelos de tabelas SQLAlchemy (Authors, Categories, Books, Users)
+├── schemas.py        # Modelos Pydantic para tipagem e validação nas rotas (inclui Users)
+├── security.py       # Utilidades de segurança e criptografia de senhas (bcrypt)
+├── crud.py           # Funções auxiliares contendo queries e lógica de persistência (com hashing de senhas)
+├── main.py           # Inicialização do FastAPI, tabelas e roteadores
+├── requirements.txt  # Lista de dependências do projeto (inclui passlib[bcrypt])
 ├── routes/           # Módulo de controllers / rotas da API
 │   ├── __init__.py
 │   ├── authors.py    # CRUD de Autores
 │   ├── categories.py # CRUD de Categorias
-│   └── books.py      # CRUD de Livros
+│   ├── books.py      # CRUD de Livros
+│   └── users.py      # CRUD de Usuários/Leitores
 └── tests/            # Suíte de testes automatizados (TDD)
     ├── conftest.py   # Configuração de banco em memória sqlite para isolamento
     ├── test_database.py
     ├── test_models.py
     ├── test_schemas.py
+    ├── test_security.py
     ├── test_crud.py
     ├── test_routes.py
+    ├── test_users.py
     └── test_main.py
 ```
 
 ---
 
-## 🗺️ Endpoints Disponíveis (Etapa 1)
+## 🗺️ Endpoints Disponíveis (Etapas 1 & 2)
 
 ### Autores (`/api/v1/authors`)
 * `POST /` - Cria um novo autor.
@@ -105,11 +109,18 @@ backend/library_api/
 * `PUT /{book_id}` - Atualiza os dados do livro.
 * `DELETE /{book_id}` - Remove o livro do catálogo.
 
+### Usuários (`/api/v1/users`)
+* `POST /` - Cria um novo usuário/leitor (com hash bcrypt automático da senha).
+* `GET /` - Retorna a lista de todos os usuários (paginada).
+* `GET /{user_id}` - Retorna detalhes de um usuário específico (não expõe o hash ou a senha).
+* `PUT /{user_id}` - Atualiza dados do usuário (nome, e-mail, senha).
+* `DELETE /{user_id}` - Deleta um usuário do sistema.
+
 ---
 
 ## 📈 Planejamento de Desenvolvimento (Próximas Etapas)
 
 * [x] **Etapa 1:** CRUD básico de Livros, Autores e Categorias com SQLite e testes integrados.
-* [ ] **Etapa 2:** Cadastro de Leitores/Membros da biblioteca.
+* [x] **Etapa 2:** Cadastro de Leitores/Membros da biblioteca.
 * [ ] **Etapa 3:** Autenticação JWT e proteção de rotas administrativas.
 * [ ] **Etapa 4:** Registro, Devolução e Controle de Empréstimos de livros com atualização automática de estoque.
