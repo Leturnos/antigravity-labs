@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean, Date
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import date
+
 
 
 class Author(Base):
@@ -47,3 +49,17 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="reader", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+
+
+class Loan(Base):
+    __tablename__ = "loans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    loan_date = Column(Date, nullable=False, default=date.today)
+    due_date = Column(Date, nullable=False)
+    returned_date = Column(Date, nullable=True)
+
+    user = relationship("User")
+    book = relationship("Book")

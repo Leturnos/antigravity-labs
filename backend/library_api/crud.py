@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Optional
 import models
 import schemas
 from security import get_password_hash
@@ -159,3 +160,78 @@ def delete_user(db: Session, user_id: int):
     db.delete(db_user)
     db.commit()
     return True
+
+
+# Loan CRUD
+def get_loan(db: Session, loan_id: int):
+    return db.query(models.Loan).filter(models.Loan.id == loan_id).first()
+
+
+def get_loans(
+    db: Session, 
+    user_id: Optional[int] = None, 
+    book_id: Optional[int] = None, 
+    returned: Optional[bool] = None
+):
+    query = db.query(models.Loan)
+    if user_id is not None:
+        query = query.filter(models.Loan.user_id == user_id)
+    if book_id is not None:
+        query = query.filter(models.Loan.book_id == book_id)
+    if returned is not None:
+        if returned:
+            query = query.filter(models.Loan.returned_date.isnot(None))
+        else:
+            query = query.filter(models.Loan.returned_date.is_(None))
+    return query.all()
+
+
+def create_loan(db: Session, loan: schemas.LoanCreate) -> models.Loan:
+    from datetime import date, timedelta
+
+    db_book = db.query(models.Book).filter(models.Book.id == loan.book_id).first()
+    if not db_book:
+        raise ValueError("Book not found")
+        
+    if db_book.quantity <= 0:
+        raise ValueError("Book is out of stock")
+        
+    # Subtract stock
+    db_book.quantity -= 1
+    
+    # Automatic dates calculation
+    loan_date = date.today()
+    due_date = loan_date + timedelta(days=14)
+    
+    db_loan = models.Loan(
+        user_id=loan.user_id,
+        book_id=loan.book_id,
+        loan_date=loan_date,
+        due_date=due_date
+    )
+    db.add(db_loan)
+    db.commit()
+    db.refresh(db_loan)
+    return db_loan
+
+
+def return_loan(db: Session, loan_id: int) -> models.Loan:
+    from datetime import date
+
+    db_loan = db.query(models.Loan).filter(models.Loan.id == loan_id).first()
+    if not db_loan:
+        raise ValueError("Loan not found")
+        
+    if db_loan.returned_date is not None:
+        raise ValueError("Book already returned")
+        
+    db_loan.returned_date = date.today()
+    
+    # Increase stock
+    db_book = db.query(models.Book).filter(models.Book.id == db_loan.book_id).first()
+    if db_book:
+        db_book.quantity += 1
+        
+    db.commit()
+    db.refresh(db_loan)
+    return db_loan

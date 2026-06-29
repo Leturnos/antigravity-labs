@@ -60,8 +60,8 @@ uvicorn main:app --reload --port 8000
 ```text
 backend/library_api/
 ├── database.py       # Configuração da conexão SQLite e instanciamento da sessão ORM
-├── models.py         # Modelos de tabelas SQLAlchemy (Authors, Categories, Books, Users)
-├── schemas.py        # Modelos Pydantic para tipagem e validação nas rotas (inclui Users)
+├── models.py         # Modelos de tabelas SQLAlchemy (Authors, Categories, Books, Users, Loans)
+├── schemas.py        # Modelos Pydantic para tipagem e validação nas rotas (inclui Users, Loans)
 ├── security.py       # Utilidades de segurança, hashing (bcrypt) e tokens JWT
 ├── crud.py           # Funções auxiliares contendo queries e lógica de persistência (com hashing de senhas)
 ├── main.py           # Inicialização do FastAPI, tabelas e roteadores
@@ -72,7 +72,8 @@ backend/library_api/
 │   ├── authors.py    # CRUD de Autores
 │   ├── categories.py # CRUD de Categorias
 │   ├── books.py      # CRUD de Livros
-│   └── users.py      # CRUD de Usuários/Leitores
+│   ├── users.py      # CRUD de Usuários/Leitores
+│   └── loans.py      # Gestão de Empréstimos/Devoluções
 └── tests/            # Suíte de testes automatizados (TDD)
     ├── conftest.py   # Configuração de banco em memória sqlite para isolamento
     ├── test_auth.py  # Testes de autenticação, login e controle de papéis (RBAC)
@@ -83,12 +84,13 @@ backend/library_api/
     ├── test_crud.py
     ├── test_routes.py
     ├── test_users.py
+    ├── test_loans.py # Testes de empréstimos e regras de estoque/isolamento
     └── test_main.py
 ```
 
 ---
 
-## 🗺️ Endpoints Disponíveis (Etapas 1, 2 & 3)
+## 🗺️ Endpoints Disponíveis (Etapas 1, 2, 3 & 4)
 
 ### Autenticação (`/api/v1/auth`)
 * `POST /login` - Recebe e-mail (`username`) e senha (Form Data), retorna o Token de Acesso JWT.
@@ -121,6 +123,12 @@ backend/library_api/
 * `PUT /{user_id}` `[Protegido - Perfil Próprio ou Admin]` - Atualiza dados do usuário (nome, e-mail, senha).
 * `DELETE /{user_id}` `[Protegido - Admin]` - Deleta um usuário do sistema.
 
+### Empréstimos (`/api/v1/loans`)
+* `POST /` `[Protegido - Admin]` - Registra o empréstimo de um livro para um usuário (decrementa o estoque em 1, define o vencimento automático para +14 dias).
+* `POST /{loan_id}/return` `[Protegido - Admin]` - Registra a devolução do livro (incrementa o estoque em 1, define data de devolução efetiva).
+* `GET /` `[Protegido - Autenticado]` - Lista empréstimos. Se o usuário logado for `"reader"`, retorna **apenas os seus próprios empréstimos**. Se for `"admin"`, permite listar todos e aplicar filtros de pesquisa.
+* `GET /{loan_id}` `[Protegido - Perfil Próprio ou Admin]` - Detalhes de um empréstimo (aninha informações completas do usuário e livro).
+
 ---
 
 ## 📈 Planejamento de Desenvolvimento (Próximas Etapas)
@@ -128,4 +136,4 @@ backend/library_api/
 * [x] **Etapa 1:** CRUD básico de Livros, Autores e Categorias com SQLite e testes integrados.
 * [x] **Etapa 2:** Cadastro de Leitores/Membros da biblioteca.
 * [x] **Etapa 3:** Autenticação JWT e proteção de rotas administrativas.
-* [ ] **Etapa 4:** Registro, Devolução e Controle de Empréstimos de livros com atualização automática de estoque.
+* [x] **Etapa 4:** Registro, Devolução e Controle de Empréstimos de livros com atualização automática de estoque.

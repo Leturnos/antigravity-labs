@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
+from datetime import date
+
 
 # Author Schemas
 class AuthorBase(BaseModel):
@@ -87,3 +89,25 @@ class UserResponse(UserBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Loan Schemas
+class LoanCreate(BaseModel):
+    user_id: int
+    book_id: int
+
+
+class LoanResponse(BaseModel):
+    id: int
+    user_id: int
+    book_id: int
+    loan_date: date
+    due_date: date
+    returned_date: Optional[date] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LoanDetailResponse(LoanResponse):
+    book: BookResponse
+    user: UserResponse

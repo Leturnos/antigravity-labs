@@ -45,3 +45,36 @@ def test_create_user_model(db_session):
     assert db_user.name == "John Doe"
     assert db_user.role == "reader"
     assert db_user.is_active is True
+
+
+def test_loan_model_creation(db_session):
+    from datetime import date, timedelta
+    from models import Loan
+
+    # Setup dependencies
+    author = Author(name="Author Test")
+    category = Category(name="Category Test")
+    db_session.add(author)
+    db_session.add(category)
+    db_session.commit()
+    
+    book = Book(title="Book Test", author_id=author.id, category_id=category.id, quantity=5)
+    user = User(name="User Test", email="test_loan@example.com", hashed_password="pwd", role="reader")
+    db_session.add(book)
+    db_session.add(user)
+    db_session.commit()
+    
+    # Create Loan
+    loan = Loan(
+        user_id=user.id,
+        book_id=book.id,
+        loan_date=date.today(),
+        due_date=date.today() + timedelta(days=14)
+    )
+    db_session.add(loan)
+    db_session.commit()
+    
+    # Verify Relationships
+    assert loan.id is not None
+    assert loan.user.name == "User Test"
+    assert loan.book.title == "Book Test"

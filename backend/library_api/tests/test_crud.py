@@ -65,3 +65,46 @@ def test_user_crud_operations(db_session):
     updated_user = crud.update_user(db_session, db_user.id, user_up)
     assert updated_user.role == "reader"
     assert updated_user.hashed_password != old_hashed_password
+
+
+def test_loan_crud_workflow(db_session):
+    import pytest
+    from datetime import timedelta
+    from schemas import LoanCreate
+    import schemas
+    
+    # Setup user and book
+    author = crud.create_author(db_session, schemas.AuthorCreate(name="J.K. Rowling"))
+    category = crud.create_category(db_session, schemas.CategoryCreate(name="Fantasy"))
+    book = crud.create_book(db_session, schemas.BookCreate(
+        title="Harry Potter", isbn="12345", author_id=author.id, category_id=category.id, quantity=1
+    ))
+    user = crud.create_user(db_session, schemas.UserCreate(
+        name="Bob", email="bob@example.com", password="password", role="reader"
+    ))
+    
+    # Verify initial stock
+    assert book.quantity == 1
+    
+    # 1. Create Loan (Decreases Stock)
+    loan_in = LoanCreate(user_id=user.id, book_id=book.id)
+    loan = crud.create_loan(db_session, loan_in)
+    
+    assert loan.id is not None
+    assert loan.due_date == loan.loan_date + timedelta(days=14)
+    assert loan.returned_date is None
+    
+    # Re-fetch book to verify stock
+    db_session.refresh(book)
+    assert book.quantity == 0
+    
+    # 2. Try to borrow again when out of stock -> Should raise ValueError
+    with pytest.raises(ValueError, match="Book is out of stock"):
+        crud.create_loan(db_session, loan_in)
+        
+    # 3. Return Loan (Increases Stock)
+    returned_loan = crud.return_loan(db_session, loan.id)
+    assert returned_loan.returned_date is not None
+    
+    db_session.refresh(book)
+    assert book.quantity == 1
