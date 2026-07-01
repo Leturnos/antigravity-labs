@@ -369,19 +369,21 @@ class AetherTetris {
     document.getElementById('btn-reset-scores').addEventListener('click', () => this.resetScores());
 
     // Home/Lobby Button (exits game back to lobby)
-    this.btnMenuLobby.addEventListener('click', () => {
-      if (this.isPlaying && !this.isGameOver) {
-        this.showConfirm(
-          'Sair para o Menu',
-          'Deseja sair para o menu inicial? Seu progresso na partida atual será perdido.',
-          () => {
-            this.stopGameAndShowLobby();
-          }
-        );
-      } else {
-        this.stopGameAndShowLobby();
-      }
-    });
+    if (this.btnMenuLobby) {
+      this.btnMenuLobby.addEventListener('click', () => {
+        if (this.isPlaying && !this.isGameOver) {
+          this.showConfirm(
+            'Sair para o Menu',
+            'Deseja sair para o menu inicial? Seu progresso na partida atual será perdido.',
+            () => {
+              this.stopGameAndShowLobby();
+            }
+          );
+        } else {
+          this.stopGameAndShowLobby();
+        }
+      });
+    }
 
     // Setup Lobby Mode Selection Buttons
     const selectLobbyMode = (modeCard) => {

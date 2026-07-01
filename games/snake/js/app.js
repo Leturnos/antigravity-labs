@@ -1174,4 +1174,11 @@
       console.error('Failed to reset score values.', err);
     }
   }
+
+  // Expose interface globally for navigation control and pause syncing
+  window.AetherSnake = {
+    isPlaying: () => startOverlay && startOverlay.classList.contains('hidden') && !isGameOver && !isVictory,
+    isPaused: () => isPaused,
+    togglePause: () => togglePause()
+  };
 })();

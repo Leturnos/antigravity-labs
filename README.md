@@ -12,6 +12,8 @@ Este repositório foi estruturado para organizar os projetos por escopo de desen
 
 ```text
 antigravity-labs/
+├── index.html   # Painel Dashboard Launcher (Central)
+├── server.py    # Servidor Central Unificado em Python
 ├── ai/          # Projetos e modelos envolvendo Inteligência Artificial (.gitkeep)
 ├── backend/     # APIs, microsserviços e utilitários de servidor
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
@@ -20,8 +22,9 @@ antigravity-labs/
 │   ├── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
 │   ├── poker/   # Aether Poker - Texas Hold'em com bots inteligentes e side pots
 │   ├── snake/   # Aether Snake - Cobrinha com IA Autopilot (BFS + Cauda) e modo Manual
-│   └── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
-└── tools/       # Ferramentas, scripts de automação e utilitários (.gitkeep)
+│   ├── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
+│   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
+
 ```
 
 Abaixo está a visualização geral do repositório para novos projetos:
@@ -29,11 +32,14 @@ Abaixo está a visualização geral do repositório para novos projetos:
 ```mermaid
 flowchart LR
     Root["🚀 Antigravity Labs"]
+    Launcher["🕹️ Dashboard Launcher"]
 
-    Root --> Games["🎮 Games"]
+    Root --> Launcher
     Root --> Backend["⚙️ Backend"]
     Root --> AI["🤖 AI"]
-    Root --> Tools["🛠️ Tools"]
+
+    Launcher --> Games["🎮 Games"]
+    Launcher --> Tools["🛠️ Tools"]
 
     Games --> Chess["♟️ Aether Chess"]
     Games --> Sweeper["💣 Aether-Sweeper"]
@@ -45,6 +51,7 @@ flowchart LR
     Backend --> LibraryAPI["📚 Library API"]
 
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
+    style Launcher fill:#6366f1,stroke:#fff,stroke-width:1.5px,color:#fff
     style Games fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff
     style Backend fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
@@ -81,11 +88,15 @@ flowchart LR
 | :--- | :--- | :--- | :--- | :--- |
 | **Library API 📚** | [backend/library_api](./backend/library_api) | `Concluído` | API RESTful para gerenciamento de biblioteca (catálogo de livros, controle de leitores, autenticação JWT e gestão atômica de empréstimos/devoluções). | Python, FastAPI, SQLite, SQLAlchemy, PyJWT, Pytest |
 
+### Tools (Ferramentas)
+
+Nenhuma ferramenta disponível no momento. Novos utilitários e geradores procedurais serão integrados em breve.
+
 ---
 
 ## 🚀 Como Executar
 
-O repositório agora utiliza um **Servidor Central Unificado** em Python para servir todos os jogos e um Painel Dashboard Launcher na raiz.
+O repositório utiliza um **Servidor Central Unificado** em Python para servir todos os projetos e um Painel Dashboard Launcher na raiz. O Dashboard Launcher oferece navegação dinâmica e categorizada entre **Games (Jogos)** e **Tools (Ferramentas)**.
 
 ### Inicializando o Servidor Central
 Execute a partir do diretório raiz:
@@ -95,13 +106,15 @@ python server.py
 ```
 
 Acesse no navegador:
-- **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/)
-- **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/)
-- **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/)
-- **Aether Poker**: [http://localhost:8000/games/poker/](http://localhost:8000/games/poker/)
-- **Aether Snake**: [http://localhost:8000/games/snake/](http://localhost:8000/games/snake/)
-- **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/)
-- **Aether Tic-Tac-Toe**: [http://localhost:8000/games/tictactoe/](http://localhost:8000/games/tictactoe/)
+*   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
+    *   **Jogos (Games)**: Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
+    *   **Ferramentas (Tools)**: Em breve.
+*   **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/) (Acesso direto)
+*   **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/) (Acesso direto)
+*   **Aether Poker**: [http://localhost:8000/games/poker/](http://localhost:8000/games/poker/) (Acesso direto)
+*   **Aether Snake**: [http://localhost:8000/games/snake/](http://localhost:8000/games/snake/) (Acesso direto)
+*   **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/) (Acesso direto)
+*   **Aether Tic-Tac-Toe**: [http://localhost:8000/games/tictactoe/](http://localhost:8000/games/tictactoe/) (Acesso direto)
 
 ---
 
@@ -109,10 +122,10 @@ Acesse no navegador:
 
 O repositório é agnóstico de stack, utilizando a tecnologia mais apropriada para cada caso:
 
-* **Frontend:** HTML5, CSS3 Vanilla, JavaScript Moderno (ES6+)
-* **Backend:** Python (FastAPI, Flask, http.server), SQLite
-* **IA/Algoritmos:** Algoritmos de busca (Minimax, Alpha-Beta), heurísticas posicionais e caching avançado
-* **Integrações:** Web Audio API, Canvas, Confetti CSS
+*   **Frontend:** HTML5, CSS3 Vanilla, JavaScript Moderno (ES6+)
+*   **Backend:** Python (FastAPI, Flask, http.server), SQLite
+*   **IA/Algoritmos:** Algoritmos de busca (Minimax, Alpha-Beta), heurísticas posicionais e caching avançado
+*   **Integrações:** Web Audio API, Canvas, Confetti CSS
 
 ---
 

@@ -30,3 +30,7 @@ design-md/
 # Virtual environment
 .venv/
 .env
+
+# MCPs and plugins
+.playwright-mcp/
+superpowers/

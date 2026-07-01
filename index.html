@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aether Games Suite</title>
+  <title>Aether Suite - Games & Tools</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -381,139 +381,405 @@
         transform: translateY(0);
       }
     }
+
+    /* View Navigation Transitions */
+    .views-container {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 4rem;
+    }
+
+    .dashboard-view {
+      display: none;
+      width: 100%;
+      opacity: 0;
+    }
+
+    .dashboard-view.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInUpView 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInUpView {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Category Grid & Cards */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      max-width: 800px; /* Centered layout for category cards */
+      margin: 0 auto;
+    }
+
+    .tools-grid {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .tools-grid .game-card {
+      max-width: 380px;
+      width: 100%;
+    }
+
+    .category-card {
+      background: var(--color-card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--color-border);
+      border-radius: 24px;
+      padding: 2.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      justify-content: flex-start;
+      min-height: 380px;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    /* Category Hover Effects */
+    .category-card.games:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-chess);
+      box-shadow: 0 12px 30px var(--color-chess-glow);
+    }
+    .category-card.tools:hover {
+      transform: translateY(-8px);
+      border-color: #6366f1;
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+    }
+
+    .category-card h2 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .category-card.games h2 { color: #c084fc; }
+    .category-card.tools h2 { color: #818cf8; }
+
+    .category-card p.description {
+      font-size: 0.975rem;
+      line-height: 1.6;
+      color: var(--color-text-muted);
+    }
+
+    .category-card .btn-launch {
+      margin-top: auto;
+    }
+
+    .category-card.games .btn-launch {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .category-card.games .btn-launch:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.5);
+    }
+
+    .category-card.tools .btn-launch {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .category-card.tools .btn-launch:hover {
+      background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Header & Back Navigation Button */
+    .view-header {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 2rem;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      padding: 0.85rem 1.75rem;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(8px);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateX(-4px);
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">AETHER GAMES SUITE</div>
-    <p>Uma coleção exclusiva de jogos clássicos premium com design glassmorphic e áudio sintetizado em tempo real.</p>
-  </header>
+  <main class="views-container">
+    <!-- 1. CATEGORIES VIEW -->
+    <section id="view-categories" class="dashboard-view active">
+      <header>
+        <div class="logo">AETHER SUITE</div>
+        <p>Uma coleção premium de jogos clássicos interativos e ferramentas utilitárias avançadas com design glassmorphic.</p>
+      </header>
 
-  <main class="games-grid">
-    <!-- Aether Chess -->
-    <div class="game-card chess" onclick="location.href='games/chess/'">
-      <div class="top-section">
-        <div class="icon-box">♟️</div>
-        <h2>Aether Chess</h2>
-        <p class="description">Enfrente uma IA minimax avançada rodando localmente com alpha-beta, quiescence e transposição. Apresenta relógio Fischer, setas táticas e temas exclusivos.</p>
-      </div>
-      <div class="game-stats" id="stats-chess-txt">
-        Vitórias: -- | Derrotas: --<br>
-        Empates: --
-      </div>
-      <a href="games/chess/" class="btn-launch" onclick="event.stopPropagation()">
-        Jogar Aether Chess
-      </a>
-    </div>
+      <div class="categories-grid">
+        <!-- Games Category Card -->
+        <div class="category-card games" onclick="showView('view-games')" role="button" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">🎮</div>
+            <h2>Jogos</h2>
+            <p class="description">Divirta-se com nossa coleção de jogos clássicos refinados: Xadrez com IA tática, Campo Minado retro, Tetris minimalista, Cobrinha com IA de busca, Jogo da Velha inteligente e Poker Hold'em.</p>
+          </div>
+          <div class="btn-launch">
+            Explorar Jogos
+          </div>
+        </div>
 
-    <!-- Aether-Sweeper -->
-    <div class="game-card sweeper" onclick="location.href='games/minesweeper/'">
-      <div class="top-section">
-        <div class="icon-box">💣</div>
-        <h2>Aether-Sweeper</h2>
-        <p class="description">Campo Minado retro arcade 8-bit com clique inicial seguro, mecânica de chording, rumbles de explosão na tela e confetes festivos de comemoração.</p>
+        <!-- Tools Category Card -->
+        <div class="category-card tools" onclick="showView('view-tools')" role="button" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">🛠️</div>
+            <h2>Ferramentas</h2>
+            <p class="description">Explore ferramentas interativas e de simulação, incluindo o nosso Gerador de Mundos procedurais em tempo real com mapas de elevação e biomas dinâmicos.</p>
+          </div>
+          <div class="btn-launch">
+            Explorar Ferramentas
+          </div>
+        </div>
       </div>
-      <div class="game-stats" id="stats-sweeper-txt">
-        Vitórias: -- | Derrotas: --<br>
-        Tempo Recorde: -- s
-      </div>
-      <a href="games/minesweeper/" class="btn-launch" onclick="event.stopPropagation()">
-        Jogar Aether-Sweeper
-      </a>
-    </div>
 
-    <!-- Aether Tetris -->
-    <div class="game-card tetris" onclick="location.href='games/tetris/'">
-      <div class="top-section">
-        <div class="icon-box">🌌</div>
-        <h2>Aether Tetris</h2>
-        <p class="description">Tetris premium inspirado no design minimalista do Linear.app. Inclui 3 modos de jogo (Clássico, Zen, Contrarrelógio) e previews hold/next.</p>
-      </div>
-      <div class="game-stats" id="stats-tetris-txt">
-        Recorde Clássico: --<br>
-        Recorde Contrarrelógio: --
-      </div>
-      <a href="games/tetris/" class="btn-launch" onclick="event.stopPropagation()">
-        Jogar Aether Tetris
-      </a>
-    </div>
+      <footer>
+        <p>Aether Suite &copy; 2026. Desenvolvido com HTML5, CSS Vanilla e Python.</p>
+      </footer>
+    </section>
 
-    <!-- Aether Snake -->
-    <div class="game-card snake" onclick="location.href='games/snake/'">
-      <div class="top-section">
-        <div class="icon-box">🐍</div>
-        <h2>Aether Snake</h2>
-        <p class="description">Assista a uma IA de busca de caminho (BFS/A* + Heurística de Cauda) jogar o clássico jogo da cobrinha por conta própria, ou assuma o controle. Possui controles de velocidade e visualização em tempo real.</p>
-      </div>
-      <div class="game-stats" id="stats-snake-txt">
-        Recorde Pontos: --<br>
-        Comprimento Máximo: --
-      </div>
-      <a href="games/snake/" class="btn-launch" onclick="event.stopPropagation()">
-        Jogar Aether Snake
-      </a>
-    </div>
+    <!-- 2. GAMES VIEW -->
+    <section id="view-games" class="dashboard-view">
+      <header>
+        <div class="logo" style="font-size: 2.25rem;">AETHER GAMES</div>
+        <p>Coleção exclusiva de clássicos recriados com design premium, efeitos sonoros sintetizados e inteligência artificial local.</p>
+      </header>
 
-    <!-- Aether Tic-Tac-Toe -->
-    <div class="game-card tictactoe" onclick="location.href='games/tictactoe/'">
-      <div class="top-section">
-        <div class="icon-box">❌</div>
-        <h2>Aether Tic-Tac-Toe</h2>
-        <p class="description">Enfrente uma IA imbatível baseada no algoritmo Minimax com poda Alpha-Beta, dispute no modo local PvP ou observe o duelo em simulação contínua com controle de velocidade.</p>
+      <div class="view-header">
+        <button class="btn-back" onclick="showView('view-categories')">
+          <span style="font-size: 1.45rem; font-weight: bold; line-height: 1;">←</span> Voltar ao Início
+        </button>
       </div>
-      <div class="game-stats" id="stats-tictactoe-txt">
-        Vitórias: -- | Derrotas: --<br>
-        Empates: --
-      </div>
-      <a href="games/tictactoe/" class="btn-launch" onclick="event.stopPropagation()">
-        Jogar Tic-Tac-Toe
-      </a>
-    </div>
+      
+      <div class="games-grid">
+        <!-- Aether Chess -->
+        <div class="game-card chess" onclick="location.href='games/chess/'">
+          <div class="top-section">
+            <div class="icon-box">♟️</div>
+            <h2>Aether Chess</h2>
+            <p class="description">Enfrente uma IA minimax avançada rodando localmente com alpha-beta, quiescence e transposição. Apresenta relógio Fischer, setas táticas e temas exclusivos.</p>
+          </div>
+          <div class="game-stats" id="stats-chess-txt">
+            Vitórias: -- | Derrotas: --<br>
+            Empates: --
+          </div>
+          <a href="games/chess/" class="btn-launch" onclick="event.stopPropagation()">
+            Jogar Aether Chess
+          </a>
+        </div>
 
-    <!-- Aether Poker -->
-    <div class="game-card poker" onclick="location.href='games/poker/'" style="--color-poker: #10b981; --color-poker-glow: rgba(16, 185, 129, 0.3);">
-      <div class="top-section">
-        <div class="icon-box">🃏</div>
-        <h2>Aether Poker</h2>
-        <p class="description">Jogue Texas Hold'em contra bots com IA inteligente e personalidades customizadas. Escolha entre Cash Game ou Torneio Sit & Go, com stacks e blinds customizáveis.</p>
+        <!-- Aether-Sweeper -->
+        <div class="game-card sweeper" onclick="location.href='games/minesweeper/'">
+          <div class="top-section">
+            <div class="icon-box">💣</div>
+            <h2>Aether-Sweeper</h2>
+            <p class="description">Campo Minado retro arcade 8-bit com clique inicial seguro, mecânica de chording, rumbles de explosão na tela e confetes festivos de comemoração.</p>
+          </div>
+          <div class="game-stats" id="stats-sweeper-txt">
+            Vitórias: -- | Derrotas: --<br>
+            Tempo Recorde: -- s
+          </div>
+          <a href="games/minesweeper/" class="btn-launch" onclick="event.stopPropagation()">
+            Jogar Aether-Sweeper
+          </a>
+        </div>
+
+        <!-- Aether Tetris -->
+        <div class="game-card tetris" onclick="location.href='games/tetris/'">
+          <div class="top-section">
+            <div class="icon-box">🌌</div>
+            <h2>Aether Tetris</h2>
+            <p class="description">Tetris premium inspirado no design minimalista do Linear.app. Inclui 3 modos de jogo (Clássico, Zen, Contrarrelógio) e previews hold/next.</p>
+          </div>
+          <div class="game-stats" id="stats-tetris-txt">
+            Recorde Clássico: --<br>
+            Recorde Contrarrelógio: --
+          </div>
+          <a href="games/tetris/" class="btn-launch" onclick="event.stopPropagation()">
+            Jogar Aether Tetris
+          </a>
+        </div>
+
+        <!-- Aether Snake -->
+        <div class="game-card snake" onclick="location.href='games/snake/'">
+          <div class="top-section">
+            <div class="icon-box">🐍</div>
+            <h2>Aether Snake</h2>
+            <p class="description">Assista a uma IA de busca de caminho (BFS/A* + Heurística de Cauda) jogar o clássico jogo da cobrinha por conta própria, ou assuma o controle. Possui controles de velocidade e visualização em tempo real.</p>
+          </div>
+          <div class="game-stats" id="stats-snake-txt">
+            Recorde Pontos: --<br>
+            Comprimento Máximo: --
+          </div>
+          <a href="games/snake/" class="btn-launch" onclick="event.stopPropagation()">
+            Jogar Aether Snake
+          </a>
+        </div>
+
+        <!-- Aether Tic-Tac-Toe -->
+        <div class="game-card tictactoe" onclick="location.href='games/tictactoe/'">
+          <div class="top-section">
+            <div class="icon-box">❌</div>
+            <h2>Aether Tic-Tac-Toe</h2>
+            <p class="description">Enfrente uma IA imbatível baseada no algoritmo Minimax com poda Alpha-Beta, dispute no modo local PvP ou observe o duelo em simulação contínua com controle de velocidade.</p>
+          </div>
+          <div class="game-stats" id="stats-tictactoe-txt">
+            Vitórias: -- | Derrotas: --<br>
+            Empates: --
+          </div>
+          <a href="games/tictactoe/" class="btn-launch" onclick="event.stopPropagation()">
+            Jogar Tic-Tac-Toe
+          </a>
+        </div>
+
+        <!-- Aether Poker -->
+        <div class="game-card poker" onclick="location.href='games/poker/'" style="--color-poker: #10b981; --color-poker-glow: rgba(16, 185, 129, 0.3);">
+          <div class="top-section">
+            <div class="icon-box">🃏</div>
+            <h2>Aether Poker</h2>
+            <p class="description">Jogue Texas Hold'em contra bots com IA inteligente e personalidades customizadas. Escolha entre Cash Game ou Torneio Sit & Go, com stacks e blinds customizáveis.</p>
+          </div>
+          <div class="game-stats" id="stats-poker-txt">
+            Cash - Vitórias: -- | Derrotas: --<br>
+            Torneio - Vitórias: -- | Maior Stack: --
+          </div>
+          <a href="games/poker/" class="btn-launch" onclick="event.stopPropagation()">
+            Jogar Aether Poker
+          </a>
+        </div>
       </div>
-      <div class="game-stats" id="stats-poker-txt">
-        Cash - Vitórias: -- | Derrotas: --<br>
-        Torneio - Vitórias: -- | Maior Stack: --
+
+      <div class="global-stats-container">
+        <div class="global-stats-header">
+          <h3>Placar Geral Consolidado</h3>
+          <button class="btn-reset-all" id="btn-reset-all">Zerar Todas as Estatísticas</button>
+        </div>
+        <div class="dashboard-grid">
+          <div class="stat-dashboard-card">
+            <h4>Total de Vitórias</h4>
+            <div class="val" id="dashboard-total-wins">0</div>
+          </div>
+          <div class="stat-dashboard-card">
+            <h4>Total de Partidas</h4>
+            <div class="val" id="dashboard-total-games">0</div>
+          </div>
+          <div class="stat-dashboard-card">
+            <h4>Recorde de Tetris</h4>
+            <div class="val" id="dashboard-tetris-record">--</div>
+          </div>
+        </div>
       </div>
-      <a href="games/poker/" class="btn-launch" onclick="event.stopPropagation()">
-        Jogar Aether Poker
-      </a>
-    </div>
+
+      <footer>
+        <p>Aether Games &copy; 2026. Feito com paixão por jogos retro.</p>
+      </footer>
+    </section>
+
+    <!-- 3. TOOLS VIEW -->
+    <section id="view-tools" class="dashboard-view">
+      <header>
+        <div class="logo" style="font-size: 2.25rem;">AETHER TOOLS</div>
+        <p>Explore geradores procedurais avançados e utilitários de simulação em tempo real.</p>
+      </header>
+
+      <div class="view-header">
+        <button class="btn-back" onclick="showView('view-categories')">
+          <span style="font-size: 1.45rem; font-weight: bold; line-height: 1;">←</span> Voltar ao Início
+        </button>
+      </div>
+
+      <div class="tools-grid">
+        <!-- Nenhuma ferramenta no momento -->
+        <p style="color: var(--color-text-muted); font-size: 0.95rem;">Novas ferramentas utilitárias e simulações em breve.</p>
+      </div>
+
+      <footer>
+        <p>Aether Tools &copy; 2026. Desenvolvido para otimização e experimentação.</p>
+      </footer>
+    </section>
   </main>
 
-  <section class="global-stats-container">
-    <div class="global-stats-header">
-      <h3>Placar Geral Consolidado</h3>
-      <button class="btn-reset-all" id="btn-reset-all">Zerar Todas as Estatísticas</button>
-    </div>
-    <div class="dashboard-grid">
-      <div class="stat-dashboard-card">
-        <h4>Total de Vitórias</h4>
-        <div class="val" id="dashboard-total-wins">0</div>
-      </div>
-      <div class="stat-dashboard-card">
-        <h4>Total de Partidas</h4>
-        <div class="val" id="dashboard-total-games">0</div>
-      </div>
-      <div class="stat-dashboard-card">
-        <h4>Recorde de Tetris</h4>
-        <div class="val" id="dashboard-tetris-record">--</div>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <p>Aether Games Suite &copy; 2026. Desenvolvido com HTML5, CSS Vanilla e Python.</p>
-  </footer>
-
   <script>
+    function showView(viewId) {
+      const views = document.querySelectorAll('.dashboard-view');
+      let target = document.getElementById(viewId);
+      
+      // Fallback to categories view if the target doesn't exist
+      if (!target) {
+        viewId = 'view-categories';
+        target = document.getElementById(viewId);
+      }
+
+      views.forEach(view => {
+        view.classList.remove('active');
+      });
+
+      if (target) {
+        target.classList.add('active');
+        
+        // Update URL query param without reload
+        let newUrl = window.location.pathname;
+        if (viewId !== 'view-categories') {
+          newUrl += `?view=${viewId}`;
+        }
+        window.history.replaceState({ view: viewId }, '', newUrl);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
     async function loadStats() {
       try {
         const response = await fetch('/api/score');
@@ -601,7 +867,24 @@
       }
     });
 
-    window.addEventListener('DOMContentLoaded', loadStats);
+    // Accessibility keydown event listener for category cards
+    document.querySelectorAll('.category-card').forEach(card => {
+      card.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          card.click();
+        }
+      });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      const urlParams = new URLSearchParams(window.location.search);
+      const view = urlParams.get('view');
+      if (view) {
+        showView(view);
+      }
+    });
   </script>
 </body>
 </html>

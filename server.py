@@ -295,7 +295,7 @@ socketserver.TCPServer.allow_reuse_address = True
 
 if __name__ == '__main__':
     with socketserver.TCPServer(("", PORT), CustomHandler) as httpd:
-        print(f"Central Aether Games Server running at: http://localhost:{PORT}")
+        print(f"Central Aether Suite Server running at: http://localhost:{PORT}")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
