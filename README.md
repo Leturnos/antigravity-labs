@@ -24,7 +24,8 @@ antigravity-labs/
 │   ├── snake/   # Aether Snake - Cobrinha com IA Autopilot (BFS + Cauda) e modo Manual
 │   ├── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 │   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
-
+└── tools/       # Ferramentas, scripts de automação e utilitários
+    └── world_generation/ # Gerador Procedural de Mundos (Fase 1: Relevo e Biomas)
 ```
 
 Abaixo está a visualização geral do repositório para novos projetos:
@@ -49,6 +50,8 @@ flowchart LR
     Games --> TicTacToe["❌ Aether Tic-Tac-Toe"]
 
     Backend --> LibraryAPI["📚 Library API"]
+    
+    Tools --> WorldGen["🗺️ World Generator"]
 
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
     style Launcher fill:#6366f1,stroke:#fff,stroke-width:1.5px,color:#fff
@@ -63,6 +66,7 @@ flowchart LR
     style Tetris fill:#5e6ad2,stroke:#fff,stroke-width:1px,color:#fff
     style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
     style LibraryAPI fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
+    style WorldGen fill:#6366f1,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
 ---
@@ -90,7 +94,9 @@ flowchart LR
 
 ### Tools (Ferramentas)
 
-Nenhuma ferramenta disponível no momento. Novos utilitários e geradores procedurais serão integrados em breve.
+| Projeto | Caminho | Status | Descrição | Tecnologias |
+| :--- | :--- | :--- | :--- | :--- |
+| **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Em Desenvolvimento (Etapa 1)` | Gerador automático procedural de mundos e biomas em tempo real via Ruído de Perlin, com controle e sliders debounced. | HTML5, CSS3, JS, Python |
 
 ---
 
@@ -108,13 +114,14 @@ python server.py
 Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
-    *   **Ferramentas (Tools)**: Em breve.
+    *   **Ferramentas (Tools)**: World Generator.
 *   **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/) (Acesso direto)
 *   **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/) (Acesso direto)
 *   **Aether Poker**: [http://localhost:8000/games/poker/](http://localhost:8000/games/poker/) (Acesso direto)
 *   **Aether Snake**: [http://localhost:8000/games/snake/](http://localhost:8000/games/snake/) (Acesso direto)
 *   **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/) (Acesso direto)
 *   **Aether Tic-Tac-Toe**: [http://localhost:8000/games/tictactoe/](http://localhost:8000/games/tictactoe/) (Acesso direto)
+*   **World Generator**: [http://localhost:8000/tools/world_generation/](http://localhost:8000/tools/world_generation/) (Acesso direto)
 
 ---
 

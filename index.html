@@ -152,6 +152,11 @@
       border-color: var(--color-poker);
       box-shadow: 0 12px 30px var(--color-poker-glow);
     }
+    .game-card.world-gen:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-world-gen);
+      box-shadow: 0 12px 30px var(--color-world-gen-glow);
+    }
 
     .game-card .top-section {
       position: relative;
@@ -180,6 +185,7 @@
     .game-card.snake h2 { color: #34d399; }
     .game-card.tictactoe h2 { color: #fb7185; }
     .game-card.poker h2 { color: #34d399; }
+    .game-card.world-gen h2 { color: #818cf8; }
 
     .game-card p.description {
       font-size: 0.975rem;
@@ -270,6 +276,14 @@
     .game-card.poker .btn-launch:hover {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       box-shadow: 0 6px 16px rgba(5, 150, 105, 0.5);
+    }
+    .game-card.world-gen .btn-launch {
+      background: linear-gradient(135deg, var(--color-world-gen) 0%, #4f46e5 100%);
+      box-shadow: 0 4px 12px var(--color-world-gen-glow);
+    }
+    .game-card.world-gen .btn-launch:hover {
+      background: linear-gradient(135deg, #818cf8 0%, var(--color-world-gen) 100%);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
     }
 
     .global-stats-container {
@@ -741,8 +755,21 @@
       </div>
 
       <div class="tools-grid">
-        <!-- Nenhuma ferramenta no momento -->
-        <p style="color: var(--color-text-muted); font-size: 0.95rem;">Novas ferramentas utilitárias e simulações em breve.</p>
+        <!-- World Generator Tool -->
+        <div class="game-card world-gen" onclick="location.href='tools/world_generation/'" style="--color-world-gen: #6366f1; --color-world-gen-glow: rgba(99, 102, 241, 0.3);">
+          <div class="top-section">
+            <div class="icon-box">🛸</div>
+            <h2>World Generator</h2>
+            <p class="description">Gere mundos procedurais em tempo real. Ajuste relevo, umidade e temperatura para ver diferentes biomas surgindo dinamicamente.</p>
+          </div>
+          <div class="game-stats">
+            Ferramenta Procedural<br>
+            Fase 1: Elevação & Biomas
+          </div>
+          <a href="tools/world_generation/" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir World Generator
+          </a>
+        </div>
       </div>
 
       <footer>

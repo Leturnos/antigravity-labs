@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural World Generator - Antigravity Labs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation & Controls -->
+        <aside class="control-panel">
+            <header class="panel-header">
+                <div class="logo">
+                    <span class="logo-icon">🛸</span>
+                    <h1>World Generator</h1>
+                </div>
+                <a href="/?view=view-tools" class="back-link">Voltar</a>
+            </header>
+
+            <div class="control-sections">
+                <!-- Mode Tabs inside Control Panel -->
+                <section class="control-section">
+                    <h2>Visualização</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-mode="biome">Biomas</button>
+                        <button class="tab-btn" data-mode="elevation">Elevação</button>
+                        <button class="tab-btn" data-mode="moisture">Umidade</button>
+                        <button class="tab-btn" data-mode="temperature">Temperatura</button>
+                    </div>
+                </section>
+
+                <!-- Seed & Size -->
+                <section class="control-section">
+                    <h2>Configurações Gerais</h2>
+                    <div class="control-group">
+                        <label for="seed-input">Semente (Seed)</label>
+                        <div class="input-with-btn">
+                            <input type="number" id="seed-input" value="13374209">
+                            <button id="btn-random-seed" title="Gerar nova semente">🎲</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="grid-size">Resolução do Grid</label>
+                            <span id="grid-size-val" class="slider-value">150x150</span>
+                        </div>
+                        <input type="range" id="grid-size" min="50" max="250" value="150" step="10">
+                    </div>
+                </section>
+
+                <!-- Elevation settings -->
+                <section class="control-section">
+                    <h2>🗻 Elevação (Relevo)</h2>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="elev-scale">Escala</label>
+                            <span id="elev-scale-val" class="slider-value">0.030</span>
+                        </div>
+                        <input type="range" id="elev-scale" min="0.005" max="0.100" value="0.030" step="0.001">
+                    </div>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="elev-octaves">Oitavas</label>
+                            <span id="elev-octaves-val" class="slider-value">4</span>
+                        </div>
+                        <input type="range" id="elev-octaves" min="1" max="6" value="4" step="1">
+                    </div>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="elev-persistence">Persistência</label>
+                            <span id="elev-persistence-val" class="slider-value">0.50</span>
+                        </div>
+                        <input type="range" id="elev-persistence" min="0.10" max="0.90" value="0.50" step="0.05">
+                    </div>
+                </section>
+
+                <!-- Moisture settings -->
+                <section class="control-section">
+                    <h2>💧 Umidade</h2>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="moist-scale">Escala</label>
+                            <span id="moist-scale-val" class="slider-value">0.040</span>
+                        </div>
+                        <input type="range" id="moist-scale" min="0.005" max="0.100" value="0.040" step="0.001">
+                    </div>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="moist-octaves">Oitavas</label>
+                            <span id="moist-octaves-val" class="slider-value">3</span>
+                        </div>
+                        <input type="range" id="moist-octaves" min="1" max="6" value="3" step="1">
+                    </div>
+                </section>
+
+                <!-- Temperature settings -->
+                <section class="control-section">
+                    <h2>🌡️ Temperatura</h2>
+                    <div class="control-group">
+                        <label for="temp-model">Modelo de Distribuição</label>
+                        <select id="temp-model" class="control-select">
+                            <option value="planet">Planetário (Equador Central)</option>
+                            <option value="inclined">Inclinado (Rotacionado por Seed)</option>
+                            <option value="noise">Ruído Livre (Zonas de Fantasia)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="temp-alt-weight">Fator Altitude</label>
+                            <span id="temp-alt-weight-val" class="slider-value">0.70</span>
+                        </div>
+                        <input type="range" id="temp-alt-weight" min="0.00" max="1.00" value="0.70" step="0.05">
+                    </div>
+                </section>
+            </div>
+        </aside>
+
+        <!-- Main Content Area: Map visualization -->
+        <main class="viewer-area">
+            <div class="canvas-container">
+                <canvas id="world-canvas" width="512" height="512"></canvas>
+            </div>
+            
+            <!-- Hover Tooltip / Status bar -->
+            <footer class="status-bar">
+                <div class="status-item"><span class="status-label">Coord:</span> <span id="val-coord">-</span></div>
+                <div class="status-item"><span class="status-label">Elevação:</span> <span id="val-elevation">-</span></div>
+                <div class="status-item"><span class="status-label">Umidade:</span> <span id="val-moisture">-</span></div>
+                <div class="status-item"><span class="status-label">Temp:</span> <span id="val-temp">-</span></div>
+                <div class="status-item"><span class="status-label">Bioma:</span> <span id="val-biome">-</span></div>
+            </footer>
+        </main>
+    </div>
+    
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
