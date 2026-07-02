@@ -23,16 +23,34 @@ tools/world_generation/
 
 ## 🧮 Modelo Matemático
 
-### 1. Elevação e Umidade
-*   **Elevação ($E$)**: Calculada somando várias oitavas de ruído de Perlin (FBM) baseadas na semente, escala e persistência definidas pelo usuário.
-*   **Umidade ($M$)**: Gerada a partir de uma instância independente de ruído de Perlin. Para eliminar qualquer correlação direcional visual com a elevação, sua semente é derivada da semente principal usando a função de hash de 32 bits `hash32(seed + 99999)`.
+### 1. Elevação com Warping e Ridge
+*   **Distorção de Domínio (Domain Warping)**:
+    Para quebrar a rigidez de blocos de biomas arredondados do Perlin clássico, as coordenadas $(x, y)$ são distorcidas por um ruído secundário (`warpNoise` com semente baseada em `seed + 77777`):
+    $$dx = Noise_{warp}(x \cdot 0.02, y \cdot 0.02)$$
+    $$dy = Noise_{warp}(x \cdot 0.02 + 5.2, y \cdot 0.02 + 1.3)$$
+    $$x_{warped} = x + dx \cdot \text{warpStrength}$$
+    $$y_{warped} = y + dy \cdot \text{warpStrength}$$
+*   **Cristas Montanhosas (Ridge Noise)**:
+    As montanhas usam um perfil de crista afiada ($E_{ridge} = 1.0 - |Noise_{elev}|$). Elas são combinadas de forma não-linear com o relevo clássico de FBM ($E_{base}$) apenas em altas altitudes usando uma interpolação manual de `smoothstep`:
+    $$t = \text{smoothstep}(0.40, 0.75, E_{base})$$
+    $$E_{final} = (1.0 - t) \cdot E_{base} + t \cdot \left( E_{ridge}^2 \cdot 1.25 \right)$$
 
-### 2. Temperatura ($T$)
+### 2. Umidade e Efeito da Distância à Costa
+*   **Brisa Marinha**: A umidade é atenuada conforme a distância até o oceano ou mar raso ($E < 0.26$) aumenta.
+*   **Busca Multi-fonte (BFS)**: Computamos em tempo linear $O(N)$ a menor distância de todas as células de terra firme até o litoral.
+*   **Modificação de Umidade**: A distância é normalizada pela maior distância continental encontrada ($maxDist$). A umidade diminui progressivamente em áreas interiores:
+    $$M_{final} = M_{base} \cdot (1.0 - dist_{costa\_norm} \cdot 0.50)$$
+
+### 3. Erosão Hidráulica Pós-processada
+O relevo é esculpido simulando partículas de gotículas de chuva que caem em terra firme e descem as encostas seguindo o gradiente de altura do grid. O número de iterações é limitado em `Math.min(intensidade * gridSize, 20000)`.
+*   Gotículas desgastam encostas íngremes (erosão) e depositam sedimentos quando encontram vales ou descidas suaves (depósito), suavizando cânions e acentuando picos.
+*   Gotículas evapora-se e perde velocidade por atrito a cada passo de descida.
+
+### 4. Temperatura ($T$)
 A temperatura final ($T$) de qualquer célula combina um fator de clima base ($T_{lat}$) e a atenuação por altitude (elevação $E$):
 $$T = T_{lat} \cdot (1.0 - weight_{alt} \cdot E)$$
 
 O fator de clima base ($T_{lat}$) é calculado através de um dos três modelos disponíveis na UI:
-
 *   **Planetário (Equador Central)**:
     Equador central quente e pólos frios lineares nas bordas superior e inferior do mapa.
     $$T_{lat} = 1.0 - \left| 2 \cdot \frac{y}{Y_{max}} - 1 \right|$$
@@ -71,6 +89,9 @@ Um objeto de configuração unificado (`BIOME_THRESHOLDS`) no topo de `js/genera
 *   **Semente (Seed)**: Insira qualquer número ou gere uma semente aleatória de 8 dígitos.
 *   **Resolução do Grid**: Slider variando de $50 \times 50$ a $250 \times 250$. O tamanho das células no canvas é calculado dinamicamente como $cellSize = canvasSize / gridSize$.
 *   **Modelo de Distribuição**: Dropdown para escolher entre as três dinâmicas de temperatura (Planetário, Inclinado, Ruído Livre).
+*   **Refinamentos Avançados**:
+    *   *Distorção (Warp)*: Controla o nível de dobramento e desalinhamento de biomas e relevos, gerando litorais mais recortados e orgânicos.
+    *   *Erosão Hidráulica*: Controla a intensidade do pós-processamento erosivo que simula gotas de chuva desgastando picos e suavizando ravinas.
 *   **Controles de Elevação**: Ajuste a escala, oitavas e persistência do ruído.
 *   **Controles de Umidade**: Ajuste a escala e oitavas do ruído.
 *   **Controles de Temperatura**: Ajuste a atenuação por altitude.

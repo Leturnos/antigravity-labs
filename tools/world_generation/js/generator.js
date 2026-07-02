@@ -41,6 +41,9 @@ export function generateWorldData(params) {
   const moistureSeed = hash32(params.seed + 99999);
   const moistNoise = new ImprovedNoise(moistureSeed);
   
+  const warpSeed = hash32(params.seed + 77777);
+  const warpNoise = new ImprovedNoise(warpSeed);
+  
   const size = params.gridSize;
   const tempModel = params.tempModel || 'planet';
   
@@ -69,18 +72,42 @@ export function generateWorldData(params) {
     grid[y] = [];
     
     for (let x = 0; x < size; x++) {
-      // Elevation generation using FBM
-      let elevation = 0;
+      // Domain Warping
+      const warpStr = params.warpStrength !== undefined ? params.warpStrength : 10;
+      let warpedX = x;
+      let warpedY = y;
+      if (warpStr > 0) {
+        const warpScale = 0.02;
+        const dx = warpNoise.noise(x * warpScale, y * warpScale);
+        const dy = warpNoise.noise(x * warpScale + 5.2, y * warpScale + 1.3);
+        warpedX += dx * warpStr;
+        warpedY += dy * warpStr;
+      }
+
+      // Elevation base FBM calculation on warped coordinates
+      let baseElevation = 0;
+      let ridgeElevation = 0;
       let amplitude = 1;
       let frequency = params.elevScale;
       let maxVal = 0;
       for (let o = 0; o < params.elevOctaves; o++) {
-        elevation += amplitude * elevNoise.noise(x * frequency, y * frequency);
+        const rawVal = elevNoise.noise(warpedX * frequency, warpedY * frequency);
+        baseElevation += amplitude * rawVal;
+        
+        const ridgeVal = 1.0 - Math.abs(rawVal);
+        ridgeElevation += amplitude * ridgeVal;
+        
         maxVal += amplitude;
         amplitude *= params.elevPersistence;
         frequency *= 2;
       }
-      elevation = (elevation / maxVal + 1) / 2; // Normalize from [-1, 1] to [0, 1]
+      baseElevation = (baseElevation / maxVal + 1) / 2;
+      ridgeElevation = (ridgeElevation / maxVal);
+
+      // Blend classic flat valley elevation with sharp ridge peaks
+      const blendFactor = Math.max(0.0, Math.min(1.0, (baseElevation - 0.4) / (0.75 - 0.4)));
+      const smoothedBlend = blendFactor * blendFactor * (3 - 2 * blendFactor);
+      const elevation = (1.0 - smoothedBlend) * baseElevation + smoothedBlend * (ridgeElevation * ridgeElevation * 1.25);
 
       // Moisture generation using FBM
       let moisture = 0;
@@ -95,7 +122,199 @@ export function generateWorldData(params) {
       }
       moisture = (moisture / maxVal + 1) / 2; // Normalize from [-1, 1] to [0, 1]
       
-      // Calculate latitudeFactor based on chosen model
+      grid[y][x] = {
+        x, y,
+        elevation,
+        moisture
+      };
+    }
+  }
+
+  // Post-processing passes
+  if (params.erosionStrength > 0) {
+    applyHydraulicErosion(grid, size, params.erosionStrength);
+  }
+
+  finalizeWorldMetadata(grid, size, params);
+  return grid;
+}
+
+function computeCoastalDistances(grid, size) {
+  const distMap = Array.from({length: size}, () => new Float32Array(size).fill(Infinity));
+  const queue = [];
+  
+  // Enqueue all water source cells (seas/oceans)
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (grid[y][x].elevation < 0.26) {
+        distMap[y][x] = 0;
+        queue.push({x, y});
+      }
+    }
+  }
+  
+  let head = 0;
+  let maxDist = 1;
+  const dirs = [
+    {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1},
+    {dx: 1, dy: 1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -1, dy: 1}
+  ];
+  
+  while (head < queue.length) {
+    const curr = queue[head++];
+    const currDist = distMap[curr.y][curr.x];
+    
+    for (let i = 0; i < 8; i++) {
+      const nx = curr.x + dirs[i].dx;
+      const ny = curr.y + dirs[i].dy;
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        const stepWeight = (dirs[i].dx !== 0 && dirs[i].dy !== 0) ? 1.414 : 1.0;
+        const nextDist = currDist + stepWeight;
+        if (nextDist < distMap[ny][nx]) {
+          distMap[ny][nx] = nextDist;
+          if (nextDist > maxDist) maxDist = nextDist;
+          queue.push({x: nx, y: ny});
+        }
+      }
+    }
+  }
+  
+  // Apply coastal attenuation to land moisture
+  const coastalWeight = 0.5; // Dampens moisture up to 50% in deep inland regions
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      if (cell.elevation >= 0.26) {
+        const distNorm = distMap[y][x] / maxDist;
+        cell.moisture = cell.moisture * (1.0 - distNorm * coastalWeight);
+      }
+      
+      // Recalculate biomes for all cells since elevation or moisture changed
+      cell.biome = classifyBiome(cell.elevation, cell.moisture, cell.temperature);
+    }
+  }
+}
+
+function applyHydraulicErosion(grid, size, strength) {
+  if (strength <= 0) return;
+  
+  // Capped iterations: min(strength * size * 20, 20000)
+  const iterations = Math.min(Math.floor(strength * size * 20), 20000);
+  
+  const maxSteps = 30;
+  const inertia = 0.05;
+  const sedimentCapacityFactor = 4;
+  const minSedimentCapacity = 0.01;
+  const erodeSpeed = 0.3;
+  const depositSpeed = 0.3;
+  const evaporateSpeed = 0.05;
+  const gravity = 4.0;
+  
+  for (let iter = 0; iter < iterations; iter++) {
+    // Choose random starting land cell
+    let rx = Math.floor(Math.random() * size);
+    let ry = Math.floor(Math.random() * size);
+    if (grid[ry][rx].elevation < 0.26) continue;
+    
+    let posX = rx;
+    let posY = ry;
+    let dirX = 0;
+    let dirY = 0;
+    let speed = 1.0;
+    let water = 1.0;
+    let sediment = 0;
+    
+    for (let step = 0; step < maxSteps; step++) {
+      const ix = Math.floor(posX);
+      const iy = Math.floor(posY);
+      
+      let gradX = 0;
+      let gradY = 0;
+      
+      const hCurrent = grid[iy][ix].elevation;
+      const hR = ix < size - 1 ? grid[iy][ix + 1].elevation : hCurrent;
+      const hL = ix > 0 ? grid[iy][ix - 1].elevation : hCurrent;
+      const hD = iy < size - 1 ? grid[iy + 1][ix].elevation : hCurrent;
+      const hU = iy > 0 ? grid[iy - 1][ix].elevation : hCurrent;
+      
+      gradX = hR - hL;
+      gradY = hD - hU;
+      
+      dirX = dirX * inertia - gradX * (1 - inertia);
+      dirY = dirY * inertia - gradY * (1 - inertia);
+      
+      const len = Math.sqrt(dirX * dirX + dirY * dirY);
+      if (len > 0) {
+        dirX /= len;
+        dirY /= len;
+      } else {
+        break;
+      }
+      
+      const nextX = posX + dirX;
+      const nextY = posY + dirY;
+      const nix = Math.floor(nextX);
+      const niy = Math.floor(nextY);
+      
+      if (nix < 0 || nix >= size || niy < 0 || niy >= size) break;
+      if (grid[niy][nix].elevation < 0.26) break;
+      
+      const hNext = grid[niy][nix].elevation;
+      const deltaH = hNext - hCurrent;
+      
+      if (deltaH > 0) {
+        const depositAmount = Math.min(deltaH, sediment);
+        grid[iy][ix].elevation += depositAmount;
+        sediment -= depositAmount;
+        break;
+      }
+      
+      const slope = -deltaH;
+      const sedimentCapacity = Math.max(slope * speed * water * sedimentCapacityFactor, minSedimentCapacity);
+      
+      if (sediment > sedimentCapacity) {
+        const depositAmount = (sediment - sedimentCapacity) * depositSpeed;
+        grid[iy][ix].elevation += depositAmount;
+        sediment -= depositAmount;
+      } else {
+        const erodeAmount = Math.min((sedimentCapacity - sediment) * erodeSpeed, slope);
+        grid[iy][ix].elevation -= erodeAmount;
+        sediment += erodeAmount;
+      }
+      
+      speed = Math.sqrt(speed * speed + slope * gravity);
+      water *= (1 - evaporateSpeed);
+      
+      posX = nextX;
+      posY = nextY;
+    }
+  }
+}
+
+function finalizeWorldMetadata(grid, size, params) {
+  const tempModel = params.tempModel || 'planet';
+  let tempNoise = null;
+  let angle = 0;
+  let centerX = (size - 1) / 2;
+  let centerY = (size - 1) / 2;
+  const maxDist = Math.sqrt(2) * size;
+
+  if (tempModel === 'noise') {
+    const tempSeed = hash32(params.seed + 88888);
+    tempNoise = new ImprovedNoise(tempSeed);
+  } else if (tempModel === 'inclined') {
+    angle = (hash32(params.seed + 101) % 360) * Math.PI / 180;
+    const offsetLimit = size * 0.2;
+    const offsetX = ((hash32(params.seed + 202) % 1000) / 1000 - 0.5) * 2 * offsetLimit;
+    const offsetY = ((hash32(params.seed + 303) % 1000) / 1000 - 0.5) * 2 * offsetLimit;
+    centerX += offsetX;
+    centerY += offsetY;
+  }
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      
       let latitudeFactor = 0.5;
       if (tempModel === 'planet') {
         latitudeFactor = 1.0 - Math.abs(2 * (y / (size - 1)) - 1);
@@ -103,7 +322,6 @@ export function generateWorldData(params) {
         const d = -Math.sin(angle) * (x - centerX) + Math.cos(angle) * (y - centerY);
         latitudeFactor = 1.0 - Math.min(1.0, Math.abs(d) / (maxDist / 2));
       } else if (tempModel === 'noise') {
-        // Low frequency noise with 2 octaves
         const tempFreq = params.elevScale * 0.35;
         let tNoise = 0;
         let amp = 1;
@@ -118,16 +336,10 @@ export function generateWorldData(params) {
         latitudeFactor = (tNoise / maxTVal + 1) / 2;
       }
       
-      const temp = latitudeFactor * (1.0 - params.tempAltWeight * elevation);
-      
-      grid[y][x] = {
-        x, y,
-        elevation,
-        moisture,
-        temperature: temp,
-        biome: classifyBiome(elevation, moisture, temp)
-      };
+      cell.temperature = latitudeFactor * (1.0 - params.tempAltWeight * cell.elevation);
     }
   }
-  return grid;
+
+  // Cost distance BFS computes coastal moisture modifications and classifies biomes
+  computeCoastalDistances(grid, size);
 }

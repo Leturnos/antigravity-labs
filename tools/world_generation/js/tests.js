@@ -73,8 +73,52 @@ export function runTempModelTests() {
   console.log("✅ Temperature model tests completed successfully!");
 }
 
+export function runRefinementTests() {
+  console.log("Initializing procedural refinements tests...");
+  const params = {
+    seed: 54321,
+    gridSize: 50,
+    elevScale: 0.03,
+    elevOctaves: 4,
+    elevPersistence: 0.5,
+    moistScale: 0.04,
+    moistOctaves: 3,
+    tempAltWeight: 0.7,
+    tempModel: 'planet',
+    warpStrength: 0,
+    erosionStrength: 0
+  };
+  
+  // Baseline (without warp or erosion)
+  const gridBase = generateWorldData(params);
+  
+  // Test 1: Domain Warping changes elevation values
+  params.warpStrength = 10;
+  const gridWarp = generateWorldData(params);
+  console.assert(gridBase[25][25].elevation !== gridWarp[25][25].elevation, "Error: Warp must alter the elevation grid");
+  
+  // Test 2: Erosion changes elevation and produces only valid numbers
+  params.warpStrength = 0;
+  params.erosionStrength = 1.5;
+  const gridErosion = generateWorldData(params);
+  let changed = false;
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x < 50; x++) {
+      const e = gridErosion[y][x].elevation;
+      console.assert(!isNaN(e) && isFinite(e), `Error: Elevation is invalid (${e}) after erosion`);
+      if (gridBase[y][x].elevation !== e) {
+        changed = true;
+      }
+    }
+  }
+  console.assert(changed, "Error: Erosion must modify at least some cells in the elevation grid");
+  
+  console.log("✅ Procedural refinements tests completed successfully!");
+}
+
 export function runAllTests() {
   runNoiseTests();
   runBiomeTests();
   runTempModelTests();
+  runRefinementTests();
 }

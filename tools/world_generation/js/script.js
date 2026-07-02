@@ -89,6 +89,8 @@ function updateWorld() {
   const moistOctaves = parseInt(document.getElementById('moist-octaves').value);
   const tempAltWeight = parseFloat(document.getElementById('temp-alt-weight').value);
   const tempModel = document.getElementById('temp-model').value;
+  const warpStrength = parseFloat(document.getElementById('warp-strength').value);
+  const erosionStrength = parseFloat(document.getElementById('erosion-strength').value);
   
   // Update slider value text indicators
   document.getElementById('grid-size-val').textContent = `${gridSize}x${gridSize}`;
@@ -98,6 +100,8 @@ function updateWorld() {
   document.getElementById('moist-scale-val').textContent = moistScale.toFixed(3);
   document.getElementById('moist-octaves-val').textContent = moistOctaves;
   document.getElementById('temp-alt-weight-val').textContent = tempAltWeight.toFixed(2);
+  document.getElementById('warp-strength-val').textContent = warpStrength;
+  document.getElementById('erosion-strength-val').textContent = erosionStrength.toFixed(1);
   
   // Execute core generator
   currentWorldData = generateWorldData({
@@ -109,7 +113,9 @@ function updateWorld() {
     moistScale,
     moistOctaves,
     tempAltWeight,
-    tempModel
+    tempModel,
+    warpStrength,
+    erosionStrength
   });
   
   // Draw on active mode
@@ -184,7 +190,8 @@ function initTabs() {
 function bindEvents() {
   const inputs = [
     'grid-size', 'elev-scale', 'elev-octaves', 'elev-persistence',
-    'moist-scale', 'moist-octaves', 'temp-alt-weight'
+    'moist-scale', 'moist-octaves', 'temp-alt-weight',
+    'warp-strength', 'erosion-strength'
   ];
   
   inputs.forEach(id => {
