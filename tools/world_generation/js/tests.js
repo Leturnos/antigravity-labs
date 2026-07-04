@@ -116,9 +116,117 @@ export function runRefinementTests() {
   console.log("✅ Procedural refinements tests completed successfully!");
 }
 
+export function runRiverTests() {
+  console.log("Initializing river generator tests...");
+  
+  const params = {
+    seed: 98765432,
+    gridSize: 50,
+    elevScale: 0.03,
+    elevOctaves: 4,
+    elevPersistence: 0.5,
+    moistScale: 0.04,
+    moistOctaves: 3,
+    tempAltWeight: 0.7,
+    tempModel: 'planet',
+    warpStrength: 5,
+    erosionStrength: 0.0,
+    riverCount: 5,
+    riverMoistRadius: 3,
+    riverMoistStrength: 0.6
+  };
+
+  // Test 1: Determinism
+  const grid1 = generateWorldData(params);
+  const grid2 = generateWorldData(params);
+  
+  let riverCount1 = 0;
+  let lakeCount1 = 0;
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x < 50; x++) {
+      const c1 = grid1[y][x];
+      const c2 = grid2[y][x];
+      
+      console.assert(c1.isRiver === c2.isRiver, `Error: River flag mismatch at ${x},${y}`);
+      console.assert(c1.isLake === c2.isLake, `Error: Lake flag mismatch at ${x},${y}`);
+      console.assert(c1.biome === c2.biome, `Error: Biome mismatch at ${x},${y}`);
+      
+      if (c1.isRiver) riverCount1++;
+      if (c1.isLake) lakeCount1++;
+    }
+  }
+  console.assert(riverCount1 > 0 || lakeCount1 > 0, "Error: Rivers should be generated");
+
+  // Test 2: Downhill Flow
+  // For each river cell, verify its downhill flow to water
+  const dirs = [
+    {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1},
+    {dx: 1, dy: 1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -1, dy: 1}
+  ];
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x < 50; x++) {
+      const cell = grid1[y][x];
+      if (cell.isRiver) {
+        // A river cell must flow to a neighbor that is lower, or is ocean, or is river/lake.
+        let hasValidFlow = false;
+        for (const d of dirs) {
+          const nx = x + d.dx;
+          const ny = y + d.dy;
+          if (nx >= 0 && nx < 50 && ny >= 0 && ny < 50) {
+            const n = grid1[ny][nx];
+            if (n.elevation < 0.26 || n.elevation <= cell.elevation || n.isRiver || n.isLake) {
+              hasValidFlow = true;
+              break;
+            }
+          }
+        }
+        console.assert(hasValidFlow, `Error: River at ${x},${y} has no downhill flow or water connection.`);
+      }
+    }
+  }
+
+  // Test 3: Moisture boost isolation
+  const paramsNoRivers = { ...params, riverCount: 0 };
+  const gridNoRivers = generateWorldData(paramsNoRivers);
+  
+  // Find all river/lake cells in grid1
+  const waterSources = [];
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x < 50; x++) {
+      const cell = grid1[y][x];
+      if ((cell.isRiver || cell.isLake) && cell.elevation >= 0.26) {
+        waterSources.push({x, y});
+      }
+    }
+  }
+
+  // Assert that moisture outside the radius remains completely unaltered
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x < 50; x++) {
+      const cellWithRiver = grid1[y][x];
+      const cellNoRiver = gridNoRivers[y][x];
+      
+      let minDist = Infinity;
+      for (const src of waterSources) {
+        // BFS queue distance (8-way grid steps)
+        const dist = Math.max(Math.abs(x - src.x), Math.abs(y - src.y));
+        if (dist < minDist) minDist = dist;
+      }
+      
+      if (minDist > params.riverMoistRadius) {
+        const diff = Math.abs(cellWithRiver.moisture - cellNoRiver.moisture);
+        console.assert(diff < 1e-7, `Error: Moisture leaked outside radius at ${x},${y}. Diff: ${diff}`);
+      }
+    }
+  }
+
+  console.log("✅ River generator tests completed successfully!");
+}
+
 export function runAllTests() {
   runNoiseTests();
   runBiomeTests();
   runTempModelTests();
   runRefinementTests();
+  runRiverTests();
 }

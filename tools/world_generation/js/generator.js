@@ -1,5 +1,7 @@
 import { hash32, ImprovedNoise } from './noise.js';
 
+export const RIVER_MIN_DIST_FACTOR = 0.08;
+
 export const BIOME_THRESHOLDS = {
   DEEP_OCEAN: 0.15,
   SHALLOW_OCEAN: 0.22,
@@ -14,9 +16,13 @@ export const BIOME_THRESHOLDS = {
   SWAMP_HEIGHT: 0.45
 };
 
-export function classifyBiome(e, m, t) {
+export function classifyBiome(e, m, t, isRiver = false, isLake = false) {
   if (e < BIOME_THRESHOLDS.DEEP_OCEAN) return 'DEEP_OCEAN';
   if (e < BIOME_THRESHOLDS.SHALLOW_OCEAN) return 'SHALLOW_OCEAN';
+  
+  if (isRiver) return 'RIVER';
+  if (isLake) return 'LAKE';
+  
   if (e < BIOME_THRESHOLDS.BEACH) return 'BEACH';
   if (e > BIOME_THRESHOLDS.PEAKS) return 'SNOW_MOUNTAIN';
   
@@ -190,7 +196,7 @@ function computeCoastalDistances(grid, size) {
       }
       
       // Recalculate biomes for all cells since elevation or moisture changed
-      cell.biome = classifyBiome(cell.elevation, cell.moisture, cell.temperature);
+      cell.biome = classifyBiome(cell.elevation, cell.moisture, cell.temperature, cell.isRiver, cell.isLake);
     }
   }
 }
@@ -340,6 +346,174 @@ function finalizeWorldMetadata(grid, size, params) {
     }
   }
 
+  // River generation
+  generateRivers(grid, size, params);
+
+  // Moisture propagation from rivers
+  propagateMoisture(grid, size, params);
+
   // Cost distance BFS computes coastal moisture modifications and classifies biomes
   computeCoastalDistances(grid, size);
 }
+
+function generateRivers(grid, size, params) {
+  if (!params.riverCount || params.riverCount <= 0) return;
+
+  const landCells = [];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      if (cell.elevation >= 0.26) {
+        landCells.push({
+          x, y,
+          elevation: cell.elevation,
+          moisture: cell.moisture,
+          score: cell.elevation * cell.moisture
+        });
+      }
+    }
+  }
+
+  // Sort by high score (highest and wettest first)
+  landCells.sort((a, b) => b.score - a.score);
+
+  // Greedy source selection with minimum distance constraint
+  const sources = [];
+  const minDist = Math.max(10, Math.floor(size * RIVER_MIN_DIST_FACTOR));
+
+  for (let i = 0; i < landCells.length && sources.length < params.riverCount; i++) {
+    const candidate = landCells[i];
+    let farEnough = true;
+    for (const src of sources) {
+      const dist = Math.abs(candidate.x - src.x) + Math.abs(candidate.y - src.y);
+      if (dist < minDist) {
+        farEnough = false;
+        break;
+      }
+    }
+    if (farEnough) {
+      sources.push({ x: candidate.x, y: candidate.y });
+    }
+  }
+
+  const dirs = [
+    {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1},
+    {dx: 1, dy: 1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -1, dy: 1}
+  ];
+
+  // Flow downhill for each source
+  for (const src of sources) {
+    let currX = src.x;
+    let currY = src.y;
+    const pathSet = new Set();
+    const maxPathLength = size * 2;
+    
+    for (let step = 0; step < maxPathLength; step++) {
+      const key = `${currX},${currY}`;
+      if (pathSet.has(key)) break; // avoid loops
+      pathSet.add(key);
+      
+      const cell = grid[currY][currX];
+      
+      // Find valid downhill neighbors
+      let bestNeighbor = null;
+      let minElev = Infinity;
+      
+      for (const dir of dirs) {
+        const nx = currX + dir.dx;
+        const ny = currY + dir.dy;
+        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+          const nKey = `${nx},${ny}`;
+          if (!pathSet.has(nKey)) {
+            const nCell = grid[ny][nx];
+            if (nCell.elevation < minElev) {
+              minElev = nCell.elevation;
+              bestNeighbor = nCell;
+            }
+          }
+        }
+      }
+      
+      if (!bestNeighbor) {
+        // Local depression: make it a lake
+        cell.isLake = true;
+        break;
+      }
+      
+      if (bestNeighbor.elevation < 0.26) {
+        // Desemboca no mar
+        cell.isRiver = true;
+        break;
+      }
+      
+      if (bestNeighbor.elevation >= cell.elevation) {
+        // Local depression (valley): end flow, make it a lake
+        cell.isLake = true;
+        break;
+      }
+      
+      // Flow downhill
+      cell.isRiver = true;
+      currX = bestNeighbor.x;
+      currY = bestNeighbor.y;
+    }
+  }
+}
+
+function propagateMoisture(grid, size, params) {
+  if (!params.riverCount || params.riverCount <= 0) return;
+  const radius = params.riverMoistRadius;
+  const strength = params.riverMoistStrength;
+  if (radius <= 0 || strength <= 0) return;
+
+  const queue = [];
+  const distMap = Array.from({length: size}, () => new Int32Array(size).fill(-1));
+
+  // Enqueue all initial River and Lake cells
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      if ((cell.isRiver || cell.isLake) && cell.elevation >= 0.26) {
+        distMap[y][x] = 0;
+        queue.push({x, y});
+      }
+    }
+  }
+
+  let head = 0;
+  const dirs = [
+    {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1},
+    {dx: 1, dy: 1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -1, dy: 1}
+  ];
+
+  while (head < queue.length) {
+    const curr = queue[head++];
+    const d = distMap[curr.y][curr.x];
+    if (d >= radius) continue;
+
+    for (const dir of dirs) {
+      const nx = curr.x + dir.dx;
+      const ny = curr.y + dir.dy;
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        const neighbor = grid[ny][nx];
+        if (neighbor.elevation >= 0.26 && distMap[ny][nx] === -1) {
+          distMap[ny][nx] = d + 1;
+          queue.push({x: nx, y: ny});
+        }
+      }
+    }
+  }
+
+  // Apply linear moisture decay boost to inland land cells
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      const d = distMap[y][x];
+      if (d > 0 && d <= radius && cell.elevation >= 0.26) {
+        const boost = strength * (1.0 - d / (radius + 1));
+        cell.moisture = Math.min(1.0, cell.moisture + boost);
+      }
+    }
+  }
+}
+

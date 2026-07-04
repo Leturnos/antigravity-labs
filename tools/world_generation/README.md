@@ -1,6 +1,6 @@
-# 🗺️ Gerador Procedural de Mundos (Fase 1)
+# 🗺️ Gerador Procedural de Mundos (Fase 2)
 
-Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos.
+Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, além de simular rios por gravidade e propagação de umidade.
 
 ---
 
@@ -13,10 +13,12 @@ tools/world_generation/
 ├── css/
 │   └── style.css    # Tema dark premium com glassmorphism e layout responsivo
 └── js/
-    ├── script.js    # Arquivo de bootstrap principal: UI, Canvas e loop de renderização
-    ├── generator.js # Regras de biomas, thresholds e cálculo do grid de dados
+    ├── script.js    # Arquivo de bootstrap principal (orquestrador)
+    ├── generator.js # Regras de biomas, thresholds, rios e cálculo do grid de dados
     ├── noise.js     # Motor matemático de Ruído Perlin 2D e Hashing 32-bit
-    └── tests.js     # Suíte de testes unitários para ruído, clima e biomas
+    ├── renderer.js  # Módulo de renderização no Canvas HTML5, biomas e cores
+    ├── ui.js        # Módulo de gerenciamento de inputs da UI e eventos
+    └── tests.js     # Suíte de testes unitários (ruído, clima, biomas e rios)
 ```
 
 ---
@@ -64,6 +66,14 @@ O fator de clima base ($T_{lat}$) é calculado através de um dos três modelos 
     A temperatura básica é gerada por uma terceira camada de ruído Perlin independente de baixa frequência (escala térmica suave correspondente a $1/3$ da escala do relevo) e 2 oitavas para criar bolsas de clima orgânicas e não-lineares.
     *   $T_{lat} = \text{tempNoiseFBM}(x \cdot \text{freq}, y \cdot \text{freq})$ normalizado entre $[0.0, 1.0]$.
 
+### 5. Geração de Rios por Gravidade e Propagação de Umidade (Fase 2)
+*   **Seleção de Sementes/Nascentes**: Células terrestres ($E \ge 0.26$) com maior pontuação ($Score = E \cdot M$) são priorizadas. O espalhamento das nascentes é garantido por uma distância mínima (Manhattan) dinâmica calculada sobre a resolução do grid:
+    $$minDist = \max(10, \lfloor gridSize \cdot 0.08 \rfloor)$$
+*   **Caminho do Curso d'Água (Gradient Descent)**: A partir de cada nascente, simulamos a água correndo colina abaixo. O rio caminha passo a passo em direção ao vizinho terrestre com menor elevação. A simulação encerra ao encontrar o oceano ($E < 0.26$) ou ao cair em uma depressão local (formando um `LAKE`).
+*   **Propagação de Umidade (BFS)**: A partir de todas as células de rio e lago terrestres, rodamos uma BFS com limite de profundidade igual ao raio selecionado ($R$). Células terrestres visitadas a uma distância $d \le R$ ganham um incremento linear de umidade:
+    $$\Delta M = \text{Força} \cdot \left(1.0 - \frac{d}{R + 1}\right)$$
+    $$M_{final} = \min(1.0, M_{atual} + \Delta M)$$
+
 ---
 
 ## 🌿 Tabela de Classificação de Biomas
@@ -82,12 +92,15 @@ Um objeto de configuração unificado (`BIOME_THRESHOLDS`) no topo de `js/genera
         *   Seco ($M < 0.30$): **Deserto**
         *   Úmido-Médio ($0.30 \le M < 0.60$): **Savana**
         *   Muito Úmido ($M \ge 0.60$): **Floresta Tropical (Jungle)**
+5.  **Rio**: Células terrestres que formam os canais de fluxo de água doce (cor `#00b4d8`).
+6.  **Lago**: Células terrestres em depressões onde a água de rio se acumula sem vazão (cor `#0077b6`).
 
 ---
 
 ## ⚙️ Controles Interativos
 *   **Semente (Seed)**: Insira qualquer número ou gere uma semente aleatória de 8 dígitos.
 *   **Resolução do Grid**: Slider variando de $50 \times 50$ a $250 \times 250$. O tamanho das células no canvas é calculado dinamicamente como $cellSize = canvasSize / gridSize$.
+*   **Rios e Lagos (Fase 2)**: Sliders para regular a Quantidade de Rios, o Raio de Umidade (alcance da BFS) e a Força da Umidade (ganho de moisture) no relevo.
 *   **Modelo de Distribuição**: Dropdown para escolher entre as três dinâmicas de temperatura (Planetário, Inclinado, Ruído Livre).
 *   **Refinamentos Avançados**:
     *   *Distorção (Warp)*: Controla o nível de dobramento e desalinhamento de biomas e relevos, gerando litorais mais recortados e orgânicos.
