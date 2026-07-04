@@ -1,6 +1,6 @@
-# 🗺️ Gerador Procedural de Mundos (Fase 3)
+# 🗺️ Gerador Procedural de Mundos (Fase 4)
 
-Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (via A* Pathfinding), recursos naturais e masmorras procedurais.
+Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (A*). A Fase 4 implementa uma simulação histórica interativa e dinâmica, com timeline visual, desastres climáticos, expedições de masmorra, eventos animados no Canvas e crônicas clicáveis que revelam a localização dos eventos no mapa.
 
 ---
 
@@ -87,6 +87,15 @@ O fator de clima base ($T_{lat}$) é calculado através de um dos três modelos 
 *   **Distribuição de Recursos**: Recursos são gerados deterministicamente com base na aptidão do bioma: `wood` (madeira em florestas e selvas), `ore` (minério em montanhas de neve), `stone` (pedra/areia em desertos e tundras), `crops` (agricultura em savanas e planícies), `fish` (pesca em águas rasas).
 *   **Masmorras (Dungeons) e POIs**: Estruturas abandonadas (`temple` ou `ruins`) são geradas proceduralmente em áreas remotas e inóspitas, distantes das rotas comerciais e das cidades.
 
+### 7. Simulação Histórica Dinâmica, Eventos do Canvas e Timeline (Fase 4)
+*   **Log de Crônicas com Coordenadas**: Todos os eventos relevantes gerados na simulação histórica possuem coordenadas $(x, y)$ mapeadas. Isso permite ligar a história textual à sua manifestação física no mapa de biomas.
+*   **Indicadores Visuais Temporários (Canvas Animation Loop)**: Quando eventos ocorrem (guerra, comércio, fundação, fome, expedições), um laço de repintura é acionado a cada 100ms no Canvas. Ele desenha círculos de calor e emojis correspondentes que sobem e sofrem *fade-out* (decaimento dinâmico de `age` de 10.0 a 0).
+*   **Eventos Históricos Ambientais e de Exploração**:
+    *   *Desastres Climáticos (Seca/Praga)*: Chance anual de 2%. Escolhe uma cidade ativa de forma aleatória, esgota seu estoque de comida e dizima 10% da sua população.
+    *   *Expedições de Masmorra*: Chance anual de 4%. Os reinos enviam tropas para conquistar masmorras próximas. Se o poder militar do reino superar a barreira da masmorra, o reino ganha bônus de recursos. Caso contrário, a expedição falha com baixas de soldados (perda de população).
+*   **Crônicas Clicáveis Interativas**: Os logs gerados na UI suportam escuta de cliques. Ao clicar em um evento do log lateral, um evento global `highlight-cell` é emitido, desenhando um retículo de foco pulsante duplo na coordenada do evento no Canvas por 1,5 segundos.
+*   **Timeline Gráfica de Progresso**: Um elemento slider progressivo na UI indica visualmente o progresso temporal em tempo real, sincronizado de forma reativa a cada incremento de ano na simulação.
+
 ---
 
 ## 🌿 Tabela de Classificação de Biomas
@@ -125,5 +134,9 @@ Um objeto de configuração unificado (`BIOME_THRESHOLDS`) no topo de `js/genera
 *   **Civilizações & Recursos (Fase 3)**:
     *   *Quantidade de Cidades*: Slider para definir quantos núcleos urbanos serão semeados no mapa terrestre.
     *   *Camadas de Exibição (Checkboxes)*: Permite renderizar overlays independentes de Cidades e Rotas Comerciais, Recursos Naturais, Reinos e Fronteiras, e Dungeons no Canvas sem necessitar do re-cálculo da matriz de biomas (redesenho dinâmico).
+*   **Simulação Histórica & Timeline (Fase 4)**:
+    *   *Controles de Reprodução*: Botões para Iniciar/Pausar a simulação automática (velocidade de 450ms por ano), avançar passo a passo (+1 Ano) ou reiniciar o mundo (Reset).
+    *   *Linha do Tempo Visual*: Uma barra de progresso horizontal que reflete a passagem dos anos em tempo real.
+    *   *Logs de Crônicas Interativas*: Clique em qualquer entrada do log lateral para fazer a câmera destacar a localização exata do acontecimento no Canvas.
 *   **Feedback Debounced**: Atualiza o canvas automaticamente 100ms após o término dos arrastes de sliders.
 *   **Hover Tooltip Ampliado**: Ao passar o cursor sobre o Canvas, a barra de status inferior exibe de forma reativa a coordenada, elevação, umidade, temperatura, bioma detalhado (incluindo o nome e tipo de cidades/vilas/dungeons da célula), recurso ativo com sua densidade, e o nome do reino correspondente (indicando se é uma área de fronteira territorial).

@@ -52,6 +52,47 @@
                     </div>
                 </section>
 
+                <!-- History Simulation -->
+                <section class="control-section">
+                    <h2>⏳ Simulação de História</h2>
+                    <div class="control-group">
+                        <div class="sim-status" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label>Ano Atual</label>
+                            <span id="current-year-val" class="slider-value">0</span>
+                        </div>
+                        <div class="sim-controls" style="display: flex; gap: 8px;">
+                            <button id="btn-play-sim" class="btn-sim" style="flex: 1; font-size: 12px; padding: 6px 10px;">▶️ Iniciar</button>
+                            <button id="btn-step-sim" class="btn-sim" style="font-size: 12px; padding: 6px 10px;">⏩ +1 Ano</button>
+                            <button id="btn-reset-sim" class="btn-sim" style="font-size: 12px; padding: 6px 10px; background-color: rgba(39, 39, 42, 0.6); border: 1px solid var(--border-color);">🔄 Reset</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="timeline-slider-container" style="position: relative; margin-top: 4px; margin-bottom: 12px;">
+                            <input type="range" id="timeline-progress" min="0" max="100" value="0" step="1" style="width: 100%; pointer-events: none; height: 6px; border-radius: 3px; background: rgba(24, 24, 27, 0.8); border: 1px solid var(--border-color);">
+                            <div class="timeline-ticks" style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); margin-top: 4px;">
+                                <span>Ano 0</span>
+                                <span>Ano 25</span>
+                                <span>Ano 50</span>
+                                <span>Ano 75</span>
+                                <span>Ano 100+</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="history-init-years">Simulação Inicial</label>
+                            <span id="history-init-years-val" class="slider-value">0 anos</span>
+                        </div>
+                        <input type="range" id="history-init-years" min="0" max="100" value="0" step="5">
+                    </div>
+                    <div class="control-group">
+                        <label>Crônicas do Mundo</label>
+                        <div id="chronicles-log" class="chronicles-container">
+                            <div class="chronicle-entry system-msg">[Sistema] Geografia gerada no Ano 0. Clique em Iniciar para começar a história do mundo.</div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Elevation settings -->
                 <section class="control-section">
                     <h2>🗻 Elevação (Relevo)</h2>

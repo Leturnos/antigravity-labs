@@ -10,6 +10,33 @@ const RESOURCE_NAMES = {
   crops: 'Agricultura'
 };
 
+export function addChronicleMessage(text, type = 'system-msg', x = undefined, y = undefined) {
+  const container = document.getElementById('chronicles-log');
+  if (!container) return;
+  
+  if (container.children.length > 100) {
+    container.removeChild(container.firstChild);
+  }
+  
+  const el = document.createElement('div');
+  el.className = `chronicle-entry ${type}`;
+  if (x !== undefined && y !== undefined) {
+    el.className += ' clickable';
+    el.setAttribute('data-x', x);
+    el.setAttribute('data-y', y);
+  }
+  el.textContent = text;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+export function clearChroniclesLog() {
+  const container = document.getElementById('chronicles-log');
+  if (container) {
+    container.innerHTML = `<div class="chronicle-entry system-msg">[Sistema] Geografia inicializada no Ano 0.</div>`;
+  }
+}
+
 export function updateUIValues(params) {
   document.getElementById('grid-size-val').textContent = `${params.gridSize}x${params.gridSize}`;
   document.getElementById('elev-scale-val').textContent = params.elevScale.toFixed(3);
@@ -28,9 +55,12 @@ export function updateUIValues(params) {
 
   // Civilization Phase 3 controls
   document.getElementById('city-count-val').textContent = params.cityCount;
+  
+  // History Simulation controls
+  document.getElementById('history-init-years-val').textContent = `${params.historyInitYears} anos`;
 }
 
-export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
+export function bindUIEvents(onUpdateCallback, currentWorldDataRef, simCallbacks = {}) {
   const queueUpdate = () => {
     if (updateTimeout) clearTimeout(updateTimeout);
     updateTimeout = setTimeout(onUpdateCallback, 100);
@@ -41,7 +71,7 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
     'moist-scale', 'moist-octaves', 'temp-alt-weight',
     'warp-strength', 'erosion-strength',
     'river-count', 'river-moist-radius', 'river-moist-strength',
-    'city-count'
+    'city-count', 'history-init-years'
   ];
   
   inputs.forEach(id => {
@@ -61,6 +91,40 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
       const randSeed = Math.floor(10000000 + Math.random() * 90000000);
       document.getElementById('seed-input').value = randSeed;
       onUpdateCallback();
+    });
+  }
+
+  // Simulation controls
+  const btnPlay = document.getElementById('btn-play-sim');
+  if (btnPlay && simCallbacks.onPlay) {
+    btnPlay.addEventListener('click', () => {
+      simCallbacks.onPlay(btnPlay);
+    });
+  }
+
+  const btnStep = document.getElementById('btn-step-sim');
+  if (btnStep && simCallbacks.onStep) {
+    btnStep.addEventListener('click', simCallbacks.onStep);
+  }
+
+  const btnReset = document.getElementById('btn-reset-sim');
+  if (btnReset && simCallbacks.onReset) {
+    btnReset.addEventListener('click', simCallbacks.onReset);
+  }
+
+  // Click handler to highlight canvas cells when clicking on chronicles log
+  const chroniclesContainer = document.getElementById('chronicles-log');
+  if (chroniclesContainer) {
+    chroniclesContainer.addEventListener('click', (e) => {
+      const entry = e.target.closest('.chronicle-entry.clickable');
+      if (entry) {
+        const x = parseInt(entry.getAttribute('data-x'));
+        const y = parseInt(entry.getAttribute('data-y'));
+        if (!isNaN(x) && !isNaN(y)) {
+          const evt = new CustomEvent('highlight-cell', { detail: { x, y } });
+          window.dispatchEvent(evt);
+        }
+      }
     });
   }
 
@@ -107,7 +171,9 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
         
         let biomeText = BIOME_NAMES[cell.biome] || cell.biome;
         if (cell.cityName) {
-          biomeText += ` (${cell.cityType === 'capital' ? 'Capital' : cell.cityType === 'city' ? 'Cidade' : 'Vila'}: ${cell.cityName})`;
+          const popLabel = cell.cityPop !== undefined ? `, Pop: ${cell.cityPop}` : '';
+          const statusLabel = cell.isAbandoned ? ' [ABANDONADA]' : '';
+          biomeText += ` (${cell.cityType === 'capital' ? 'Capital' : cell.cityType === 'city' ? 'Cidade' : 'Vila'}: ${cell.cityName}${popLabel}${statusLabel})`;
         } else if (cell.dungeonName) {
           biomeText += ` (${cell.dungeonName})`;
         } else if (cell.isRoad) {
@@ -166,6 +232,9 @@ export function getParams() {
     showCities: document.getElementById('show-cities-routes').checked,
     showResources: document.getElementById('show-resources').checked,
     showKingdoms: document.getElementById('show-kingdoms').checked,
-    showDungeons: document.getElementById('show-dungeons').checked
+    showDungeons: document.getElementById('show-dungeons').checked,
+    
+    // History Phase 3
+    historyInitYears: parseInt(document.getElementById('history-init-years').value)
   };
 }

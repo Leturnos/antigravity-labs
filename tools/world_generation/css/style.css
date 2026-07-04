@@ -480,3 +480,108 @@ canvas {
         gap: 12px;
     }
 }
+
+/* Chronicles Log Container (Fase 3) */
+.chronicles-container {
+    background-color: rgba(15, 15, 20, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    height: 160px;
+    overflow-y: auto;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.chronicle-entry {
+    font-family: monospace;
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--text-muted);
+    border-left: 2px solid var(--border-color);
+    padding-left: 8px;
+}
+
+.chronicle-entry.war-msg {
+    color: #fca5a5;
+    border-left-color: #ef4444;
+}
+
+.chronicle-entry.trade-msg {
+    color: #fde047;
+    border-left-color: #eab308;
+}
+
+.chronicle-entry.growth-msg {
+    color: #86efac;
+    border-left-color: #22c55e;
+}
+
+.chronicle-entry.decay-msg {
+    color: #cbd5e1;
+    border-left-color: #64748b;
+}
+
+.chronicle-entry.system-msg {
+    color: var(--text-primary);
+    font-weight: 500;
+    border-left-color: var(--accent);
+}
+
+/* Custom scrollbar for chronicles log */
+.chronicles-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chronicles-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.chronicles-container::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 2px;
+}
+
+.chronicles-container::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+/* Clickable Chronicles (Fase 4) */
+.chronicle-entry.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.chronicle-entry.clickable:hover {
+    background-color: rgba(99, 102, 241, 0.15);
+    color: white;
+}
+
+/* Timeline progress styling (Fase 4) */
+#timeline-progress {
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+}
+
+#timeline-progress::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 1.5px solid white;
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.9);
+}
+
+#timeline-progress::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 1.5px solid white;
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.9);
+}

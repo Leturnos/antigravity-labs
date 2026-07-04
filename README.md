@@ -96,7 +96,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
-| **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Em Desenvolvimento (Etapa 3)` | Gerador procedural de mundos 2D em tempo real com ruído Perlin, rios por gravidade, lagos, propagação de umidade, e camadas de reinos, cidades com estradas (A*), masmorras e recursos. | HTML5, CSS3, JS, Python |
+| **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Em Desenvolvimento (Etapa 4)` | Gerador de mundos 2D (ruído Perlin, rios, lagos) com reinos, estradas (A*), recursos e simulação histórica interativa (timeline, eventos animados no canvas, desastres, expedições e logs clicáveis). | HTML5, CSS3, JS, Python |
 
 ---
 

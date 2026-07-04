@@ -767,18 +767,61 @@ function generateCities(grid, size, params) {
         type = 'city';
       }
     }
+    // Analisar recursos circundantes para exportação (raio 4)
+    const counts = { wood: 0, ore: 0, fish: 0, stone: 0, crops: 0 };
+    const radiusRes = 4;
+    for (let dy = -radiusRes; dy <= radiusRes; dy++) {
+      for (let dx = -radiusRes; dx <= radiusRes; dx++) {
+        const nx = c.x + dx;
+        const ny = c.y + dy;
+        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+          const res = grid[ny][nx].resource;
+          if (res) counts[res]++;
+        }
+      }
+    }
     
+    let produces = 'crops';
+    let maxCount = 0;
+    for (const [res, count] of Object.entries(counts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        produces = res;
+      }
+    }
+    
+    // Complementaridade simples de importação
+    let consumes = 'crops';
+    if (produces === 'wood') consumes = 'ore';
+    else if (produces === 'ore') consumes = 'wood';
+    else if (produces === 'crops' || produces === 'fish') consumes = 'stone';
+    else if (produces === 'stone') consumes = 'crops';
+
+    const initialPops = { capital: 2000, city: 800, village: 150 };
+    const population = initialPops[type] || 150;
     const name = generateCityName(params.seed, i);
+    
+    // Registrar dados na célula física
     c.cell.cityName = name;
     c.cell.cityType = type;
     c.cell.cityIndex = i;
+    c.cell.cityPop = population;
+    c.cell.isAbandoned = false;
     
     return {
       x: c.x,
       y: c.y,
       name,
       type,
-      index: i
+      index: i,
+      population,
+      isAbandoned: false,
+      military: Math.floor(population * 0.1),
+      foodStock: 1000,
+      materialStock: 500,
+      produces,
+      consumes,
+      connections: []
     };
   });
   
@@ -1121,5 +1164,469 @@ function generateDungeons(grid, size, params) {
   }
   
   return dungeons;
+}
+
+export function simulateHistoryYear(grid, size, params) {
+  grid.historyYear = (grid.historyYear || 0) + 1;
+  const year = grid.historyYear;
+  const chronicles = [];
+
+  const cities = grid.cities || [];
+  const kingdoms = grid.kingdoms || [];
+  grid.activeWars = grid.activeWars || [];
+
+  if (cities.length === 0) return chronicles;
+
+  // 1. HARVEST, CONSUMPTION, AND GROWTH/DECLINE PHASE
+  cities.forEach(city => {
+    if (city.isAbandoned) return;
+
+    // Gather local resources within radius 3
+    const r = 3;
+    let foodCollected = 0;
+    let materialCollected = 0;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const nx = city.x + dx;
+        const ny = city.y + dy;
+        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+          const cell = grid[ny][nx];
+          if (cell.resource === 'crops' || cell.resource === 'fish') {
+            foodCollected += 12;
+          } else if (cell.resource === 'wood' || cell.resource === 'stone') {
+            materialCollected += 8;
+          }
+        }
+      }
+    }
+
+    // Typical city production (bonus from export resource)
+    if (city.produces === 'crops' || city.produces === 'fish') foodCollected += 40;
+    else materialCollected += 30;
+
+    // Accumulate stock
+    city.foodStock += foodCollected;
+    city.materialStock += materialCollected;
+
+    // Consumption based on population
+    const foodConsumed = Math.ceil(city.population * 0.12);
+    const materialConsumed = Math.ceil(city.population * 0.04);
+
+    if (city.foodStock >= foodConsumed) {
+      city.foodStock -= foodConsumed;
+      
+      // Population growth
+      let growRate = 1.02 + (hash32(params.seed + city.index * 17 + year) % 40) / 1000; // 2% to 6% per year
+      if (city.connections.length > 0) {
+        growRate += 0.015; // Commercial trade bonus
+      }
+      const prevPop = city.population;
+      city.population = Math.floor(city.population * growRate);
+      
+      // Evoluções de categoria
+      if (city.type === 'village' && city.population > 600) {
+        city.type = 'city';
+        const cell = grid[city.y][city.x];
+        cell.cityType = 'city';
+        chronicles.push({
+          type: 'growth-msg',
+          text: `Ano ${year}: A vila de ${city.name} prosperou e tornou-se uma Cidade! (Pop: ${city.population})`,
+          x: city.x,
+          y: city.y
+        });
+      } else if (city.type === 'city' && city.population > 2500) {
+        city.type = 'capital';
+        const cell = grid[city.y][city.x];
+        cell.cityType = 'capital';
+        chronicles.push({
+          type: 'growth-msg',
+          text: `Ano ${year}: A cidade de ${city.name} tornou-se uma metrópole e nova Capital! (Pop: ${city.population})`,
+          x: city.x,
+          y: city.y
+        });
+      }
+    } else {
+      // Famine / Decline
+      const prevPop = city.population;
+      city.population = Math.max(10, Math.floor(city.population * 0.92)); // loses 8% of the population
+      city.foodStock = 0; // depleted food stock
+      
+      // Demotions
+      if (city.type === 'capital' && city.population < 1500) {
+        // Only demotes if not the sole capital of the kingdom
+        const kId = city.kingdomId;
+        const otherCapitals = cities.filter(c => c.kingdomId === kId && c.type === 'capital' && c.index !== city.index);
+        if (otherCapitals.length > 0) {
+          city.type = 'city';
+          grid[city.y][city.x].cityType = 'city';
+          chronicles.push({
+            type: 'decay-msg',
+            text: `Ano ${year}: A capital ${city.name} encolheu devido à fome e perdeu o status de capital.`,
+            x: city.x,
+            y: city.y
+          });
+        }
+      } else if (city.type === 'city' && city.population < 400) {
+        city.type = 'village';
+        grid[city.y][city.x].cityType = 'village';
+        chronicles.push({
+          type: 'decay-msg',
+          text: `Ano ${year}: A cidade de ${city.name} decaiu para o status de Vila devido ao declínio populacional.`,
+          x: city.x,
+          y: city.y
+        });
+      } else if (city.population < 30) {
+        city.isAbandoned = true;
+        const cell = grid[city.y][city.x];
+        cell.isAbandoned = true;
+        cell.cityName = `${cell.cityName} (Ruínas)`;
+        cell.cityType = 'village';
+        
+        // Remove kingdom allegiance
+        cell.kingdomId = undefined;
+        cell.kingdomName = undefined;
+        
+        chronicles.push({
+          type: 'decay-msg',
+          text: `Ano ${year}: 💀 A cidade de ${city.name} foi completamente abandonada devido à fome extrema!`,
+          x: city.x,
+          y: city.y
+        });
+      }
+    }
+    
+    // Update military power
+    city.military = Math.floor(city.population * 0.12);
+    if (city.produces === 'ore') {
+      city.military = Math.floor(city.military * 1.3);
+    }
+    
+    // Update physical grid cell attributes
+    grid[city.y][city.x].cityPop = city.population;
+  });
+
+  // 2. COMPLEMENTARY TRADE PHASE
+  cities.forEach(cityA => {
+    if (cityA.isAbandoned) return;
+    
+    const needsTrade = cityA.materialStock < 200 || cityA.foodStock < 300;
+    
+    if (needsTrade && cityA.connections.length < 3) {
+      for (const cityB of cities) {
+        if (cityB.index === cityA.index || cityB.isAbandoned) continue;
+        
+        const isComplementary = cityB.produces === cityA.consumes && cityB.consumes === cityA.produces;
+        const alreadyConnected = cityA.connections.includes(cityB.index);
+        
+        if (isComplementary && !alreadyConnected) {
+          const routePath = findPathAStar(grid, size, cityA, cityB);
+          if (routePath && routePath.length > 0) {
+            cityA.connections.push(cityB.index);
+            cityB.connections.push(cityA.index);
+            
+            routePath.forEach(pt => {
+              grid[pt.y][pt.x].isRoad = true;
+              grid[pt.y][pt.x].isTradeRoute = true;
+            });
+            
+            grid.routes = grid.routes || [];
+            const pathId = cityA.index < cityB.index ? `${cityA.index}_to_${cityB.index}` : `${cityB.index}_to_${cityA.index}`;
+            if (!grid.routes.some(r => r.id === pathId)) {
+              grid.routes.push({
+                id: pathId,
+                start: cityA,
+                end: cityB,
+                path: routePath
+              });
+            }
+            
+            chronicles.push({
+              type: 'trade-msg',
+              text: `Ano ${year}: 🌾 Rota comercial aberta entre ${cityA.name} e ${cityB.name} (Troca de ${cityA.produces} por ${cityB.consumes}).`,
+              x: Math.floor((cityA.x + cityB.x) / 2),
+              y: Math.floor((cityA.y + cityB.y) / 2)
+            });
+            
+            cityA.foodStock += 200;
+            cityA.materialStock += 200;
+            cityB.foodStock += 200;
+            cityB.materialStock += 200;
+            break;
+          }
+        }
+      }
+    }
+  });
+
+  // 3. FASE DE GUERRA E GEOPOLÍTICA (Voronoi Geográfico Dinâmico)
+  if (grid.activeWars.length === 0 && kingdoms.length > 1) {
+    const chance = hash32(params.seed + year) % 100;
+    if (chance < 8) {
+      const borderPairs = [];
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const cell = grid[y][x];
+          if (cell.isFrontier && cell.kingdomId !== undefined) {
+            const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
+            for (const d of dirs) {
+              const nx = x + d.dx;
+              const ny = y + d.dy;
+              if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                const neighbor = grid[ny][nx];
+                if (neighbor.kingdomId !== undefined && neighbor.kingdomId !== cell.kingdomId) {
+                  const pairId = cell.kingdomId < neighbor.kingdomId ? `${cell.kingdomId}_vs_${neighbor.kingdomId}` : `${neighbor.kingdomId}_vs_${cell.kingdomId}`;
+                  if (!borderPairs.includes(pairId)) {
+                    borderPairs.push(pairId);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if (borderPairs.length > 0) {
+        const chosenPair = borderPairs[hash32(params.seed + year * 3) % borderPairs.length];
+        const [k1, k2] = chosenPair.split('_vs_').map(Number);
+        
+        const reino1 = kingdoms.find(k => k.id === k1);
+        const reino2 = kingdoms.find(k => k.id === k2);
+        
+        if (reino1 && reino2 && !reino1.isDestroyed && !reino2.isDestroyed) {
+          grid.activeWars.push({
+            attackerId: k1,
+            defenderId: k2,
+            duration: 0
+          });
+          chronicles.push({
+            type: 'war-msg',
+            text: `Ano ${year}: ⚔️ O Reino de ${reino1.name} declarou guerra contra o Reino de ${reino2.name} por disputas territoriais!`,
+            x: Math.floor((reino1.capitalX || reino1.x || 0 + reino2.capitalX || reino2.x || 0) / 2),
+            y: Math.floor((reino1.capitalY || reino1.y || 0 + reino2.capitalY || reino2.y || 0) / 2)
+          });
+        }
+      }
+    }
+  }
+
+  for (let wIdx = grid.activeWars.length - 1; wIdx >= 0; wIdx--) {
+    const war = grid.activeWars[wIdx];
+    war.duration++;
+
+    const attacker = kingdoms.find(k => k.id === war.attackerId);
+    const defender = kingdoms.find(k => k.id === war.defenderId);
+
+    if (!attacker || !defender || attacker.isDestroyed || defender.isDestroyed) {
+      grid.activeWars.splice(wIdx, 1);
+      continue;
+    }
+
+    const attPower = cities.filter(c => c.kingdomId === attacker.id && !c.isAbandoned).reduce((sum, c) => sum + c.military, 0);
+    const defPower = cities.filter(c => c.kingdomId === defender.id && !c.isAbandoned).reduce((sum, c) => sum + c.military, 0);
+
+    if (attPower === 0 || defPower === 0) {
+      grid.activeWars.splice(wIdx, 1);
+      continue;
+    }
+
+    const winnerId = attPower > defPower ? attacker.id : defender.id;
+    const winnerName = attPower > defPower ? attacker.name : defender.name;
+    const loserId = winnerId === attacker.id ? defender.id : attacker.id;
+
+    const frontierCells = [];
+    const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const cell = grid[y][x];
+        if (cell.kingdomId === loserId) {
+          let bordersWinner = false;
+          for (const d of dirs) {
+            const nx = x + d.dx;
+            const ny = y + d.dy;
+            if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+              if (grid[ny][nx].kingdomId === winnerId) {
+                bordersWinner = true;
+                break;
+              }
+            }
+          }
+          if (bordersWinner) {
+            frontierCells.push(cell);
+          }
+        }
+      }
+    }
+
+    const cellsToConvert = Math.min(frontierCells.length, 4);
+    for (let i = 0; i < cellsToConvert; i++) {
+      const idx = hash32(params.seed + year * 7 + i) % frontierCells.length;
+      const cell = frontierCells[idx];
+      cell.kingdomId = winnerId;
+      cell.kingdomName = winnerName;
+      
+      if (cell.cityName && !cell.isAbandoned) {
+        const city = cities.find(c => c.x === cell.x && c.y === cell.y);
+        if (city && city.kingdomId === loserId) {
+          city.kingdomId = winnerId;
+          city.kingdomName = winnerName;
+          
+          if (city.type === 'capital') {
+            defender.isDestroyed = true;
+            
+            cities.forEach(c => {
+              if (c.kingdomId === loserId) {
+                c.kingdomId = winnerId;
+                c.kingdomName = winnerName;
+                grid[c.y][c.x].kingdomId = winnerId;
+                grid[c.y][c.x].kingdomName = winnerName;
+              }
+            });
+            for (let cy = 0; cy < size; cy++) {
+              for (let cx = 0; cx < size; cx++) {
+                if (grid[cy][cx].kingdomId === loserId) {
+                  grid[cy][cx].kingdomId = winnerId;
+                  grid[cy][cx].kingdomName = winnerName;
+                }
+              }
+            }
+            
+            chronicles.push({
+              type: 'war-msg',
+              text: `Ano ${year}: 👑 A capital ${city.name} caiu! O Reino de ${defender.name} foi totalmente conquistado e anexado por ${attacker.name}!`,
+              x: city.x,
+              y: city.y
+            });
+            
+            grid.activeWars.splice(wIdx, 1);
+            break;
+          } else {
+            chronicles.push({
+              type: 'war-msg',
+              text: `Ano ${year}: ⚔️ A cidade de ${city.name} foi capturada pelas forças de ${winnerName}!`,
+              x: city.x,
+              y: city.y
+            });
+            
+            if ((hash32(params.seed + year) % 10) < 4) {
+              grid.activeWars.splice(wIdx, 1);
+              chronicles.push({
+                type: 'system-msg',
+                text: `Ano ${year}: 🏳️ Um tratado de paz foi assinado. O Reino de ${winnerName} manteve o controle de ${city.name}.`,
+                x: city.x,
+                y: city.y
+              });
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (grid.activeWars[wIdx] && war.duration > 8) {
+      grid.activeWars.splice(wIdx, 1);
+      chronicles.push({
+        type: 'system-msg',
+        text: `Ano ${year}: 🏳️ Os reinos de ${attacker.name} e ${defender.name} assinaram um armistício devido à exaustão de combate.`,
+        x: Math.floor((attacker.capitalX || attacker.x || 0 + defender.capitalX || defender.x || 0) / 2),
+        y: Math.floor((attacker.capitalY || attacker.y || 0 + defender.capitalY || defender.y || 0) / 2)
+      });
+    }
+  }
+
+  // 5. ENVIRONMENTAL EVENTS (Natural Disasters - 2% annual chance)
+  const disasterChance = hash32(params.seed + year * 11) % 100;
+  if (disasterChance < 2 && cities.length > 0) {
+    const activeCities = cities.filter(c => !c.isAbandoned);
+    if (activeCities.length > 0) {
+      const chosenCity = activeCities[hash32(params.seed + year * 13) % activeCities.length];
+      chosenCity.foodStock = Math.max(0, chosenCity.foodStock - 400);
+      chosenCity.population = Math.max(10, Math.floor(chosenCity.population * 0.90)); // Loses 10% of population
+      chronicles.push({
+        type: 'decay-msg',
+        text: `Ano ${year}: 🌪️ Um desastre climático atingiu ${chosenCity.name}, destruindo plantações e dizimando recursos!`,
+        x: chosenCity.x,
+        y: chosenCity.y
+      });
+    }
+  }
+
+  // 6. EXPLORATION EVENTS (Dungeon Expeditions - 4% annual chance)
+  const expeditionChance = hash32(params.seed + year * 17) % 100;
+  if (expeditionChance < 4 && grid.dungeons && grid.dungeons.length > 0 && kingdoms.length > 0) {
+    const activeKingdoms = kingdoms.filter(k => !k.isDestroyed);
+    if (activeKingdoms.length > 0) {
+      const chosenKingdom = activeKingdoms[hash32(params.seed + year * 19) % activeKingdoms.length];
+      const kingdomCities = cities.filter(c => c.kingdomId === chosenKingdom.id && !c.isAbandoned);
+      
+      if (kingdomCities.length > 0) {
+        // Find closest dungeon to the kingdom's capital
+        const capital = kingdomCities.find(c => c.type === 'capital') || kingdomCities[0];
+        let closestDungeon = grid.dungeons[0];
+        let minDist = Infinity;
+        
+        for (const dung of grid.dungeons) {
+          const dist = Math.sqrt((dung.x - capital.x)**2 + (dung.y - capital.y)**2);
+          if (dist < minDist) {
+            minDist = dist;
+            closestDungeon = dung;
+          }
+        }
+        
+        const milPower = kingdomCities.reduce((sum, c) => sum + c.military, 0);
+        const successLimit = closestDungeon.type === 'temple' ? 250 : 150;
+        
+        if (milPower >= successLimit) {
+          // Success
+          kingdomCities.forEach(c => {
+            c.foodStock += 150;
+            c.materialStock += 150;
+          });
+          chronicles.push({
+            type: 'growth-msg',
+            text: `Ano ${year}: ⛩️ Expedição do Reino de ${chosenKingdom.name} conquistou ${closestDungeon.name} e trouxe tesouros!`,
+            x: closestDungeon.x,
+            y: closestDungeon.y
+          });
+        } else {
+          // Failure
+          kingdomCities.forEach(c => {
+            c.population = Math.max(10, Math.floor(c.population * 0.95)); // Loses 5% of military force
+          });
+          chronicles.push({
+            type: 'decay-msg',
+            text: `Ano ${year}: 🏛️ Expedição do Reino de ${chosenKingdom.name} falhou em explorar ${closestDungeon.name} com pesadas baixas.`,
+            x: closestDungeon.x,
+            y: closestDungeon.y
+          });
+        }
+      }
+    }
+  }
+
+  // 4. RECOMPUTE GEOPOLITICAL BORDERS
+  const dirs4 = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      cell.isFrontier = false;
+      if (cell.elevation >= 0.26 && cell.kingdomId !== undefined) {
+        let isFrontier = false;
+        for (const d of dirs4) {
+          const nx = x + d.dx;
+          const ny = y + d.dy;
+          if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+            const neighbor = grid[ny][nx];
+            if (neighbor.elevation >= 0.26 && neighbor.kingdomId !== undefined && neighbor.kingdomId !== cell.kingdomId) {
+              isFrontier = true;
+              break;
+            }
+          }
+        }
+        cell.isFrontier = isFrontier;
+      }
+    }
+  }
+
+  return chronicles;
 }
 

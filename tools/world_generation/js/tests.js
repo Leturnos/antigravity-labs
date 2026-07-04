@@ -1,5 +1,5 @@
 import { ImprovedNoise } from './noise.js';
-import { classifyBiome, generateWorldData } from './generator.js';
+import { classifyBiome, generateWorldData, simulateHistoryYear } from './generator.js';
 
 export function runNoiseTests() {
   console.log("Initializing noise generator tests...");
@@ -321,6 +321,57 @@ export function runPhase3Tests() {
   console.log("✅ Phase 3 generator tests completed successfully!");
 }
 
+export function runHistoryTests() {
+  console.log("Initializing history simulation tests...");
+  
+  const params = {
+    seed: 45678901,
+    gridSize: 50,
+    elevScale: 0.03,
+    elevOctaves: 4,
+    elevPersistence: 0.5,
+    moistScale: 0.04,
+    moistOctaves: 3,
+    tempAltWeight: 0.7,
+    tempModel: 'planet',
+    warpStrength: 5,
+    erosionStrength: 0.0,
+    riverCount: 3,
+    riverMoistRadius: 3,
+    riverMoistStrength: 0.5,
+    cityCount: 4
+  };
+
+  const grid = generateWorldData(params);
+  const initialPop = grid.cities[0].population;
+
+  // Test 1: Simulating years changes population and generates chronicles
+  let allChronicles = [];
+  for (let i = 0; i < 35; i++) {
+    const chronicles = simulateHistoryYear(grid, 50, params);
+    allChronicles = allChronicles.concat(chronicles);
+  }
+  console.assert(grid.historyYear === 35, "Error: Year should be 35.");
+  console.assert(grid.cities[0].population !== initialPop || allChronicles.length > 0, "Error: Simulation should process cities.");
+
+  // Test 2: Determinism - simulating again with same seed produces identical results
+  const gridA = generateWorldData(params);
+  for (let i = 0; i < 35; i++) simulateHistoryYear(gridA, 50, params);
+
+  const gridB = generateWorldData(params);
+  for (let i = 0; i < 35; i++) simulateHistoryYear(gridB, 50, params);
+
+  console.assert(gridA.historyYear === gridB.historyYear, "Error: historyYear mismatch.");
+  console.assert(gridA.cities[0].population === gridB.cities[0].population, "Error: Deterministic history simulation failed (population).");
+  console.assert(gridA.cities[1].foodStock === gridB.cities[1].foodStock, "Error: Deterministic history simulation failed (foodStock).");
+
+  // Test 3: Rich chronicle structures containing coordinates x and y
+  const hasCoordinates = allChronicles.some(c => c.x !== undefined && c.y !== undefined);
+  console.assert(hasCoordinates, "Error: Expected at least some chronicles to have coordinate logging (x, y) over 35 years.");
+
+  console.log("✅ History simulation tests completed successfully!");
+}
+
 export function runAllTests() {
   runNoiseTests();
   runBiomeTests();
@@ -328,4 +379,5 @@ export function runAllTests() {
   runRefinementTests();
   runRiverTests();
   runPhase3Tests();
+  runHistoryTests();
 }

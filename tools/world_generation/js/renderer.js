@@ -30,7 +30,7 @@ export const BIOME_NAMES = {
   LAKE: 'Lago'
 };
 
-export function renderWorld(grid, mode) {
+export function renderWorld(grid, mode, recentEvents = []) {
   const canvas = document.getElementById('world-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -138,12 +138,18 @@ export function renderWorld(grid, mode) {
 
     // C. Rotas Comerciais (Estradas)
     if (showCities && grid.routes) {
-      ctx.strokeStyle = '#4a3728'; // Marrom estrada
-      ctx.lineWidth = Math.max(1.5, cellSize * 0.25);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
       for (const route of grid.routes) {
+        if (route.isTradeRoute) {
+          ctx.strokeStyle = '#eab308'; // Dourado para rotas comerciais ativas
+          ctx.lineWidth = Math.max(2.2, cellSize * 0.35);
+        } else {
+          ctx.strokeStyle = '#4a3728'; // Marrom padrão para estradas
+          ctx.lineWidth = Math.max(1.5, cellSize * 0.25);
+        }
+
         ctx.beginPath();
         route.path.forEach((pt, idx) => {
           const px = pt.x * cellSize + cellSize / 2;
@@ -186,6 +192,26 @@ export function renderWorld(grid, mode) {
         const cx = city.x * cellSize + cellSize / 2;
         const cy = city.y * cellSize + cellSize / 2;
 
+        // Se for abandonada
+        if (city.isAbandoned) {
+          if (cellSize >= 8) {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `${Math.floor(cellSize * 1.3)}px Arial`;
+            ctx.fillText('💀', cx, cy);
+          } else {
+            ctx.fillStyle = '#475569'; // Cinza escuro
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            const r = Math.max(2, cellSize * 0.6);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+          continue;
+        }
+
         if (cellSize >= 8) {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -202,6 +228,71 @@ export function renderWorld(grid, mode) {
           ctx.stroke();
         }
       }
+    }
+    
+    // F. Drawing of Recent History Events and Highlights (Phase 4)
+    if (recentEvents && recentEvents.length > 0) {
+      recentEvents.forEach(evt => {
+        const cx = evt.x * cellSize + cellSize / 2;
+        const cy = evt.y * cellSize + cellSize / 2;
+        const alpha = Math.max(0, evt.age / 10.0);
+        
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        
+        // Draw pulsing heat circle
+        ctx.beginPath();
+        const pulseRadius = cellSize * (1.2 + (10.0 - Math.min(10.0, evt.age)) * 0.35);
+        ctx.arc(cx, cy, pulseRadius, 0, Math.PI * 2);
+        
+        if (evt.type === 'war-msg') {
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+          ctx.strokeStyle = '#ef4444';
+        } else if (evt.type === 'trade-msg') {
+          ctx.fillStyle = 'rgba(234, 179, 8, 0.35)';
+          ctx.strokeStyle = '#eab308';
+        } else if (evt.type === 'growth-msg') {
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.35)';
+          ctx.strokeStyle = '#22c55e';
+        } else if (evt.type === 'highlight') {
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.18)';
+          ctx.strokeStyle = '#6366f1';
+        } else {
+          // decay-msg, disasters
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+          ctx.strokeStyle = '#94a3b8';
+        }
+        
+        ctx.fill();
+        ctx.lineWidth = Math.max(1, cellSize * 0.08);
+        ctx.stroke();
+        
+        // Extra effect for Highlight (Chronicle click)
+        if (evt.type === 'highlight') {
+          ctx.beginPath();
+          ctx.arc(cx, cy, pulseRadius * 1.6, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        // Draw floating emojis that rise as event ages
+        if (cellSize >= 10 && evt.type !== 'highlight') {
+          ctx.font = `${Math.floor(cellSize * 1.5)}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          let emoji = '✨';
+          if (evt.type === 'war-msg') emoji = '⚔️';
+          else if (evt.type === 'trade-msg') emoji = '🪙';
+          else if (evt.type === 'growth-msg') emoji = '📈';
+          else if (evt.type === 'decay-msg') emoji = '💀';
+          
+          // Emojis rise slightly
+          const floatOffset = (10.0 - Math.min(10.0, evt.age)) * (cellSize * 0.15);
+          ctx.fillText(emoji, cx, cy - floatOffset);
+        }
+        
+        ctx.restore();
+      });
     }
   }
 }
