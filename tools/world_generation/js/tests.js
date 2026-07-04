@@ -223,10 +223,109 @@ export function runRiverTests() {
   console.log("✅ River generator tests completed successfully!");
 }
 
+export function runPhase3Tests() {
+  console.log("Initializing Phase 3 generator tests...");
+  
+  const params = {
+    seed: 98765432,
+    gridSize: 50,
+    elevScale: 0.03,
+    elevOctaves: 4,
+    elevPersistence: 0.5,
+    moistScale: 0.04,
+    moistOctaves: 3,
+    tempAltWeight: 0.7,
+    tempModel: 'planet',
+    warpStrength: 5,
+    erosionStrength: 0.0,
+    riverCount: 5,
+    riverMoistRadius: 3,
+    riverMoistStrength: 0.6,
+    
+    // Phase 3 params
+    cityCount: 5
+  };
+
+  const grid = generateWorldData(params);
+
+  // Test 1: Cidades geradas e contadas corretamente
+  console.assert(grid.cities !== undefined, "Error: Cities must be generated.");
+  console.assert(grid.cities.length === params.cityCount, `Error: Expected ${params.cityCount} cities, got ${grid.cities.length}`);
+
+  // Test 2: Posicionamento ecológico e regras de cidades
+  grid.cities.forEach(city => {
+    const cell = grid[city.y][city.x];
+    console.assert(cell.elevation >= 0.26, `Error: City ${city.name} placed on water at ${city.x},${city.y}`);
+    console.assert(cell.biome !== 'SNOW_MOUNTAIN', `Error: City ${city.name} placed on snow peaks`);
+    console.assert(cell.biome !== 'SWAMP', `Error: City ${city.name} placed on swamp`);
+  });
+
+  // Test 3: Distância mínima respeitada
+  const minDist = Math.max(6, Math.floor(50 / (Math.sqrt(params.cityCount) * 1.6)));
+  for (let i = 0; i < grid.cities.length; i++) {
+    for (let j = i + 1; j < grid.cities.length; j++) {
+      const c1 = grid.cities[i];
+      const c2 = grid.cities[j];
+      const dist = Math.sqrt((c1.x - c2.x) ** 2 + (c1.y - c2.y) ** 2);
+      console.assert(dist >= minDist - 0.5, `Error: Cities too close! ${c1.name} and ${c2.name} at distance ${dist}`);
+    }
+  }
+
+  // Test 4: Reinos e capitais definidos
+  console.assert(grid.kingdoms !== undefined && grid.kingdoms.length > 0, "Error: Kingdoms must be generated.");
+  const capitals = grid.cities.filter(c => c.type === 'capital');
+  console.assert(capitals.length === grid.kingdoms.length, "Error: Number of kingdoms must match number of capitals.");
+
+  // Test 5: A* Pathfinding de estradas comerciais
+  console.assert(grid.routes !== undefined, "Error: Routes must be generated.");
+  grid.routes.forEach(route => {
+    route.path.forEach(pt => {
+      const cell = grid[pt.y][pt.x];
+      console.assert(cell.elevation >= 0.26, "Error: Road crossing ocean.");
+      console.assert(!cell.isLake, "Error: Road crossing lake.");
+    });
+  });
+
+  // Test 6: Recursos naturais coerentes com biomas
+  let resourceCount = 0;
+  for (let y = 0; y < 50; y++) {
+    for (let x = 0; x < 50; x++) {
+      const cell = grid[y][x];
+      if (cell.resource) {
+        resourceCount++;
+        if (cell.resource === 'wood') {
+          console.assert(cell.biome === 'TEMP_FOREST' || cell.biome === 'JUNGLE', "Error: Wood resource outside forest/jungle.");
+        } else if (cell.resource === 'ore') {
+          console.assert(cell.biome === 'SNOW_MOUNTAIN', "Error: Ore resource outside mountain peaks.");
+        } else if (cell.resource === 'stone') {
+          console.assert(cell.biome === 'DESERT' || cell.biome === 'TUNDRA', "Error: Stone resource outside desert/tundra.");
+        } else if (cell.resource === 'crops') {
+          console.assert(cell.biome === 'SAVANNA' || cell.biome === 'GRASSLAND', "Error: Crops resource outside savanna/grassland.");
+        }
+      }
+    }
+  }
+  console.assert(resourceCount > 0, "Error: No natural resources generated.");
+
+  // Test 7: Dungeons geradas corretamente
+  console.assert(grid.dungeons !== undefined && grid.dungeons.length >= 3, "Error: Expected at least 3 dungeons.");
+  grid.dungeons.forEach(dung => {
+    const cell = grid[dung.y][dung.x];
+    if (dung.type === 'temple') {
+      console.assert(cell.biome === 'JUNGLE' || cell.biome === 'TEMP_FOREST', "Error: Temple dungeon outside forest/jungle.");
+    } else {
+      console.assert(cell.biome === 'DESERT' || cell.biome === 'TUNDRA' || cell.biome === 'SWAMP', "Error: Ruins dungeon outside hostile biome.");
+    }
+  });
+
+  console.log("✅ Phase 3 generator tests completed successfully!");
+}
+
 export function runAllTests() {
   runNoiseTests();
   runBiomeTests();
   runTempModelTests();
   runRefinementTests();
   runRiverTests();
+  runPhase3Tests();
 }

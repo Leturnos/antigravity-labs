@@ -1,6 +1,6 @@
-# 🗺️ Gerador Procedural de Mundos (Fase 2)
+# 🗺️ Gerador Procedural de Mundos (Fase 3)
 
-Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, além de simular rios por gravidade e propagação de umidade.
+Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (via A* Pathfinding), recursos naturais e masmorras procedurais.
 
 ---
 
@@ -74,6 +74,19 @@ O fator de clima base ($T_{lat}$) é calculado através de um dos três modelos 
     $$\Delta M = \text{Força} \cdot \left(1.0 - \frac{d}{R + 1}\right)$$
     $$M_{final} = \min(1.0, M_{atual} + \Delta M)$$
 
+### 6. Civilizações, Reinos e Estradas Comerciais (Fase 3)
+*   **Geração de Assentamentos (Cidades e Vilas)**: Células planas terrestres ($E \ge 0.26$, evitando montanhas $E > 0.80$) com alta proximidade a fontes de água doce (rios e lagos) são selecionadas como polos de desenvolvimento. Elas são classificadas deterministicamente como Capitais, Cidades ou Vilas. Os nomes das cidades e reinos são gerados usando hashes determinísticos da semente.
+*   **Territórios e Fronteiras (BFS Territorial)**: A partir das Capitais, os territórios dos reinos expandem-se simulando crescimento populacional em áreas terrestres através de uma busca em largura (BFS) coordenada. Quando territórios de reinos distintos entram em contato, a célula de colisão é marcada como fronteira comercial (`isFrontier`).
+*   **Rotas Comerciais e Estradas (A* Pathfinding)**: As cidades e capitais próximas são conectadas por estradas. O trajeto é calculado usando o algoritmo $A^*$ com uma função de custo heurística inteligente:
+    $$Custo = C_{base} + \Delta E \cdot 15.0 + Penalidade_{Bioma} + Penalidade_{Rio} - Desconto_{Estrada}$$
+    *   $C_{base}$ é $1.0$ para movimentos ortogonais e $1.414$ para diagonais.
+    *   $\Delta E$ é a diferença de altitude acumulada.
+    *   Penalidades adicionais são aplicadas para cruzar rios (+4), pântanos (+6), selvas (+2), desertos (+1.5) e picos nevados (+20, intransponível).
+    *   Se a estrada já existe, o custo é reduzido drasticamente para $0.15$ para incentivar o compartilhamento de trechos de rotas comerciais.
+    *   Estradas são bloqueadas de cruzar oceanos e lagos.
+*   **Distribuição de Recursos**: Recursos são gerados deterministicamente com base na aptidão do bioma: `wood` (madeira em florestas e selvas), `ore` (minério em montanhas de neve), `stone` (pedra/areia em desertos e tundras), `crops` (agricultura em savanas e planícies), `fish` (pesca em águas rasas).
+*   **Masmorras (Dungeons) e POIs**: Estruturas abandonadas (`temple` ou `ruins`) são geradas proceduralmente em áreas remotas e inóspitas, distantes das rotas comerciais e das cidades.
+
 ---
 
 ## 🌿 Tabela de Classificação de Biomas
@@ -109,5 +122,8 @@ Um objeto de configuração unificado (`BIOME_THRESHOLDS`) no topo de `js/genera
 *   **Controles de Umidade**: Ajuste a escala e oitavas do ruído.
 *   **Controles de Temperatura**: Ajuste a atenuação por altitude.
 *   **Camadas de Renderização (Tabs)**: Alterne visualizações (Biomas, Elevação, Umidade, Temperatura) instantaneamente.
+*   **Civilizações & Recursos (Fase 3)**:
+    *   *Quantidade de Cidades*: Slider para definir quantos núcleos urbanos serão semeados no mapa terrestre.
+    *   *Camadas de Exibição (Checkboxes)*: Permite renderizar overlays independentes de Cidades e Rotas Comerciais, Recursos Naturais, Reinos e Fronteiras, e Dungeons no Canvas sem necessitar do re-cálculo da matriz de biomas (redesenho dinâmico).
 *   **Feedback Debounced**: Atualiza o canvas automaticamente 100ms após o término dos arrastes de sliders.
-*   **Hover Tooltip**: Ao passar o cursor sobre o Canvas, a barra de status inferior exibe as coordenadas, elevação, umidade, temperatura e bioma da célula sob o cursor.
+*   **Hover Tooltip Ampliado**: Ao passar o cursor sobre o Canvas, a barra de status inferior exibe de forma reativa a coordenada, elevação, umidade, temperatura, bioma detalhado (incluindo o nome e tipo de cidades/vilas/dungeons da célula), recurso ativo com sua densidade, e o nome do reino correspondente (indicando se é uma área de fronteira territorial).

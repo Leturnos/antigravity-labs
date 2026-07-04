@@ -39,6 +39,7 @@ export function renderWorld(grid, mode) {
   
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
+  // 1. Renderização base do grid
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const cell = grid[y][x];
@@ -63,6 +64,144 @@ export function renderWorld(grid, mode) {
       
       ctx.fillStyle = color;
       ctx.fillRect(x * cellSize, y * cellSize, Math.ceil(cellSize), Math.ceil(cellSize));
+    }
+  }
+
+  // 2. Camadas adicionais da Fase 3 (somente na visualização de Biomas)
+  if (mode === 'biome') {
+    const showKingdoms = document.getElementById('show-kingdoms')?.checked ?? false;
+    const showResources = document.getElementById('show-resources')?.checked ?? false;
+    const showCities = document.getElementById('show-cities-routes')?.checked ?? false;
+    const showDungeons = document.getElementById('show-dungeons')?.checked ?? false;
+
+    // A. Reinos: territórios semitransparentes
+    if (showKingdoms && grid.kingdoms) {
+      const KINGDOM_COLORS = [
+        'rgba(230, 57, 70, 0.15)',  // Vermelho
+        'rgba(69, 123, 157, 0.15)', // Azul
+        'rgba(131, 56, 236, 0.15)', // Roxo
+        'rgba(244, 162, 97, 0.15)', // Laranja
+        'rgba(42, 157, 143, 0.15)', // Verde-turquesa
+      ];
+      
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const cell = grid[y][x];
+          if (cell.kingdomId !== undefined) {
+            ctx.fillStyle = KINGDOM_COLORS[cell.kingdomId % KINGDOM_COLORS.length];
+            ctx.fillRect(x * cellSize, y * cellSize, Math.ceil(cellSize), Math.ceil(cellSize));
+          }
+        }
+      }
+
+      // Fronteiras
+      const KINGDOM_BORDER_COLORS = ['#e63946', '#457b9d', '#8338ec', '#f4a261', '#2a9d8f'];
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const cell = grid[y][x];
+          if (cell.isFrontier) {
+            ctx.strokeStyle = KINGDOM_BORDER_COLORS[cell.kingdomId % KINGDOM_BORDER_COLORS.length];
+            ctx.lineWidth = Math.max(1, cellSize * 0.15);
+            ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+
+    // B. Recursos Naturais
+    if (showResources) {
+      const resourceEmojis = { wood: '🪵', ore: '⛏️', fish: '🐟', stone: '🧱', crops: '🌾' };
+      const resourceColors = { wood: '#8b5a2b', ore: '#a9a9a9', fish: '#90e0ef', stone: '#d3d3d3', crops: '#ffd166' };
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const cell = grid[y][x];
+          if (cell.resource && cell.resourceDensity > 0.6) {
+            const cx = x * cellSize + cellSize / 2;
+            const cy = y * cellSize + cellSize / 2;
+
+            if (cellSize >= 10) {
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.font = `${Math.floor(cellSize * 0.75)}px Arial`;
+              ctx.fillText(resourceEmojis[cell.resource], cx, cy);
+            } else {
+              ctx.fillStyle = resourceColors[cell.resource];
+              ctx.beginPath();
+              ctx.arc(cx, cy, Math.max(1, cellSize * 0.2), 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+      }
+    }
+
+    // C. Rotas Comerciais (Estradas)
+    if (showCities && grid.routes) {
+      ctx.strokeStyle = '#4a3728'; // Marrom estrada
+      ctx.lineWidth = Math.max(1.5, cellSize * 0.25);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (const route of grid.routes) {
+        ctx.beginPath();
+        route.path.forEach((pt, idx) => {
+          const px = pt.x * cellSize + cellSize / 2;
+          const py = pt.y * cellSize + cellSize / 2;
+          if (idx === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
+        });
+        ctx.stroke();
+      }
+    }
+
+    // D. Dungeons e POIs
+    if (showDungeons && grid.dungeons) {
+      for (const dung of grid.dungeons) {
+        const cx = dung.x * cellSize + cellSize / 2;
+        const cy = dung.y * cellSize + cellSize / 2;
+
+        if (cellSize >= 8) {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = `${Math.floor(cellSize * 1.1)}px Arial`;
+          ctx.fillText(dung.type === 'temple' ? '⛩️' : '🏛️', cx, cy);
+        } else {
+          ctx.fillStyle = '#ff3333';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1;
+          const w = Math.max(3, cellSize * 0.8);
+          ctx.fillRect(cx - w/2, cy - w/2, w, w);
+          ctx.strokeRect(cx - w/2, cy - w/2, w, w);
+        }
+      }
+    }
+
+    // E. Cidades e Assentamentos
+    if (showCities && grid.cities) {
+      for (const city of grid.cities) {
+        const cx = city.x * cellSize + cellSize / 2;
+        const cy = city.y * cellSize + cellSize / 2;
+
+        if (cellSize >= 8) {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = `${Math.floor(cellSize * 1.3)}px Arial`;
+          ctx.fillText(city.type === 'capital' ? '👑' : city.type === 'city' ? '🏰' : '🏠', cx, cy);
+        } else {
+          ctx.fillStyle = city.type === 'capital' ? '#ff3333' : city.type === 'city' ? '#ffaa00' : '#ffff00';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1;
+          const r = Math.max(2, cellSize * 0.6);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+      }
     }
   }
 }

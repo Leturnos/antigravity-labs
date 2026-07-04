@@ -1,6 +1,14 @@
-import { BIOME_NAMES } from './renderer.js';
+import { BIOME_NAMES, renderWorld } from './renderer.js';
 
 let updateTimeout = null;
+
+const RESOURCE_NAMES = {
+  wood: 'Madeira',
+  ore: 'Minério',
+  fish: 'Pesca',
+  stone: 'Pedra/Areia',
+  crops: 'Agricultura'
+};
 
 export function updateUIValues(params) {
   document.getElementById('grid-size-val').textContent = `${params.gridSize}x${params.gridSize}`;
@@ -17,6 +25,9 @@ export function updateUIValues(params) {
   document.getElementById('river-count-val').textContent = params.riverCount;
   document.getElementById('river-moist-radius-val').textContent = `${params.riverMoistRadius} células`;
   document.getElementById('river-moist-strength-val').textContent = params.riverMoistStrength.toFixed(2);
+
+  // Civilization Phase 3 controls
+  document.getElementById('city-count-val').textContent = params.cityCount;
 }
 
 export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
@@ -29,7 +40,8 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
     'grid-size', 'elev-scale', 'elev-octaves', 'elev-persistence',
     'moist-scale', 'moist-octaves', 'temp-alt-weight',
     'warp-strength', 'erosion-strength',
-    'river-count', 'river-moist-radius', 'river-moist-strength'
+    'river-count', 'river-moist-radius', 'river-moist-strength',
+    'city-count'
   ];
   
   inputs.forEach(id => {
@@ -51,6 +63,22 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
       onUpdateCallback();
     });
   }
+
+  // Handle Layer Checkboxes Redraw (no regeneration)
+  const checkboxes = ['show-cities-routes', 'show-resources', 'show-kingdoms', 'show-dungeons'];
+  checkboxes.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => {
+        const grid = currentWorldDataRef();
+        if (grid) {
+          const activeTab = document.querySelector('.tab-btn.active');
+          const currentViewMode = activeTab ? activeTab.getAttribute('data-mode') : 'biome';
+          renderWorld(grid, currentViewMode);
+        }
+      });
+    }
+  });
 
   // Interactivity Hover Tooltip
   const canvas = document.getElementById('world-canvas');
@@ -76,7 +104,31 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
         document.getElementById('val-elevation').textContent = cell.elevation.toFixed(2);
         document.getElementById('val-moisture').textContent = cell.moisture.toFixed(2);
         document.getElementById('val-temp').textContent = cell.temperature.toFixed(2);
-        document.getElementById('val-biome').textContent = BIOME_NAMES[cell.biome] || cell.biome;
+        
+        let biomeText = BIOME_NAMES[cell.biome] || cell.biome;
+        if (cell.cityName) {
+          biomeText += ` (${cell.cityType === 'capital' ? 'Capital' : cell.cityType === 'city' ? 'Cidade' : 'Vila'}: ${cell.cityName})`;
+        } else if (cell.dungeonName) {
+          biomeText += ` (${cell.dungeonName})`;
+        } else if (cell.isRoad) {
+          biomeText += ` (Estrada Comercial)`;
+        }
+        document.getElementById('val-biome').textContent = biomeText;
+
+        // Resource display
+        if (cell.resource) {
+          const density = cell.resourceDensity > 0.8 ? 'Rico' : cell.resourceDensity > 0.6 ? 'Médio' : 'Escasso';
+          document.getElementById('val-resource').textContent = `${RESOURCE_NAMES[cell.resource]} (${density})`;
+        } else {
+          document.getElementById('val-resource').textContent = '-';
+        }
+
+        // Kingdom display
+        if (cell.kingdomName) {
+          document.getElementById('val-kingdom').textContent = cell.kingdomName + (cell.isFrontier ? ' (Fronteira)' : '');
+        } else {
+          document.getElementById('val-kingdom').textContent = '-';
+        }
       }
     });
     
@@ -86,6 +138,8 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef) {
       document.getElementById('val-moisture').textContent = '-';
       document.getElementById('val-temp').textContent = '-';
       document.getElementById('val-biome').textContent = '-';
+      document.getElementById('val-resource').textContent = '-';
+      document.getElementById('val-kingdom').textContent = '-';
     });
   }
 }
@@ -105,6 +159,13 @@ export function getParams() {
     erosionStrength: parseFloat(document.getElementById('erosion-strength').value),
     riverCount: parseInt(document.getElementById('river-count').value),
     riverMoistRadius: parseInt(document.getElementById('river-moist-radius').value),
-    riverMoistStrength: parseFloat(document.getElementById('river-moist-strength').value)
+    riverMoistStrength: parseFloat(document.getElementById('river-moist-strength').value),
+    
+    // Civilizations Phase 3
+    cityCount: parseInt(document.getElementById('city-count').value),
+    showCities: document.getElementById('show-cities-routes').checked,
+    showResources: document.getElementById('show-resources').checked,
+    showKingdoms: document.getElementById('show-kingdoms').checked,
+    showDungeons: document.getElementById('show-dungeons').checked
   };
 }

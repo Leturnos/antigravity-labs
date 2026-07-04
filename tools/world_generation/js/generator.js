@@ -354,6 +354,9 @@ function finalizeWorldMetadata(grid, size, params) {
 
   // Cost distance BFS computes coastal moisture modifications and classifies biomes
   computeCoastalDistances(grid, size);
+
+  // Fase 3: Civilizações, Recursos, Reinos e Dungeons
+  generatePhase3Elements(grid, size, params);
 }
 
 function generateRivers(grid, size, params) {
@@ -515,5 +518,608 @@ function propagateMoisture(grid, size, params) {
       }
     }
   }
+}
+
+// ==========================================
+// FASE 3: CIVILIZAÇÕES, RECURSOS E REINOS
+// ==========================================
+
+const CITY_PREFIXES = ['Oakhaven', 'Ironclad', 'Stonegard', 'Deepwater', 'Riverrun', 'Goldfield', 'Greenwall', 'Sanddrift', 'Winterhold', 'Fairbreeze', 'Shadowfen', 'Stormwatch'];
+const CITY_SUFFIXES = ['crest', 'fort', 'bury', 'port', 'vale', 'shore', 'bridge', 'gate', 'wood', 'run', 'keep', 'spire'];
+
+const KINGDOM_NAMES = ['Aethelgard', 'Valyria', 'Gondor', 'Rohan', 'Skellige', 'Novigrad', 'Temeria', 'Redania', 'Nilfgaard', 'Cintra'];
+
+const DUNGEON_TEMPLE_NAMES = ['Templo de Solis', 'Santuário de Jade', 'Zigurato das Serpes', 'Monastério das Brumas'];
+const DUNGEON_RUINS_NAMES = ['Ruínas de Osgiliath', 'Fortaleza do Crânio', 'Necrópole das Areias', 'Bastião do Inverno'];
+
+function generateCityName(seed, index) {
+  const hash = hash32(seed + index * 12345);
+  const p = CITY_PREFIXES[hash % CITY_PREFIXES.length];
+  const s = CITY_SUFFIXES[(hash >> 4) % CITY_SUFFIXES.length];
+  return `${p}${s}`;
+}
+
+function generatePhase3Elements(grid, size, params) {
+  // 1. Recursos Naturais
+  generateNaturalResources(grid, size, params);
+  
+  // 2. Cidades e Assentamentos
+  const cities = generateCities(grid, size, params);
+  grid.cities = cities;
+  
+  // 3. Reinos e Fronteiras (a partir das capitais das cidades)
+  const kingdoms = generateKingdoms(grid, size, cities);
+  grid.kingdoms = kingdoms;
+  
+  // 4. Rotas comerciais (A*)
+  const routes = generateRoutes(grid, size, cities);
+  grid.routes = routes;
+  
+  // 5. Dungeons e POIs
+  const dungeons = generateDungeons(grid, size, params);
+  grid.dungeons = dungeons;
+}
+
+function generateNaturalResources(grid, size, params) {
+  const resSeed = hash32(params.seed + 11111);
+  const resNoise = new ImprovedNoise(resSeed);
+  const scale = 0.06; // ruído de baixa frequência para depósitos
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      
+      // Apenas células terrestres
+      if (cell.elevation < 0.26) {
+        cell.resource = null;
+        cell.resourceDensity = 0;
+        continue;
+      }
+
+      // Pegamos o ruído de baixa frequência normalizado [0, 1]
+      const noiseVal = (resNoise.noise(x * scale, y * scale) + 1) / 2;
+      
+      let resource = null;
+      let resourceDensity = 0;
+      
+      if (noiseVal > 0.55) { // threshold para depósitos concentrados
+        const biome = cell.biome;
+        if (biome === 'TEMP_FOREST' || biome === 'JUNGLE') {
+          resource = 'wood';
+        } else if (biome === 'SNOW_MOUNTAIN') {
+          resource = 'ore';
+        } else if (biome === 'DESERT' || biome === 'TUNDRA') {
+          resource = 'stone';
+        } else if (biome === 'SAVANNA' || biome === 'GRASSLAND') {
+          resource = 'crops';
+        } else if (biome === 'BEACH' || biome === 'SWAMP' || isNearWater(cell, grid, size)) {
+          resource = 'fish';
+        }
+        
+        if (resource) {
+          resourceDensity = (noiseVal - 0.55) / 0.45; // normaliza densidade de 0 a 1
+        }
+      }
+      
+      cell.resource = resource;
+      cell.resourceDensity = resourceDensity;
+    }
+  }
+}
+
+function isNearWater(cell, grid, size) {
+  const dirs = [{dx:1, dy:0}, {dx:-1, dy:0}, {dx:0, dy:1}, {dx:0, dy:-1}];
+  for (const d of dirs) {
+    const nx = cell.x + d.dx;
+    const ny = cell.y + d.dy;
+    if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+      const neighbor = grid[ny][nx];
+      if (neighbor.elevation < 0.26 || neighbor.isRiver || neighbor.isLake) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isNearCoast(cell, grid, size) {
+  const r = 3;
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const nx = cell.x + dx;
+      const ny = cell.y + dy;
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        const e = grid[ny][nx].elevation;
+        if (e < 0.26) return true; // oceano/mar raso próximo
+      }
+    }
+  }
+  return false;
+}
+
+function generateCities(grid, size, params) {
+  const cityCount = params.cityCount || 6;
+  const candidates = [];
+  
+  for (let y = 2; y < size - 2; y++) {
+    for (let x = 2; x < size - 2; x++) {
+      const cell = grid[y][x];
+      
+      // Critérios de exclusão
+      if (cell.elevation < 0.26) continue;
+      if (cell.biome === 'BEACH') continue;
+      if (cell.biome === 'SNOW_MOUNTAIN') continue;
+      if (cell.biome === 'SWAMP') continue;
+      
+      // Declividade local (terreno plano)
+      const hCurrent = cell.elevation;
+      const hR = grid[y][x + 1].elevation;
+      const hL = grid[y][x - 1].elevation;
+      const hD = grid[y + 1][x].elevation;
+      const hU = grid[y - 1][x].elevation;
+      const slope = (Math.abs(hR - hCurrent) + Math.abs(hL - hCurrent) + Math.abs(hD - hCurrent) + Math.abs(hU - hCurrent)) / 4;
+      
+      if (slope > 0.07) continue; // muito inclinado
+      
+      let score = 50; // atratividade base
+      
+      // Proximidade de água doce
+      let hasRiverOrLake = false;
+      const dirs4 = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
+      for (const d of dirs4) {
+        const nx = x + d.dx;
+        const ny = y + d.dy;
+        const n = grid[ny][nx];
+        if (n.isRiver || n.isLake) {
+          hasRiverOrLake = true;
+          break;
+        }
+      }
+      
+      if (hasRiverOrLake) {
+        score += 35;
+      } else if (isNearCoast(cell, grid, size)) {
+        score += 20;
+      }
+      
+      // Biomas favoráveis
+      if (cell.biome === 'GRASSLAND' || cell.biome === 'TEMP_FOREST') {
+        score += 25;
+      } else if (cell.biome === 'SAVANNA' || cell.biome === 'JUNGLE') {
+        score += 15;
+      } else if (cell.biome === 'TUNDRA' || cell.biome === 'DESERT') {
+        score += 5;
+      }
+      
+      // Extra plano
+      if (slope < 0.03) {
+        score += 15;
+      }
+      
+      // Pequeno ruído determinístico para quebrar empates e variar
+      const valHash = hash32(params.seed + x * 83 + y * 19);
+      score += (valHash % 100) / 10;
+      
+      candidates.push({
+        x, y,
+        score,
+        cell
+      });
+    }
+  }
+  
+  // Ordenar candidatos por pontuação decrescente
+  candidates.sort((a, b) => b.score - a.score);
+  
+  const selected = [];
+  const minDist = Math.max(6, Math.floor(size / (Math.sqrt(cityCount) * 1.6)));
+  
+  for (const cand of candidates) {
+    if (selected.length >= cityCount) break;
+    
+    let tooClose = false;
+    for (const sel of selected) {
+      const dist = Math.sqrt((cand.x - sel.x) ** 2 + (cand.y - sel.y) ** 2);
+      if (dist < minDist) {
+        tooClose = true;
+        break;
+      }
+    }
+    
+    if (!tooClose) {
+      selected.push(cand);
+    }
+  }
+  
+  // Classificar reinos e tamanhos
+  let numCapitals = 1;
+  if (cityCount >= 5 && cityCount < 9) numCapitals = 2;
+  else if (cityCount >= 9) numCapitals = 3;
+  
+  const cities = selected.map((c, i) => {
+    let type = 'village';
+    if (i < numCapitals) {
+      type = 'capital';
+    } else {
+      // Suporte ecológico local
+      let support = 0;
+      let count = 0;
+      const r = 3;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          const nx = c.x + dx;
+          const ny = c.y + dy;
+          if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+            const b = grid[ny][nx].biome;
+            if (b === 'GRASSLAND' || b === 'TEMP_FOREST' || b === 'SAVANNA' || b === 'JUNGLE') {
+              support += 1.0;
+            } else if (b === 'DESERT' || b === 'TUNDRA' || b === 'SWAMP' || b === 'SNOW_MOUNTAIN') {
+              support += 0.1;
+            } else {
+              support += 0.2;
+            }
+            count++;
+          }
+        }
+      }
+      const ecoRatio = support / count;
+      if (ecoRatio > 0.5) {
+        type = 'city';
+      }
+    }
+    
+    const name = generateCityName(params.seed, i);
+    c.cell.cityName = name;
+    c.cell.cityType = type;
+    c.cell.cityIndex = i;
+    
+    return {
+      x: c.x,
+      y: c.y,
+      name,
+      type,
+      index: i
+    };
+  });
+  
+  return cities;
+}
+
+function generateKingdoms(grid, size, cities) {
+  const capitals = cities.filter(c => c.type === 'capital');
+  const kingdoms = [];
+  
+  if (capitals.length === 0) return kingdoms;
+  
+  const queue = [];
+  const visited = Array.from({length: size}, () => new Int32Array(size).fill(-1));
+  
+  capitals.forEach((cap, i) => {
+    visited[cap.y][cap.x] = i;
+    const name = KINGDOM_NAMES[i % KINGDOM_NAMES.length] || `Reino de ${cap.name}`;
+    kingdoms.push({
+      id: i,
+      name,
+      capital: cap,
+      colorId: i,
+      cells: [{x: cap.x, y: cap.y}]
+    });
+    
+    grid[cap.y][cap.x].kingdomId = i;
+    grid[cap.y][cap.x].kingdomName = name;
+    
+    queue.push({x: cap.x, y: cap.y, kingdomId: i, name, dist: 0});
+  });
+  
+  let head = 0;
+  const dirs = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
+  
+  while (head < queue.length) {
+    const curr = queue[head++];
+    
+    for (const d of dirs) {
+      const nx = curr.x + d.dx;
+      const ny = curr.y + d.dy;
+      
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        const neighbor = grid[ny][nx];
+        
+        if (neighbor.elevation < 0.26) continue;
+        if (neighbor.biome === 'SNOW_MOUNTAIN') continue;
+        
+        if (visited[ny][nx] === -1) {
+          visited[ny][nx] = curr.kingdomId;
+          neighbor.kingdomId = curr.kingdomId;
+          neighbor.kingdomName = curr.name;
+          kingdoms[curr.kingdomId].cells.push({x: nx, y: ny});
+          
+          queue.push({
+            x: nx,
+            y: ny,
+            kingdomId: curr.kingdomId,
+            name: curr.name,
+            dist: curr.dist + 1
+          });
+        }
+      }
+    }
+  }
+  
+  // Marcar as divisas de reinos (Fronteiras)
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      if (cell.elevation >= 0.26 && cell.kingdomId !== undefined) {
+        let isFrontier = false;
+        for (const d of dirs) {
+          const nx = x + d.dx;
+          const ny = y + d.dy;
+          if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+            const neighbor = grid[ny][nx];
+            if (neighbor.elevation >= 0.26 && neighbor.kingdomId !== undefined && neighbor.kingdomId !== cell.kingdomId) {
+              isFrontier = true;
+              break;
+            }
+          }
+        }
+        cell.isFrontier = isFrontier;
+      }
+    }
+  }
+  
+  // Associar vilas/cidades sem capital ao reino territorial onde caíram
+  for (const city of cities) {
+    if (city.type !== 'capital') {
+      const cell = grid[city.y][city.x];
+      if (cell.kingdomId !== undefined) {
+        city.kingdomId = cell.kingdomId;
+        city.kingdomName = cell.kingdomName;
+      }
+    }
+  }
+  
+  return kingdoms;
+}
+
+function findPathAStar(grid, size, start, end) {
+  const openSet = new Set();
+  const closedSet = new Set();
+  const startKey = `${start.x},${start.y}`;
+  const endKey = `${end.x},${end.y}`;
+  
+  const cameFrom = new Map();
+  const gScore = new Map();
+  const fScore = new Map();
+  
+  gScore.set(startKey, 0);
+  fScore.set(startKey, Math.abs(start.x - end.x) + Math.abs(start.y - end.y));
+  
+  openSet.add(startKey);
+  
+  const dirs = [
+    {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1},
+    {dx: 1, dy: 1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -1, dy: 1}
+  ];
+  
+  let steps = 0;
+  const maxSteps = size * size * 2;
+  
+  while (openSet.size > 0 && steps < maxSteps) {
+    steps++;
+    let currentKey = null;
+    let minF = Infinity;
+    for (const key of openSet) {
+      const f = fScore.get(key) ?? Infinity;
+      if (f < minF) {
+        minF = f;
+        currentKey = key;
+      }
+    }
+    
+    if (currentKey === endKey) {
+      const path = [];
+      let temp = currentKey;
+      while (cameFrom.has(temp)) {
+        const [tx, ty] = temp.split(',').map(Number);
+        path.push({x: tx, y: ty});
+        temp = cameFrom.get(temp);
+      }
+      path.push({x: start.x, y: start.y});
+      return path.reverse();
+    }
+    
+    openSet.delete(currentKey);
+    closedSet.add(currentKey);
+    
+    const [cx, cy] = currentKey.split(',').map(Number);
+    const currentCell = grid[cy][cx];
+    
+    for (const d of dirs) {
+      const nx = cx + d.dx;
+      const ny = cy + d.dy;
+      
+      if (nx < 0 || nx >= size || ny < 0 || ny >= size) continue;
+      const neighborKey = `${nx},${ny}`;
+      
+      if (closedSet.has(neighborKey)) continue;
+      
+      const neighbor = grid[ny][nx];
+      
+      // Não atravessar água
+      if (neighbor.elevation < 0.26 || neighbor.isLake) continue;
+      if (neighbor.biome === 'DEEP_OCEAN' || neighbor.biome === 'SHALLOW_OCEAN') continue;
+      
+      const isDiagonal = d.dx !== 0 && d.dy !== 0;
+      let cost = isDiagonal ? 1.414 : 1.0;
+      
+      // Inclinação do terreno (diferença de altura)
+      const diffElev = Math.abs(neighbor.elevation - currentCell.elevation);
+      cost += diffElev * 15.0;
+      
+      // Penalidades de biomas difíceis
+      if (neighbor.biome === 'SNOW_MOUNTAIN') cost += 20.0;
+      if (neighbor.biome === 'SWAMP') cost += 6.0;
+      if (neighbor.biome === 'JUNGLE') cost += 2.0;
+      if (neighbor.biome === 'DESERT') cost += 1.5;
+      
+      // Cruzar rio
+      if (neighbor.isRiver) cost += 4.0;
+      
+      // Incentivo de estrada compartilhada
+      if (neighbor.isRoad) {
+        cost = 0.15;
+      }
+      
+      const tentativeGScore = (gScore.get(currentKey) ?? 0) + cost;
+      
+      if (!openSet.has(neighborKey)) {
+        openSet.add(neighborKey);
+      } else if (tentativeGScore >= (gScore.get(neighborKey) ?? Infinity)) {
+        continue;
+      }
+      
+      cameFrom.set(neighborKey, currentKey);
+      gScore.set(neighborKey, tentativeGScore);
+      
+      const h = Math.abs(nx - end.x) + Math.abs(ny - end.y);
+      fScore.set(neighborKey, tentativeGScore + h);
+    }
+  }
+  
+  return null;
+}
+
+function generateRoutes(grid, size, cities) {
+  const routes = [];
+  if (cities.length <= 1) return routes;
+  
+  for (let i = 0; i < cities.length; i++) {
+    const c1 = cities[i];
+    const distances = [];
+    
+    for (let j = 0; j < cities.length; j++) {
+      if (i === j) continue;
+      const c2 = cities[j];
+      const dist = Math.sqrt((c1.x - c2.x) ** 2 + (c1.y - c2.y) ** 2);
+      distances.push({index: j, city: c2, dist});
+    }
+    
+    distances.sort((a, b) => a.dist - b.dist);
+    const targets = distances.slice(0, Math.min(2, distances.length));
+    
+    for (const target of targets) {
+      const pathId = i < target.index ? `${i}_to_${target.index}` : `${target.index}_to_${i}`;
+      if (routes.some(r => r.id === pathId)) continue;
+      
+      const path = findPathAStar(grid, size, c1, target.city);
+      if (path && path.length > 0) {
+        routes.push({
+          id: pathId,
+          start: c1,
+          end: target.city,
+          path
+        });
+        
+        for (const pt of path) {
+          grid[pt.y][pt.x].isRoad = true;
+        }
+      }
+    }
+  }
+  
+  return routes;
+}
+
+function generateDungeons(grid, size, params) {
+  const dungeons = [];
+  const dungeonCount = 3 + (hash32(params.seed + 888) % 4); // de 3 a 6
+  
+  const candidates = [];
+  for (let y = 3; y < size - 3; y++) {
+    for (let x = 3; x < size - 3; x++) {
+      const cell = grid[y][x];
+      if (cell.elevation < 0.26) continue;
+      if (cell.cityName) continue;
+      if (cell.isRoad) continue;
+      
+      let type = null;
+      if (cell.biome === 'JUNGLE' || cell.biome === 'TEMP_FOREST') {
+        type = 'temple';
+      } else if (cell.biome === 'DESERT' || cell.biome === 'TUNDRA' || cell.biome === 'SWAMP') {
+        type = 'ruins';
+      }
+      
+      if (type) {
+        candidates.push({x, y, type, cell});
+      }
+    }
+  }
+  
+  if (candidates.length === 0) return dungeons;
+  
+  // Embaralhamento determinístico por semente
+  const seededRandom = (s) => {
+    let x = Math.sin(s) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  let s = params.seed + 999;
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const r = Math.floor(seededRandom(s++) * (i + 1));
+    const temp = candidates[i];
+    candidates[i] = candidates[r];
+    candidates[r] = temp;
+  }
+  
+  let selectedCount = 0;
+  for (const cand of candidates) {
+    if (selectedCount >= dungeonCount) break;
+    
+    // Distância das cidades
+    let farEnough = true;
+    if (grid.cities) {
+      for (const city of grid.cities) {
+        const dist = Math.sqrt((cand.x - city.x) ** 2 + (cand.y - city.y) ** 2);
+        if (dist < 10) {
+          farEnough = false;
+          break;
+        }
+      }
+    }
+    
+    // Distância de outras dungeons
+    if (farEnough) {
+      for (const dung of dungeons) {
+        const dist = Math.sqrt((cand.x - dung.x) ** 2 + (cand.y - dung.y) ** 2);
+        if (dist < 10) {
+          farEnough = false;
+          break;
+        }
+      }
+    }
+    
+    if (farEnough) {
+      let name = '';
+      const hash = hash32(params.seed + selectedCount * 456);
+      if (cand.type === 'temple') {
+        name = DUNGEON_TEMPLE_NAMES[hash % DUNGEON_TEMPLE_NAMES.length];
+      } else {
+        name = DUNGEON_RUINS_NAMES[hash % DUNGEON_RUINS_NAMES.length];
+      }
+      
+      cand.cell.dungeonName = name;
+      cand.cell.dungeonType = cand.type;
+      
+      dungeons.push({
+        x: cand.x,
+        y: cand.y,
+        name,
+        type: cand.type
+      });
+      selectedCount++;
+    }
+  }
+  
+  return dungeons;
 }
 

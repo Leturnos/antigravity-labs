@@ -143,6 +143,39 @@
                     </div>
                 </section>
 
+                <!-- Civilization & Resources Phase 3 -->
+                <section class="control-section">
+                    <h2>🏰 Civilizações & Recursos</h2>
+                    <div class="control-group">
+                        <div class="label-with-val">
+                            <label for="city-count">Quantidade de Cidades</label>
+                            <span id="city-count-val" class="slider-value">6</span>
+                        </div>
+                        <input type="range" id="city-count" min="2" max="12" value="6" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label>Camadas de Exibição</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-cities-routes" checked>
+                                Cidades e Rotas comerc.
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-resources" checked>
+                                Recursos Naturais
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-kingdoms">
+                                Reinos e Fronteiras
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="show-dungeons" checked>
+                                Dungeons e POIs
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Advanced Refinements -->
                 <section class="control-section">
                     <h2>🛠️ Refinamentos Avançados</h2>
@@ -177,6 +210,8 @@
                 <div class="status-item"><span class="status-label">Umidade:</span> <span id="val-moisture">-</span></div>
                 <div class="status-item"><span class="status-label">Temp:</span> <span id="val-temp">-</span></div>
                 <div class="status-item"><span class="status-label">Bioma:</span> <span id="val-biome">-</span></div>
+                <div class="status-item"><span class="status-label">Recurso:</span> <span id="val-resource">-</span></div>
+                <div class="status-item"><span class="status-label">Reino:</span> <span id="val-kingdom">-</span></div>
             </footer>
         </main>
     </div>
