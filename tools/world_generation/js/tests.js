@@ -1,5 +1,5 @@
 import { ImprovedNoise } from './noise.js';
-import { classifyBiome, generateWorldData, simulateHistoryYear } from './generator.js';
+import { classifyBiome, generateWorldData, simulateHistoryYear, serializeWorld } from './generator.js';
 
 export function runNoiseTests() {
   console.log("Initializing noise generator tests...");
@@ -372,6 +372,87 @@ export function runHistoryTests() {
   console.log("✅ History simulation tests completed successfully!");
 }
 
+export function runExportTests() {
+  console.log("Initializing world export serialization tests...");
+  
+  const params = {
+    seed: 12345678,
+    gridSize: 50,
+    elevScale: 0.03,
+    elevOctaves: 4,
+    elevPersistence: 0.5,
+    moistScale: 0.04,
+    moistOctaves: 3,
+    tempAltWeight: 0.7,
+    tempModel: 'planet',
+    warpStrength: 5,
+    erosionStrength: 0.0,
+    riverCount: 3,
+    riverMoistRadius: 2,
+    riverMoistStrength: 0.5,
+    cityCount: 4
+  };
+
+  const grid = generateWorldData(params);
+  // Advance history by 45 years to generate chronicles and verify accumulation
+  for (let i = 0; i < 45; i++) {
+    simulateHistoryYear(grid, 50, params);
+  }
+
+  // Run serialization
+  let serialized = null;
+  try {
+    serialized = serializeWorld(grid, params);
+  } catch (e) {
+    console.error("Serialization failed with exception: ", e);
+    console.assert(false, "ERROR: serializeWorld threw an exception.");
+  }
+
+  console.assert(serialized !== null, "ERROR: serializeWorld returned null.");
+
+  // Test 1: JSON Stringify validation (verifies no circular references exist)
+  let jsonStr = "";
+  try {
+    jsonStr = JSON.stringify(serialized);
+    console.assert(jsonStr.length > 0, "ERROR: JSON string must not be empty.");
+  } catch (e) {
+    console.error("JSON stringification failed: ", e);
+    console.assert(false, "ERROR: JSON.stringify failed (likely due to circular references).");
+  }
+
+  // Test 2: Node presence check
+  console.assert(serialized.metadata !== undefined, "ERROR: JSON missing metadata.");
+  console.assert(serialized.stats !== undefined, "ERROR: JSON missing stats.");
+  console.assert(serialized.cities !== undefined, "ERROR: JSON missing cities list.");
+  console.assert(serialized.kingdoms !== undefined, "ERROR: JSON missing kingdoms list.");
+  console.assert(serialized.rivers !== undefined, "ERROR: JSON missing rivers list.");
+  console.assert(serialized.dungeons !== undefined, "ERROR: JSON missing dungeons list.");
+  console.assert(serialized.chronicles !== undefined, "ERROR: JSON missing chronicles list.");
+  console.assert(serialized.grid !== undefined, "ERROR: JSON missing grid.");
+
+  // Test 3: Structural details
+  console.assert(serialized.metadata.seed === params.seed, "ERROR: seed mismatch in metadata.");
+  console.assert(serialized.metadata.gridSize === params.gridSize, "ERROR: gridSize mismatch in metadata.");
+  console.assert(serialized.metadata.historyYear === 45, "ERROR: historyYear mismatch in metadata.");
+  
+  console.assert(serialized.stats.cities === serialized.cities.length, "ERROR: cities count stat mismatch.");
+  console.assert(serialized.stats.rivers === serialized.rivers.length, "ERROR: rivers count stat mismatch.");
+  console.assert(serialized.stats.chronicles === serialized.chronicles.length, "ERROR: chronicles count stat mismatch.");
+
+  // Test 4: Rivers contain paths
+  if (params.riverCount > 0) {
+    console.assert(serialized.rivers.length > 0, "ERROR: expected rivers in serialization.");
+    console.assert(serialized.rivers[0].path !== undefined && serialized.rivers[0].path.length > 0, "ERROR: river path must be populated.");
+    console.assert(serialized.rivers[0].source !== undefined, "ERROR: river source must be populated.");
+  }
+
+  // Test 5: Chronicles contain historical year records
+  console.assert(serialized.chronicles.length > 1, "ERROR: chronicles should contain init event and advanced years events.");
+  console.assert(serialized.chronicles[0].year === 0, "ERROR: first chronicle year should be 0.");
+
+  console.log("✅ World export serialization tests completed successfully!");
+}
+
 export function runAllTests() {
   runNoiseTests();
   runBiomeTests();
@@ -380,4 +461,5 @@ export function runAllTests() {
   runRiverTests();
   runPhase3Tests();
   runHistoryTests();
+  runExportTests();
 }

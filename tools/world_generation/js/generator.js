@@ -142,6 +142,12 @@ export function generateWorldData(params) {
   }
 
   finalizeWorldMetadata(grid, size, params);
+  
+  grid.historyYear = 0;
+  grid.chronicles = [
+    { year: 0, text: "[Sistema] Geografia inicializada no Ano 0.", type: "system-msg" }
+  ];
+
   return grid;
 }
 
@@ -360,6 +366,7 @@ function finalizeWorldMetadata(grid, size, params) {
 }
 
 function generateRivers(grid, size, params) {
+  grid.rivers = [];
   if (!params.riverCount || params.riverCount <= 0) return;
 
   const landCells = [];
@@ -405,16 +412,19 @@ function generateRivers(grid, size, params) {
   ];
 
   // Flow downhill for each source
+  let riverId = 0;
   for (const src of sources) {
     let currX = src.x;
     let currY = src.y;
     const pathSet = new Set();
     const maxPathLength = size * 2;
+    const riverPath = [];
     
     for (let step = 0; step < maxPathLength; step++) {
       const key = `${currX},${currY}`;
       if (pathSet.has(key)) break; // avoid loops
       pathSet.add(key);
+      riverPath.push({ x: currX, y: currY });
       
       const cell = grid[currY][currX];
       
@@ -446,6 +456,7 @@ function generateRivers(grid, size, params) {
       if (bestNeighbor.elevation < 0.26) {
         // Desemboca no mar
         cell.isRiver = true;
+        riverPath.push({ x: bestNeighbor.x, y: bestNeighbor.y });
         break;
       }
       
@@ -460,6 +471,12 @@ function generateRivers(grid, size, params) {
       currX = bestNeighbor.x;
       currY = bestNeighbor.y;
     }
+
+    grid.rivers.push({
+      id: riverId++,
+      source: { x: src.x, y: src.y },
+      path: riverPath
+    });
   }
 }
 
@@ -1627,6 +1644,143 @@ export function simulateHistoryYear(grid, size, params) {
     }
   }
 
+  grid.chronicles = grid.chronicles || [];
+  chronicles.forEach(c => {
+    grid.chronicles.push({
+      year,
+      text: c.text,
+      type: c.type,
+      x: c.x,
+      y: c.y
+    });
+  });
+
   return chronicles;
+}
+
+export function serializeWorld(grid, params) {
+  const size = grid.length;
+  const serializedGrid = [];
+  
+  for (let y = 0; y < size; y++) {
+    const row = [];
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      row.push({
+        x: cell.x,
+        y: cell.y,
+        elevation: cell.elevation,
+        moisture: cell.moisture,
+        temperature: cell.temperature,
+        biome: cell.biome,
+        resource: cell.resource || null,
+        resourceDensity: cell.resourceDensity !== undefined ? cell.resourceDensity : 0,
+        cityName: cell.cityName || null,
+        cityType: cell.cityType || null,
+        cityIndex: cell.cityIndex !== undefined ? cell.cityIndex : null,
+        cityPop: cell.cityPop !== undefined ? cell.cityPop : null,
+        isAbandoned: cell.isAbandoned || false,
+        dungeonName: cell.dungeonName || null,
+        dungeonType: cell.dungeonType || null,
+        kingdomId: cell.kingdomId !== undefined ? cell.kingdomId : null,
+        kingdomName: cell.kingdomName || null,
+        isRiver: cell.isRiver || false,
+        isLake: cell.isLake || false,
+        isRoad: cell.isRoad || false,
+        isFrontier: cell.isFrontier || false
+      });
+    }
+    serializedGrid.push(row);
+  }
+
+  const serializedCities = (grid.cities || []).map(c => ({
+    x: c.x,
+    y: c.y,
+    name: c.name,
+    type: c.type,
+    index: c.index,
+    population: c.population,
+    military: c.military,
+    foodStock: c.foodStock,
+    materialStock: c.materialStock,
+    produces: c.produces,
+    consumes: c.consumes,
+    isAbandoned: c.isAbandoned,
+    kingdomId: c.kingdomId !== undefined ? c.kingdomId : null,
+    connections: c.connections || []
+  }));
+
+  const serializedKingdoms = (grid.kingdoms || []).map(k => ({
+    id: k.id,
+    name: k.name,
+    colorId: k.colorId,
+    capitalName: k.capital ? k.capital.name : null,
+    capitalIndex: k.capital ? k.capital.index : null,
+    capitalCoords: k.capital ? { x: k.capital.x, y: k.capital.y } : null,
+    territorySize: k.cells ? k.cells.length : 0,
+    cells: (k.cells || []).map(pt => ({ x: pt.x, y: pt.y }))
+  }));
+
+  const serializedDungeons = (grid.dungeons || []).map(d => ({
+    x: d.x,
+    y: d.y,
+    name: d.name,
+    type: d.type,
+    power: d.power !== undefined ? d.power : 100,
+    isCleared: d.isCleared || false
+  }));
+
+  const serializedRivers = (grid.rivers || []).map(r => ({
+    id: r.id,
+    source: r.source ? { x: r.source.x, y: r.source.y } : null,
+    path: (r.path || []).map(pt => ({ x: pt.x, y: pt.y }))
+  }));
+
+  const serializedRoutes = (grid.routes || []).map(r => ({
+    id: r.id,
+    startCity: r.start ? r.start.name : null,
+    endCity: r.end ? r.end.name : null,
+    path: (r.path || []).map(pt => ({ x: pt.x, y: pt.y }))
+  }));
+
+  return {
+    metadata: {
+      generator: "Procedural World Generator - Antigravity Labs",
+      version: "1.0.0",
+      seed: params.seed,
+      gridSize: size,
+      historyYear: grid.historyYear || 0,
+      parameters: {
+        elevScale: params.elevScale,
+        elevOctaves: params.elevOctaves,
+        elevPersistence: params.elevPersistence,
+        moistScale: params.moistScale,
+        moistOctaves: params.moistOctaves,
+        tempAltWeight: params.tempAltWeight,
+        tempModel: params.tempModel,
+        warpStrength: params.warpStrength,
+        erosionStrength: params.erosionStrength,
+        riverCount: params.riverCount,
+        riverMoistRadius: params.riverMoistRadius,
+        riverMoistStrength: params.riverMoistStrength,
+        cityCount: params.cityCount
+      }
+    },
+    stats: {
+      cities: serializedCities.length,
+      kingdoms: serializedKingdoms.length,
+      dungeons: serializedDungeons.length,
+      rivers: serializedRivers.length,
+      routes: serializedRoutes.length,
+      chronicles: (grid.chronicles || []).length
+    },
+    cities: serializedCities,
+    kingdoms: serializedKingdoms,
+    dungeons: serializedDungeons,
+    rivers: serializedRivers,
+    routes: serializedRoutes,
+    chronicles: grid.chronicles || [],
+    grid: serializedGrid
+  };
 }
 

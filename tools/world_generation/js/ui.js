@@ -1,4 +1,5 @@
 import { BIOME_NAMES, renderWorld } from './renderer.js';
+import { serializeWorld } from './generator.js';
 
 let updateTimeout = null;
 
@@ -143,6 +144,46 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef, simCallbacks
       });
     }
   });
+
+  // Handle JSON World Export
+  const btnExport = document.getElementById('btn-export-json');
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      const grid = currentWorldDataRef();
+      if (!grid) {
+        alert("Nenhum mundo gerado para exportar!");
+        return;
+      }
+      
+      try {
+        const params = getParams();
+        const serialized = serializeWorld(grid, params);
+        const jsonStr = JSON.stringify(serialized, null, 2);
+        
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        const year = grid.historyYear || 0;
+        a.href = url;
+        a.download = `world_${params.gridSize}x${params.gridSize}_seed_${params.seed}_year_${year}.json`;
+        a.style.position = 'fixed';
+        a.style.left = '-9999px';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Use a generous timeout to let the browser finish downloading large files
+        // before revoking the blob URL. The grid JSON can be 15+ MB.
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 10000);
+      } catch (e) {
+        console.error('Export failed:', e);
+        alert('Erro ao exportar mundo: ' + e.message);
+      }
+    });
+  }
 
   // Interactivity Hover Tooltip
   const canvas = document.getElementById('world-canvas');

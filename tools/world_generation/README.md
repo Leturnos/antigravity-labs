@@ -1,6 +1,6 @@
-# 🗺️ Gerador Procedural de Mundos (Fase 4)
+# 🗺️ Gerador Procedural de Mundos (Fase 5)
 
-Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (A*). A Fase 4 implementa uma simulação histórica interativa e dinâmica, com timeline visual, desastres climáticos, expedições de masmorra, eventos animados no Canvas e crônicas clicáveis que revelam a localização dos eventos no mapa.
+Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (A*). A Fase 4 implementa uma simulação histórica interativa e dinâmica, com timeline visual, desastres climáticos, expedições de masmorra, eventos animados no Canvas e crônicas clicáveis que revelam a localização dos eventos no mapa. A Fase 5 adiciona exportação completa do mundo gerado em JSON, incluindo todos os dados do grid, civilizações, crônicas e metadados de geração.
 
 ---
 
@@ -96,6 +96,17 @@ O fator de clima base ($T_{lat}$) é calculado através de um dos três modelos 
 *   **Crônicas Clicáveis Interativas**: Os logs gerados na UI suportam escuta de cliques. Ao clicar em um evento do log lateral, um evento global `highlight-cell` é emitido, desenhando um retículo de foco pulsante duplo na coordenada do evento no Canvas por 1,5 segundos.
 *   **Timeline Gráfica de Progresso**: Um elemento slider progressivo na UI indica visualmente o progresso temporal em tempo real, sincronizado de forma reativa a cada incremento de ano na simulação.
 
+### 8. Exportação de Mundo em JSON (Fase 5)
+*   **Serialização Completa (`serializeWorld`)**: A função `serializeWorld(grid, params)` em `generator.js` serializa todo o estado do mundo atual em um objeto JSON puro (sem referências circulares), pronto para uso externo ou arquivamento.
+*   **Estrutura do JSON exportado**:
+    *   `metadata`: informações de geração (generator, versão, seed, tamanho do grid, ano histórico atual, parâmetros de geração completos).
+    *   `stats`: contagens resumidas de cidades, reinos, masmorras, rios, rotas e crônicas.
+    *   `cities`, `kingdoms`, `dungeons`, `rivers`, `routes`: arrays com os dados de cada entidade civilizatória.
+    *   `chronicles`: histórico completo de eventos da simulação com ano, descrição e coordenadas.
+    *   `grid`: matriz completa de células com elevação, umidade, temperatura, bioma, recursos e informações territoriais.
+*   **Download via Browser**: O botão **📦 Exportar Mundo (JSON)** na interface dispara o download automático de um arquivo `.json` nomeado como `world_{N}x{N}_seed_{seed}_year_{ano}.json`. Grids grandes (ex.: 250×250) podem gerar arquivos de 15 MB ou mais.
+*   **Testes de Serialização**: A suíte de testes em `tests.js` inclui `runExportTests()`, que valida a integridade do JSON (ausência de referências circulares, presença de todos os nós obrigatórios, coerência de contagens e estrutura dos dados de rios e crônicas).
+
 ---
 
 ## 🌿 Tabela de Classificação de Biomas
@@ -138,5 +149,7 @@ Um objeto de configuração unificado (`BIOME_THRESHOLDS`) no topo de `js/genera
     *   *Controles de Reprodução*: Botões para Iniciar/Pausar a simulação automática (velocidade de 450ms por ano), avançar passo a passo (+1 Ano) ou reiniciar o mundo (Reset).
     *   *Linha do Tempo Visual*: Uma barra de progresso horizontal que reflete a passagem dos anos em tempo real.
     *   *Logs de Crônicas Interativas*: Clique em qualquer entrada do log lateral para fazer a câmera destacar a localização exata do acontecimento no Canvas.
+*   **Exportação de Mundo (Fase 5)**:
+    *   *Botão 📦 Exportar Mundo (JSON)*: Serializa o estado completo do mundo gerado (grid, civilizações, crônicas e metadados) e inicia o download de um arquivo `.json` nomeado com o tamanho do grid, seed e ano histórico corrente.
 *   **Feedback Debounced**: Atualiza o canvas automaticamente 100ms após o término dos arrastes de sliders.
 *   **Hover Tooltip Ampliado**: Ao passar o cursor sobre o Canvas, a barra de status inferior exibe de forma reativa a coordenada, elevação, umidade, temperatura, bioma detalhado (incluindo o nome e tipo de cidades/vilas/dungeons da célula), recurso ativo com sua densidade, e o nome do reino correspondente (indicando se é uma área de fronteira territorial).
