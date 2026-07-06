@@ -250,6 +250,13 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef, simCallbacks
     });
   }
   
+  const chkDayNight = document.getElementById('toggle-day-night-3d');
+  if (chkDayNight) {
+    chkDayNight.addEventListener('change', () => {
+      window.dispatchEvent(new CustomEvent('toggle-day-night-3d', { detail: chkDayNight.checked }));
+    });
+  }
+  
   if (btnResetCam) {
     btnResetCam.addEventListener('click', () => {
       window.dispatchEvent(new CustomEvent('reset-camera-3d'));
@@ -302,7 +309,8 @@ export function getParams() {
     
     // History Phase 3
     historyInitYears: parseInt(document.getElementById('history-init-years').value),
-    enableShadows3d: document.getElementById('enable-shadows-3d') ? document.getElementById('enable-shadows-3d').checked : false
+    enableShadows3d: document.getElementById('enable-shadows-3d') ? document.getElementById('enable-shadows-3d').checked : false,
+    enableDayNight3d: document.getElementById('toggle-day-night-3d') ? document.getElementById('toggle-day-night-3d').checked : false
   };
 }
 

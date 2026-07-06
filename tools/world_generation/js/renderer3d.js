@@ -21,6 +21,13 @@ let raycaster = null;
 let mouse = null;
 let activeEventSpheres = [];
 
+// Day/Night Cycle State
+let dayNightEnabled = false;
+let currentYear = 0;
+
+// Camera Tween State
+let activeCameraTween = null;
+
 
 export function initRenderer3D(container) {
   if (renderer) destroyRenderer3D();
@@ -68,12 +75,19 @@ export function initRenderer3D(container) {
     animFrameId = requestAnimationFrame(animate);
     if (controls) controls.update();
     update3DHistoryEvents(0.016); // ~60fps delta
+    updateDayNightCycle();
+    if (typeof TWEEN !== 'undefined') TWEEN.update();
     if (renderer && scene && camera) renderer.render(scene, camera);
   }
   animate();
 }
 
 export function destroyRenderer3D() {
+  if (activeCameraTween) {
+    activeCameraTween.stop();
+    activeCameraTween = null;
+  }
+  
   if (animFrameId) {
     cancelAnimationFrame(animFrameId);
     animFrameId = null;
@@ -134,8 +148,11 @@ export function resetCamera(gridSize) {
 
 const MAX_HEIGHT = 15; // Vertical exaggeration multiplier
 
-export function renderWorld3D(grid, viewMode, enableShadows = false) {
+export function renderWorld3D(grid, viewMode, enableShadows = false, enableDayNight = false) {
   if (!scene) return;
+  
+  dayNightEnabled = enableDayNight;
+  currentYear = grid.historyYear || 0;
   
   // 1. Cleanup old terrain & water
   if (terrainMesh) {
@@ -265,7 +282,7 @@ export function renderWorld3D(grid, viewMode, enableShadows = false) {
     
     // Draw Resources
     if (showResources) {
-      draw3DResources(grid, size);
+      draw3DResources(grid, size, enableShadows);
     }
   }
 }
@@ -285,65 +302,146 @@ function getCellHeightY(cell) {
 }
 
 function draw3DCities(cities, grid, size, enableShadows) {
-  const capitalGeom = new THREE.CylinderGeometry(0, 0.45, 0.9, 5);
-  const cityGeom = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-  const townGeom = new THREE.ConeGeometry(0.35, 0.5, 4);
-  const ruinsGeom = new THREE.BoxGeometry(0.5, 0.3, 0.5); // Abandoned cities
-  
   const KINGDOM_COLORS = ['#e63946', '#457b9d', '#8338ec', '#f4a261', '#2a9d8f'];
   
   cities.forEach(city => {
     const cell = grid[city.y][city.x];
-    const py = getCellHeightY(cell) + (city.isAbandoned ? 0.15 : city.type === 'capital' ? 0.45 : city.type === 'city' ? 0.3 : 0.25);
     const px = city.x - size / 2;
     const pz = city.y - size / 2;
+    const py = getCellHeightY(cell);
     
-    let geom = townGeom;
-    let colorHex = '#eab308';
+    const cityGroup = new THREE.Group();
+    cityGroup.position.set(px, py, pz);
     
     if (city.isAbandoned) {
-      geom = ruinsGeom;
-      colorHex = '#475569';
+      // Ruins: 2 small flattened grey boxes at slight offsets
+      const ruinsMat = new THREE.MeshLambertMaterial({ color: '#475569' });
+      const b1 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.4), ruinsMat);
+      b1.position.set(-0.1, 0.1, -0.1);
+      const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.35), ruinsMat);
+      b2.position.set(0.15, 0.075, 0.15);
+      b2.rotation.y = 0.4;
+      cityGroup.add(b1, b2);
     } else if (city.type === 'capital') {
-      geom = capitalGeom;
-      const kId = city.kingdomId;
-      colorHex = (kId !== undefined && kId !== null && !isNaN(kId))
-        ? KINGDOM_COLORS[kId % KINGDOM_COLORS.length]
-        : '#e63946';
+      // Capital Castle: Circular wall, 4 small towers, 1 keep
+      const wallColor = '#a1a1aa';
+      const roofColor = KINGDOM_COLORS[city.kingdomId % KINGDOM_COLORS.length] || '#e63946';
+      
+      const wallMat = new THREE.MeshLambertMaterial({ color: wallColor });
+      const roofMat = new THREE.MeshLambertMaterial({ color: roofColor });
+      
+      // Castle Keep (center tower)
+      const keep = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.7, 0.35), wallMat);
+      keep.position.y = 0.35;
+      
+      const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.4, 4), roofMat);
+      keepRoof.position.y = 0.9;
+      
+      // Corner towers
+      const towerGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 4);
+      const towerRoofGeom = new THREE.ConeGeometry(0.12, 0.25, 4);
+      const offsets = [
+        [-0.22, -0.22], [0.22, -0.22],
+        [-0.22, 0.22], [0.22, 0.22]
+      ];
+      
+      cityGroup.add(keep, keepRoof);
+      
+      offsets.forEach(([ox, oz]) => {
+        const tw = new THREE.Mesh(towerGeom, wallMat);
+        tw.position.set(ox, 0.25, oz);
+        const tr = new THREE.Mesh(towerRoofGeom, roofMat);
+        tr.position.set(ox, 0.625, oz);
+        cityGroup.add(tw, tr);
+      });
+      
+      // Ring wall
+      const wall = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.35, 0.22, 8, 1, true), wallMat);
+      wall.position.y = 0.11;
+      cityGroup.add(wall);
     } else if (city.type === 'city') {
-      geom = cityGeom;
-      colorHex = '#f59e0b';
+      // City: Cluster of 3 houses
+      const houseMat = new THREE.MeshLambertMaterial({ color: '#f59e0b' });
+      const roofMat = new THREE.MeshLambertMaterial({ color: '#9a3412' });
+      
+      const createHouse = (hSize, hHeight, hx, hz, rot) => {
+        const body = new THREE.Mesh(new THREE.BoxGeometry(hSize, hHeight, hSize), houseMat);
+        body.position.set(hx, hHeight / 2, hz);
+        body.rotation.y = rot;
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(hSize * 0.75, hHeight * 0.5, 4), roofMat);
+        roof.position.set(hx, hHeight + (hHeight * 0.25), hz);
+        roof.rotation.y = rot + Math.PI / 4;
+        cityGroup.add(body, roof);
+      };
+      
+      createHouse(0.24, 0.45, -0.12, -0.12, 0.1);
+      createHouse(0.20, 0.35, 0.12, -0.08, -0.3);
+      createHouse(0.18, 0.30, 0.0, 0.14, 0.5);
+    } else {
+      // Town/Vila: 1 house
+      const houseMat = new THREE.MeshLambertMaterial({ color: '#eab308' });
+      const roofMat = new THREE.MeshLambertMaterial({ color: '#7c2d12' });
+      
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.24), houseMat);
+      body.position.y = 0.175;
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.20, 0.22, 4), roofMat);
+      roof.position.y = 0.46;
+      roof.rotation.y = Math.PI / 4;
+      cityGroup.add(body, roof);
     }
     
-    const mat = new THREE.MeshLambertMaterial({ color: colorHex || '#eab308' });
-    const mesh = new THREE.Mesh(geom, mat);
-    mesh.position.set(px, py, pz);
-    mesh.castShadow = enableShadows;
-    mesh.receiveShadow = enableShadows;
-    overlaysGroup.add(mesh);
+    cityGroup.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = enableShadows;
+        child.receiveShadow = enableShadows;
+      }
+    });
+    
+    const modelScale = Math.max(1.0, size / 80);
+    cityGroup.scale.set(modelScale, modelScale, modelScale);
+    
+    overlaysGroup.add(cityGroup);
   });
 }
 
 function draw3DDungeons(dungeons, grid, size, enableShadows) {
-  const dungGeom = new THREE.CylinderGeometry(0.3, 0.3, 0.7, 6);
   const dungMat = new THREE.MeshStandardMaterial({
-    color: '#374151',
-    roughness: 0.9,
-    emissive: '#ef4444',
-    emissiveIntensity: 0.3
+    color: '#27272a',
+    roughness: 0.95,
+    metalness: 0.1
   });
   
   dungeons.forEach(dung => {
     const cell = grid[dung.y][dung.x];
-    const py = getCellHeightY(cell) + 0.35;
     const px = dung.x - size / 2;
     const pz = dung.y - size / 2;
+    const py = getCellHeightY(cell);
     
-    const mesh = new THREE.Mesh(dungGeom, dungMat);
-    mesh.position.set(px, py, pz);
-    mesh.castShadow = enableShadows;
-    mesh.receiveShadow = enableShadows;
-    overlaysGroup.add(mesh);
+    const dungGroup = new THREE.Group();
+    dungGroup.position.set(px, py, pz);
+    
+    // Main broken tower
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.7, 6), dungMat);
+    tower.position.y = 0.35;
+    
+    // Glowing red portal cube
+    const portalMat = new THREE.MeshBasicMaterial({ color: '#ef4444' });
+    const portal = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.1), portalMat);
+    portal.position.set(0, 0.075, 0.2); // Front of the tower
+    
+    dungGroup.add(tower, portal);
+    
+    dungGroup.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = enableShadows;
+        child.receiveShadow = enableShadows;
+      }
+    });
+    
+    const modelScale = Math.max(1.0, size / 80);
+    dungGroup.scale.set(modelScale, modelScale, modelScale);
+    
+    overlaysGroup.add(dungGroup);
   });
 }
 
@@ -361,9 +459,14 @@ function draw3DRoads(grid, size, enableShadows) {
     polygonOffsetUnits: -4.0
   });
   
+  const normalGeoms = [];
+  const tradeGeoms = [];
+  
+  const dummy = new THREE.Object3D();
+  
   grid.routes.forEach(route => {
-    const mat = route.isTradeRoute ? tradeMat : roadMat;
     const width = route.isTradeRoute ? 0.22 : 0.14;
+    const targetGeoms = route.isTradeRoute ? tradeGeoms : normalGeoms;
     
     for (let i = 0; i < route.path.length - 1; i++) {
       const p1 = route.path[i];
@@ -387,25 +490,44 @@ function draw3DRoads(grid, size, enableShadows) {
       const angle = Math.atan2(dz, dx);
       
       const planeGeom = new THREE.PlaneGeometry(dist, width);
-      const plane = new THREE.Mesh(planeGeom, mat);
       
-      plane.position.set(x1 + dx/2, (y1 + y2)/2, z1 + dz/2);
-      plane.rotation.x = -Math.PI / 2;
-      plane.rotation.z = -angle;
+      dummy.position.set(x1 + dx/2, (y1 + y2)/2, z1 + dz/2);
+      dummy.rotation.set(-Math.PI / 2, 0, -angle);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
       
-      overlaysGroup.add(plane);
+      planeGeom.applyMatrix4(dummy.matrix);
+      targetGeoms.push(planeGeom);
     }
   });
+  
+  // Merge and draw normal roads
+  if (normalGeoms.length > 0) {
+    const mergedNormalGeom = THREE.BufferGeometryUtils.mergeBufferGeometries(normalGeoms);
+    const roadMesh = new THREE.Mesh(mergedNormalGeom, roadMat);
+    roadMesh.name = 'roadMesh';
+    overlaysGroup.add(roadMesh);
+  }
+  
+  // Merge and draw trade routes
+  if (tradeGeoms.length > 0) {
+    const mergedTradeGeom = THREE.BufferGeometryUtils.mergeBufferGeometries(tradeGeoms);
+    const tradeRoadMesh = new THREE.Mesh(mergedTradeGeom, tradeMat);
+    tradeRoadMesh.name = 'tradeRoadMesh';
+    overlaysGroup.add(tradeRoadMesh);
+  }
 }
 
-function draw3DResources(grid, size) {
-  const resourceColors = { wood: '#2d6a4f', ore: '#a9a9a9', fish: '#90e0ef', stone: '#d3d3d3', crops: '#ffd166' };
-  const geom = new THREE.SphereGeometry(0.12, 4, 4);
+function draw3DResources(grid, size, enableShadows) {
+  const resourceColors = { ore: '#a9a9a9', fish: '#90e0ef', stone: '#d3d3d3', crops: '#ffd166' };
+  const modelScale = Math.max(1.0, size / 80);
+  const geom = new THREE.SphereGeometry(0.08 * modelScale, 4, 4);
   
+  // Non-wood resources rendered as standard sphere markers
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const cell = grid[y][x];
-      if (cell.resource && cell.resourceDensity > 0.6) {
+      if (cell.resource && cell.resource !== 'wood' && cell.resourceDensity > 0.6) {
         const colorHex = resourceColors[cell.resource] || '#ffffff';
         const mat = new THREE.MeshBasicMaterial({ color: colorHex });
         const mesh = new THREE.Mesh(geom, mat);
@@ -414,11 +536,63 @@ function draw3DResources(grid, size) {
         const pz = y - size / 2;
         const py = getCellHeightY(cell) + 0.55;
         mesh.position.set(px, py, pz);
-        
         overlaysGroup.add(mesh);
       }
     }
   }
+  
+  // Build Instanced Forest for Wood resource
+  build3DForest(grid, size, enableShadows);
+}
+
+function build3DForest(grid, size, enableShadows) {
+  const forestPositions = [];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = grid[y][x];
+      if (cell.resource === 'wood' && cell.resourceDensity > 0.6) {
+        forestPositions.push({ x, y, cell });
+      }
+    }
+  }
+  
+  if (forestPositions.length === 0) return;
+  
+  // Combine cylinder and cone into one BufferGeometry
+  const trunkGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.24, 4);
+  trunkGeom.translate(0, 0.12, 0); // Grounded
+  
+  const leavesGeom = new THREE.ConeGeometry(0.12, 0.32, 4);
+  leavesGeom.translate(0, 0.36, 0); // Positioned above trunk
+  
+  const treeGeom = THREE.BufferGeometryUtils.mergeBufferGeometries([trunkGeom, leavesGeom]);
+  const treeMat = new THREE.MeshLambertMaterial({ color: '#2d6a4f' });
+  
+  const forestMesh = new THREE.InstancedMesh(treeGeom, treeMat, forestPositions.length);
+  forestMesh.name = 'forestMesh';
+  forestMesh.castShadow = enableShadows;
+  forestMesh.receiveShadow = enableShadows;
+  
+  const dummy = new THREE.Object3D();
+  
+  forestPositions.forEach((pos, idx) => {
+    const px = pos.x - size / 2;
+    const pz = pos.y - size / 2;
+    const py = getCellHeightY(pos.cell) + 0.5; // Top of the voxel
+    
+    // Add slightly randomized scaling for organic feel
+    const modelScale = Math.max(1.0, size / 80);
+    const randomScale = (0.85 + Math.random() * 0.3) * modelScale;
+    
+    dummy.position.set(px, py, pz);
+    dummy.scale.set(randomScale, randomScale, randomScale);
+    dummy.updateMatrix();
+    
+    forestMesh.setMatrixAt(idx, dummy.matrix);
+  });
+  
+  forestMesh.instanceMatrix.needsUpdate = true;
+  overlaysGroup.add(forestMesh);
 }
 
 
@@ -560,5 +734,99 @@ export function update3DHistoryEvents(dt = 0.1) {
     }
   }
 }
+
+function updateDayNightCycle() {
+  if (!dirLight || !ambientLight) return;
+  
+  if (!dayNightEnabled) {
+    // Reset to static noon
+    dirLight.position.set(-50, 80, -30);
+    dirLight.intensity = 0.85;
+    dirLight.color.set(new THREE.Color('#fff9e6'));
+    ambientLight.color.set(new THREE.Color('#ffffff'));
+    ambientLight.intensity = 0.55;
+    return;
+  }
+  
+  // Angle calculated from year: 1 year = ~0.2 radians
+  const theta = currentYear * 0.2;
+  const px = Math.cos(theta) * 120;
+  const py = Math.sin(theta) * 120;
+  const pz = Math.sin(theta * 0.5) * 60;
+  
+  dirLight.position.set(px, py, pz);
+  
+  if (py >= 5) {
+    // Daytime
+    dirLight.castShadow = true;
+    const ratio = Math.min(1.0, py / 80);
+    dirLight.intensity = 0.85 * ratio;
+    
+    // Interpolate colors: warm orange to bright yellow
+    dirLight.color.lerpColors(new THREE.Color('#ff8c00'), new THREE.Color('#fff9e6'), ratio);
+    ambientLight.color.lerpColors(new THREE.Color('#415a77'), new THREE.Color('#ffffff'), ratio);
+    ambientLight.intensity = 0.2 + 0.35 * ratio;
+  } else if (py < 5 && py >= -15) {
+    // Sunset/Sunrise
+    const ratio = Math.max(0.0, (py + 15) / 20);
+    dirLight.intensity = 0.25 * ratio;
+    dirLight.color.set(new THREE.Color('#e25822'));
+    ambientLight.color.lerpColors(new THREE.Color('#0f172a'), new THREE.Color('#415a77'), ratio);
+    ambientLight.intensity = 0.15 + 0.05 * ratio;
+  } else {
+    // Night
+    dirLight.castShadow = false;
+    dirLight.intensity = 0;
+    ambientLight.color.set(new THREE.Color('#0f172a'));
+    ambientLight.intensity = 0.15;
+  }
+}
+
+export function easeToCell(x, y, grid) {
+  if (!camera || !controls || typeof TWEEN === 'undefined') return;
+  
+  if (activeCameraTween) {
+    activeCameraTween.stop();
+  }
+  
+  const size = grid.length;
+  const tx = x - size / 2;
+  const tz = y - size / 2;
+  const ty = getCellHeightY(grid[y][x]);
+  
+  // Starting parameters
+  const startPos = {
+    cx: camera.position.x,
+    cy: camera.position.y,
+    cz: camera.position.z,
+    tx: controls.target.x,
+    ty: controls.target.y,
+    tz: controls.target.z
+  };
+  
+  // Target parameters
+  const endPos = {
+    cx: tx - 25,
+    cy: ty + 30,
+    cz: tz + 35,
+    tx: tx,
+    ty: ty,
+    tz: tz
+  };
+  
+  activeCameraTween = new TWEEN.Tween(startPos)
+    .to(endPos, 1200)
+    .easing(TWEEN.Easing.Cubic.Out)
+    .onUpdate(() => {
+      camera.position.set(startPos.cx, startPos.cy, startPos.cz);
+      controls.target.set(startPos.tx, startPos.ty, startPos.tz);
+      controls.update();
+    })
+    .onComplete(() => {
+      activeCameraTween = null;
+    })
+    .start();
+}
+
 
 

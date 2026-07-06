@@ -459,6 +459,8 @@ export async function runThreeJSLoadTests(loadThreeJSFunction) {
     await loadThreeJSFunction();
     console.assert(window.THREE !== undefined, "ERROR: THREE global is not defined after script load.");
     console.assert(window.THREE.OrbitControls !== undefined, "ERROR: OrbitControls is not defined after script load.");
+    console.assert(window.THREE.BufferGeometryUtils !== undefined, "ERROR: BufferGeometryUtils is not defined after script load.");
+    console.assert(window.TWEEN !== undefined, "ERROR: TWEEN is not defined after script load.");
     console.log("✅ Three.js script loader tests completed successfully!");
   } catch (e) {
     console.error("ERROR: Three.js failed to load dynamically: ", e);

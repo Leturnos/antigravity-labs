@@ -2,7 +2,7 @@ import { generateWorldData, simulateHistoryYear } from './generator.js';
 import { runAllTests, runThreeJSLoadTests } from './tests.js';
 import { renderWorld } from './renderer.js';
 import { bindUIEvents, updateUIValues, getParams, addChronicleMessage, clearChroniclesLog } from './ui.js';
-import { initRenderer3D, destroyRenderer3D, renderWorld3D, resizeRenderer3D, resetCamera, check3DIntersection, clear3DHighlight, spawn3DHistoryEvent } from './renderer3d.js';
+import { initRenderer3D, destroyRenderer3D, renderWorld3D, resizeRenderer3D, resetCamera, check3DIntersection, clear3DHighlight, spawn3DHistoryEvent, easeToCell } from './renderer3d.js';
 
 let renderMode = '2d'; // '2d' or '3d'
 
@@ -22,7 +22,21 @@ export function loadThreeJS() {
       const controlsScript = document.createElement('script');
       controlsScript.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js";
       controlsScript.onload = () => {
-        resolve();
+        // Load BufferGeometryUtils
+        const utilsScript = document.createElement('script');
+        utilsScript.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js";
+        utilsScript.onload = () => {
+          // Load Tween.js
+          const tweenScript = document.createElement('script');
+          tweenScript.src = "https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js";
+          tweenScript.onload = () => {
+            resolve();
+          };
+          tweenScript.onerror = () => reject(new Error("Failed to load Tween.js"));
+          document.head.appendChild(tweenScript);
+        };
+        utilsScript.onerror = () => reject(new Error("Failed to load BufferGeometryUtils"));
+        document.head.appendChild(utilsScript);
       };
       controlsScript.onerror = () => reject(new Error("Failed to load OrbitControls"));
       document.head.appendChild(controlsScript);
@@ -75,18 +89,24 @@ function startAnimationLoop() {
 
 window.addEventListener('highlight-cell', (e) => {
   const { x, y } = e.detail;
-  // Clear older highlights to avoid accumulation
-  recentEvents = recentEvents.filter(evt => evt.type !== 'highlight');
-  recentEvents.push({
-    x,
-    y,
-    type: 'highlight',
-    age: 15.0 // Lifespan of 1.5 seconds
-  });
-  if (currentWorldData) {
-    renderWorld(currentWorldData, currentViewMode, recentEvents);
+  if (renderMode === '3d') {
+    if (currentWorldData) {
+      easeToCell(x, y, currentWorldData);
+    }
+  } else {
+    // Clear older highlights to avoid accumulation
+    recentEvents = recentEvents.filter(evt => evt.type !== 'highlight');
+    recentEvents.push({
+      x,
+      y,
+      type: 'highlight',
+      age: 15.0 // Lifespan of 1.5 seconds
+    });
+    if (currentWorldData) {
+      renderWorld(currentWorldData, currentViewMode, recentEvents);
+    }
+    startAnimationLoop();
   }
-  startAnimationLoop();
 });
 
 // Read parameters, update text nodes, and re-render
@@ -149,7 +169,7 @@ function updateWorld() {
 function redrawWorld3D() {
   if (renderMode === '3d' && currentWorldData) {
     const params = getParams();
-    renderWorld3D(currentWorldData, currentViewMode, params.enableShadows3d);
+    renderWorld3D(currentWorldData, currentViewMode, params.enableShadows3d, params.enableDayNight3d);
   }
 }
 
@@ -291,6 +311,12 @@ window.addEventListener('change-render-mode', async (e) => {
 });
 
 window.addEventListener('toggle-shadows-3d', (e) => {
+  if (renderMode === '3d' && currentWorldData) {
+    redrawWorld3D();
+  }
+});
+
+window.addEventListener('toggle-day-night-3d', (e) => {
   if (renderMode === '3d' && currentWorldData) {
     redrawWorld3D();
   }
