@@ -204,52 +204,77 @@ export function bindUIEvents(onUpdateCallback, currentWorldDataRef, simCallbacks
       const cellY = Math.floor(scaleY / cellSize);
       
       if (cellX >= 0 && cellX < size && cellY >= 0 && cellY < size) {
-        const cell = grid[cellY][cellX];
-        document.getElementById('val-coord').textContent = `${cell.x}, ${cell.y}`;
-        document.getElementById('val-elevation').textContent = cell.elevation.toFixed(2);
-        document.getElementById('val-moisture').textContent = cell.moisture.toFixed(2);
-        document.getElementById('val-temp').textContent = cell.temperature.toFixed(2);
-        
-        let biomeText = BIOME_NAMES[cell.biome] || cell.biome;
-        if (cell.cityName) {
-          const popLabel = cell.cityPop !== undefined ? `, Pop: ${cell.cityPop}` : '';
-          const statusLabel = cell.isAbandoned ? ' [ABANDONADA]' : '';
-          biomeText += ` (${cell.cityType === 'capital' ? 'Capital' : cell.cityType === 'city' ? 'Cidade' : 'Vila'}: ${cell.cityName}${popLabel}${statusLabel})`;
-        } else if (cell.dungeonName) {
-          biomeText += ` (${cell.dungeonName})`;
-        } else if (cell.isRoad) {
-          biomeText += ` (Estrada Comercial)`;
-        }
-        document.getElementById('val-biome').textContent = biomeText;
-
-        // Resource display
-        if (cell.resource) {
-          const density = cell.resourceDensity > 0.8 ? 'Rico' : cell.resourceDensity > 0.6 ? 'Médio' : 'Escasso';
-          document.getElementById('val-resource').textContent = `${RESOURCE_NAMES[cell.resource]} (${density})`;
-        } else {
-          document.getElementById('val-resource').textContent = '-';
-        }
-
-        // Kingdom display
-        if (cell.kingdomName) {
-          document.getElementById('val-kingdom').textContent = cell.kingdomName + (cell.isFrontier ? ' (Fronteira)' : '');
-        } else {
-          document.getElementById('val-kingdom').textContent = '-';
-        }
+        updateTooltipForCell(grid[cellY][cellX]);
       }
     });
     
     canvas.addEventListener('mouseleave', () => {
-      document.getElementById('val-coord').textContent = '-';
-      document.getElementById('val-elevation').textContent = '-';
-      document.getElementById('val-moisture').textContent = '-';
-      document.getElementById('val-temp').textContent = '-';
-      document.getElementById('val-biome').textContent = '-';
-      document.getElementById('val-resource').textContent = '-';
-      document.getElementById('val-kingdom').textContent = '-';
+      clearTooltip();
+    });
+  }
+
+  // 3D View Selector & Settings Bindings
+  const btn2D = document.getElementById('btn-view-2d');
+  const btn3D = document.getElementById('btn-view-3d');
+  const div3DContainer = document.getElementById('world-3d-container');
+  const canvas2D = document.getElementById('world-canvas');
+  const section3D = document.getElementById('section-3d-settings');
+  const chkShadows = document.getElementById('enable-shadows-3d');
+  const btnResetCam = document.getElementById('btn-reset-camera-3d');
+  
+  if (btn2D && btn3D) {
+    btn2D.addEventListener('click', () => {
+      btn2D.classList.add('active');
+      btn3D.classList.remove('active');
+      canvas2D.classList.remove('hidden');
+      div3DContainer.classList.add('hidden');
+      section3D.classList.add('hidden');
+      
+      window.dispatchEvent(new CustomEvent('change-render-mode', { detail: '2d' }));
+    });
+    
+    btn3D.addEventListener('click', () => {
+      btn3D.classList.add('active');
+      btn2D.classList.remove('active');
+      canvas2D.classList.add('hidden');
+      div3DContainer.classList.remove('hidden');
+      section3D.classList.remove('hidden');
+      
+      window.dispatchEvent(new CustomEvent('change-render-mode', { detail: '3d' }));
+    });
+  }
+  
+  if (chkShadows) {
+    chkShadows.addEventListener('change', () => {
+      window.dispatchEvent(new CustomEvent('toggle-shadows-3d', { detail: chkShadows.checked }));
+    });
+  }
+  
+  if (btnResetCam) {
+    btnResetCam.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('reset-camera-3d'));
+    });
+  }
+  
+  // Raycast hover updates status bar in 3D Container
+  if (div3DContainer) {
+    div3DContainer.addEventListener('mousemove', (e) => {
+      const grid = currentWorldDataRef();
+      if (!grid || !window.THREE) return;
+      
+      const cell = window.check3DIntersection(e.clientX, e.clientY, div3DContainer, grid);
+      if (cell) {
+        updateTooltipForCell(cell);
+      }
+    });
+    
+    div3DContainer.addEventListener('mouseleave', () => {
+      if (window.THREE && window.clear3DHighlight) window.clear3DHighlight();
+      clearTooltip();
     });
   }
 }
+
 
 export function getParams() {
   return {
@@ -276,6 +301,52 @@ export function getParams() {
     showDungeons: document.getElementById('show-dungeons').checked,
     
     // History Phase 3
-    historyInitYears: parseInt(document.getElementById('history-init-years').value)
+    historyInitYears: parseInt(document.getElementById('history-init-years').value),
+    enableShadows3d: document.getElementById('enable-shadows-3d') ? document.getElementById('enable-shadows-3d').checked : false
   };
 }
+
+export function updateTooltipForCell(cell) {
+  document.getElementById('val-coord').textContent = `${cell.x}, ${cell.y}`;
+  document.getElementById('val-elevation').textContent = cell.elevation.toFixed(2);
+  document.getElementById('val-moisture').textContent = cell.moisture.toFixed(2);
+  document.getElementById('val-temp').textContent = cell.temperature.toFixed(2);
+  
+  let biomeText = BIOME_NAMES[cell.biome] || cell.biome;
+  if (cell.cityName) {
+    const popLabel = cell.cityPop !== undefined ? `, Pop: ${cell.cityPop}` : '';
+    const statusLabel = cell.isAbandoned ? ' [ABANDONADA]' : '';
+    biomeText += ` (${cell.cityType === 'capital' ? 'Capital' : cell.cityType === 'city' ? 'Cidade' : 'Vila'}: ${cell.cityName}${popLabel}${statusLabel})`;
+  } else if (cell.dungeonName) {
+    biomeText += ` (${cell.dungeonName})`;
+  } else if (cell.isRoad) {
+    biomeText += ` (Estrada Comercial)`;
+  }
+  document.getElementById('val-biome').textContent = biomeText;
+
+  // Resource display
+  if (cell.resource) {
+    const density = cell.resourceDensity > 0.8 ? 'Rico' : cell.resourceDensity > 0.6 ? 'Médio' : 'Escasso';
+    document.getElementById('val-resource').textContent = `${RESOURCE_NAMES[cell.resource]} (${density})`;
+  } else {
+    document.getElementById('val-resource').textContent = '-';
+  }
+
+  // Kingdom display
+  if (cell.kingdomName) {
+    document.getElementById('val-kingdom').textContent = cell.kingdomName + (cell.isFrontier ? ' (Fronteira)' : '');
+  } else {
+    document.getElementById('val-kingdom').textContent = '-';
+  }
+}
+
+export function clearTooltip() {
+  document.getElementById('val-coord').textContent = '-';
+  document.getElementById('val-elevation').textContent = '-';
+  document.getElementById('val-moisture').textContent = '-';
+  document.getElementById('val-temp').textContent = '-';
+  document.getElementById('val-biome').textContent = '-';
+  document.getElementById('val-resource').textContent = '-';
+  document.getElementById('val-kingdom').textContent = '-';
+}
+

@@ -1,6 +1,6 @@
-# 🗺️ Gerador Procedural de Mundos (Fase 5)
+# 🗺️ Gerador Procedural de Mundos (Fase 6)
 
-Uma ferramenta baseada no navegador para geração procedural de mundos em 2D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (A*). A Fase 4 implementa uma simulação histórica interativa e dinâmica, com timeline visual, desastres climáticos, expedições de masmorra, eventos animados no Canvas e crônicas clicáveis que revelam a localização dos eventos no mapa. A Fase 5 adiciona exportação completa do mundo gerado em JSON, incluindo todos os dados do grid, civilizações, crônicas e metadados de geração.
+Uma ferramenta baseada no navegador para geração procedural de mundos em 2D e 3D, desenvolvida com HTML5 Canvas, CSS Vanilla e JavaScript moderno (ES6+). Ela utiliza ruído de Perlin 2D composto (FBM - Fractal Brownian Motion) para construir matrizes de elevação, umidade e temperatura, combinando-as para classificar biomas geográficos, simular rios por gravidade e propagação de umidade, além de gerar uma camada de civilização com reinos territoriais, cidades e estradas comerciais (A*). A Fase 4 implementa uma simulação histórica interativa e dinâmica, com timeline visual, desastres climáticos, expedições de masmorra, eventos animados no Canvas e crônicas clicáveis que revelam a localização dos eventos no mapa. A Fase 5 adiciona exportação completa do mundo gerado em JSON, incluindo todos os dados do grid, civilizações, crônicas e metadados de geração. A Fase 6 adiciona uma visualização tridimensional interativa com o motor Three.js, oferecendo renderização voxel de terreno, sombras projetadas dinâmicas, controle de órbita da câmera, raycasting para hover interativo nas células e um sistema de partículas 3D para eventos históricos em tempo real.
 
 ---
 
@@ -17,8 +17,9 @@ tools/world_generation/
     ├── generator.js # Regras de biomas, thresholds, rios e cálculo do grid de dados
     ├── noise.js     # Motor matemático de Ruído Perlin 2D e Hashing 32-bit
     ├── renderer.js  # Módulo de renderização no Canvas HTML5, biomas e cores
+    ├── renderer3d.js# Módulo de renderização 3D tridimensional com Three.js e OrbitControls
     ├── ui.js        # Módulo de gerenciamento de inputs da UI e eventos
-    └── tests.js     # Suíte de testes unitários (ruído, clima, biomas e rios)
+    └── tests.js     # Suíte de testes unitários e de integração (incluindo ciclo 3D)
 ```
 
 ---
@@ -107,6 +108,20 @@ O fator de clima base ($T_{lat}$) é calculado através de um dos três modelos 
 *   **Download via Browser**: O botão **📦 Exportar Mundo (JSON)** na interface dispara o download automático de um arquivo `.json` nomeado como `world_{N}x{N}_seed_{seed}_year_{ano}.json`. Grids grandes (ex.: 250×250) podem gerar arquivos de 15 MB ou mais.
 *   **Testes de Serialização**: A suíte de testes em `tests.js` inclui `runExportTests()`, que valida a integridade do JSON (ausência de referências circulares, presença de todos os nós obrigatórios, coerência de contagens e estrutura dos dados de rios e crônicas).
 
+### 9. Visualização Tridimensional Interativa com Three.js (Fase 6)
+*   **Carregamento Sob Demanda (Lazy Loading)**: A biblioteca **Three.js** e o módulo **OrbitControls** são injetados dinamicamente via CDN apenas quando o Modo 3D é ativado. Isso mantém o boot da página leve e previne consumo desnecessário de memória.
+*   **Renderização Voxel Otimizada (`InstancedMesh`)**: O terreno tridimensional usa uma malha instanciada (`THREE.InstancedMesh`) e cubos padrão (`THREE.BoxGeometry`). Cada célula do grid é posicionada e escalada no eixo Y proporcionalmente à sua elevação ($Height = \max(0.1, E \cdot 15.0)$), reduzindo os draw calls de milhares para apenas 1, garantindo 60 FPS estáveis mesmo em resoluções de $250 \times 250$.
+*   **Plano de Água Translúcido**: O oceano é representado por uma malha plana (`THREE.PlaneGeometry`) com material físico tridimensional (`THREE.MeshStandardMaterial`) ajustado na altura correspondente à linha costeira ($E = 0.22$), com opacidade parcial ($75\%$) e parâmetros de rugosidade baixos.
+*   **Representação 3D de Elementos Civis e Naturais**:
+    *   *Cidades*: Formas geométricas de baixo polígono. Capitais são cilindros de 5 lados pintados na cor do reino correspondente, cidades são cubos amarelos e vilas são cones amarelos. Cidades abandonadas viram caixas cinza achatadas (ruínas).
+    *   *Dungeons e POIs*: Cilindros escuros de 6 lados com emissividade vermelha pulsante para denotar perigo.
+    *   *Estradas e Rotas*: Quadros planos direcionais (`THREE.PlaneGeometry`) esticados entre nós vizinhos, com deslocamento vertical sutil ($+0.501$ sobre a altura da célula) para mitigar Z-fighting.
+    *   *Recursos*: Pequenas esferas coloridas flutuando nos biomas terrestres apropriados.
+*   **Iluminação Dinâmica e Sombras Projetadas**: O cenário é iluminado por uma luz ambiente suave e uma luz direcional (sol). Sombras dinâmicas podem ser habilitadas opcionalmente usando o mapeamento de sombras `THREE.PCFSoftShadowMap`. A câmera de sombras acompanha dinamicamente a área do grid.
+*   **Interatividade por Raycasting**: Um raio é projetado a partir da posição do mouse (`THREE.Raycaster`) na tela em direção à malha instanciada do terreno. A interseção descobre o índice da célula no grid, permitindo atualizar reativamente a barra de status com coordenadas, biomas, reinos e estatísticas. Um contorno wireframe (`hoverHelper`) destaca a célula inspecionada.
+*   **Sistema de Partículas de Eventos Históricos**: Eventos da timeline histórica geram esferas coloridas de partículas (`spawn3DHistoryEvent`) na coordenada física do evento. Essas partículas sobem suavemente no eixo Y enquanto sofrem decaimento de opacidade e expansão de escala em tempo real.
+*   **Ciclo de Descarte (Memory Cleanup)**: Ao alternar de volta para o Modo 2D, o contexto WebGL é completamente limpo (`destroyRenderer3D`). Todas as geometrias, materiais, texturas e listeners de redimensionamento são descartados via `.dispose()` para garantir que não haja vazamentos de memória.
+
 ---
 
 ## 🌿 Tabela de Classificação de Biomas
@@ -151,5 +166,10 @@ Um objeto de configuração unificado (`BIOME_THRESHOLDS`) no topo de `js/genera
     *   *Logs de Crônicas Interativas*: Clique em qualquer entrada do log lateral para fazer a câmera destacar a localização exata do acontecimento no Canvas.
 *   **Exportação de Mundo (Fase 5)**:
     *   *Botão 📦 Exportar Mundo (JSON)*: Serializa o estado completo do mundo gerado (grid, civilizações, crônicas e metadados) e inicia o download de um arquivo `.json` nomeado com o tamanho do grid, seed e ano histórico corrente.
-*   **Feedback Debounced**: Atualiza o canvas automaticamente 100ms após o término dos arrastes de sliders.
-*   **Hover Tooltip Ampliado**: Ao passar o cursor sobre o Canvas, a barra de status inferior exibe de forma reativa a coordenada, elevação, umidade, temperatura, bioma detalhado (incluindo o nome e tipo de cidades/vilas/dungeons da célula), recurso ativo com sua densidade, e o nome do reino correspondente (indicando se é uma área de fronteira territorial).
+*   **Visualização 3D Interativa (Fase 6)**:
+    *   *Modo 2D/3D (Tabs)*: Alterne livremente entre o canvas bidimensional clássico e o espaço tridimensional com Three.js.
+    *   *OrbitControls*: Use o mouse para navegar (botão esquerdo para rotacionar o mundo, scroll para zoom, botão direito para mover a câmera).
+    *   *Sombras 3D (Checkbox)*: Ativa projeção de sombras em tempo real no terreno (pode afetar o desempenho em computadores mais modestos).
+    *   *Resetar Câmera (Botão)*: Reposiciona a câmera e o foco de controle no centro do mapa.
+*   **Feedback Debounced**: Atualiza o canvas ou redesenha a cena 3D automaticamente 100ms após o término dos arrastes de sliders.
+*   **Hover Tooltip Ampliado**: Ao passar o cursor sobre o Canvas 2D ou o contêiner 3D, a barra de status inferior exibe de forma reativa a coordenada, elevação, umidade, temperatura, bioma detalhado (incluindo o nome e tipo de cidades/vilas/dungeons da célula), recurso ativo com sua densidade, e o nome do reino correspondente (indicando se é uma área de fronteira territorial).

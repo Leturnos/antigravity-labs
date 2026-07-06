@@ -1,10 +1,47 @@
 import { generateWorldData, simulateHistoryYear } from './generator.js';
-import { runAllTests } from './tests.js';
+import { runAllTests, runThreeJSLoadTests } from './tests.js';
 import { renderWorld } from './renderer.js';
 import { bindUIEvents, updateUIValues, getParams, addChronicleMessage, clearChroniclesLog } from './ui.js';
+import { initRenderer3D, destroyRenderer3D, renderWorld3D, resizeRenderer3D, resetCamera, check3DIntersection, clear3DHighlight, spawn3DHistoryEvent } from './renderer3d.js';
+
+let renderMode = '2d'; // '2d' or '3d'
+
+// Expose to window for ui.js raycasting
+window.check3DIntersection = check3DIntersection;
+window.clear3DHighlight = clear3DHighlight;
+
+let threeLoadedPromise = null;
+
+export function loadThreeJS() {
+  if (threeLoadedPromise) return threeLoadedPromise;
+  
+  threeLoadedPromise = new Promise((resolve, reject) => {
+    const threeScript = document.createElement('script');
+    threeScript.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js";
+    threeScript.onload = () => {
+      const controlsScript = document.createElement('script');
+      controlsScript.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js";
+      controlsScript.onload = () => {
+        resolve();
+      };
+      controlsScript.onerror = () => reject(new Error("Failed to load OrbitControls"));
+      document.head.appendChild(controlsScript);
+    };
+    threeScript.onerror = () => reject(new Error("Failed to load Three.js"));
+    document.head.appendChild(threeScript);
+  });
+  
+  return threeLoadedPromise;
+}
 
 // Run unit tests on load
 runAllTests();
+runThreeJSLoadTests(loadThreeJS).then(() => {
+  // Run lifecycle tests once Three.js is loaded
+  import('./tests.js').then(mod => {
+    mod.runRenderer3DLifecycleTests(initRenderer3D, destroyRenderer3D);
+  });
+});
 
 let currentWorldData = null;
 let currentViewMode = 'biome';
@@ -102,7 +139,18 @@ function updateWorld() {
   }
 
   // Draw on active mode
-  renderWorld(currentWorldData, currentViewMode, recentEvents);
+  if (renderMode === '3d') {
+    redrawWorld3D();
+  } else {
+    renderWorld(currentWorldData, currentViewMode, recentEvents);
+  }
+}
+
+function redrawWorld3D() {
+  if (renderMode === '3d' && currentWorldData) {
+    const params = getParams();
+    renderWorld3D(currentWorldData, currentViewMode, params.enableShadows3d);
+  }
 }
 
 // Avança um ano da simulação ativa
@@ -119,12 +167,16 @@ function advanceYear() {
   chronicles.forEach(c => {
     addChronicleMessage(c.text, c.type, c.x, c.y);
     if (c.x !== undefined && c.y !== undefined) {
-      recentEvents.push({
-        x: c.x,
-        y: c.y,
-        type: c.type,
-        age: 10.0 // Animation ticks (1 second total fade out)
-      });
+      if (renderMode === '3d') {
+        spawn3DHistoryEvent(c.x, c.y, currentWorldData, c.type);
+      } else {
+        recentEvents.push({
+          x: c.x,
+          y: c.y,
+          type: c.type,
+          age: 10.0 // Animation ticks (1 second total fade out)
+        });
+      }
     }
   });
   
@@ -140,8 +192,12 @@ function advanceYear() {
   }
   
   // Force redraw on biome view mode including recent events
-  renderWorld(currentWorldData, currentViewMode, recentEvents);
-  startAnimationLoop();
+  if (renderMode === '3d') {
+    redrawWorld3D();
+  } else {
+    renderWorld(currentWorldData, currentViewMode, recentEvents);
+    startAnimationLoop();
+  }
 }
 
 function stopSimulation() {
@@ -193,11 +249,58 @@ function initTabs() {
       tab.classList.add('active');
       currentViewMode = tab.getAttribute('data-mode');
       if (currentWorldData) {
-        renderWorld(currentWorldData, currentViewMode);
+        if (renderMode === '3d') {
+          redrawWorld3D();
+        } else {
+          renderWorld(currentWorldData, currentViewMode);
+        }
       }
     });
   });
 }
+
+// 3D Global Custom Event Listeners
+window.addEventListener('change-render-mode', async (e) => {
+  renderMode = e.detail;
+  if (renderMode === '3d') {
+    const loader = document.getElementById('loader-3d');
+    if (loader) loader.classList.remove('hidden');
+    
+    try {
+      await loadThreeJS();
+      if (loader) loader.classList.add('hidden');
+      
+      const container = document.getElementById('world-3d-container');
+      initRenderer3D(container);
+      
+      // Resize binding
+      window.addEventListener('resize', () => resizeRenderer3D(container));
+      
+      redrawWorld3D();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao carregar o motor 3D: " + err.message);
+    }
+  } else {
+    // Destroy WebGL context and return to 2D
+    destroyRenderer3D();
+    if (currentWorldData) {
+      renderWorld(currentWorldData, currentViewMode, recentEvents);
+    }
+  }
+});
+
+window.addEventListener('toggle-shadows-3d', (e) => {
+  if (renderMode === '3d' && currentWorldData) {
+    redrawWorld3D();
+  }
+});
+
+window.addEventListener('reset-camera-3d', () => {
+  if (renderMode === '3d' && currentWorldData) {
+    resetCamera(currentWorldData.length);
+  }
+});
 
 // Page boot loader
 window.addEventListener('DOMContentLoaded', () => {

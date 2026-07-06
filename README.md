@@ -25,7 +25,7 @@ antigravity-labs/
 │   ├── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 │   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
 └── tools/       # Ferramentas, scripts de automação e utilitários
-    └── world_generation/ # Gerador Procedural de Mundos (Fase 1: Relevo e Biomas)
+    └── world_generation/ # Gerador Procedural de Mundos (Fase 6: Visualização 3D)
 ```
 
 Abaixo está a visualização geral do repositório para novos projetos:
@@ -96,7 +96,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
-| **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Em Desenvolvimento (Etapa 5)` | Gerador de mundos 2D (ruído Perlin, rios, lagos) com reinos, estradas (A*), recursos, simulação histórica interativa (timeline, eventos animados no canvas, desastres, expedições e logs clicáveis) e exportação completa do mundo em JSON. | HTML5, CSS3, JS, Python |
+| **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Em Desenvolvimento (Etapa 6)` | Gerador procedural de mundos 2D e 3D (Three.js) com relevo, rios, reinos, estradas (A*), recursos, simulação histórica interativa (logs clicáveis, timeline, partículas 3D) e exportação completa em JSON. | HTML5, CSS3, JS, Three.js, Python |
 
 ---
 

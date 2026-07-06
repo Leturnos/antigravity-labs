@@ -453,7 +453,45 @@ export function runExportTests() {
   console.log("✅ World export serialization tests completed successfully!");
 }
 
+export async function runThreeJSLoadTests(loadThreeJSFunction) {
+  console.log("Initializing Three.js script loader tests...");
+  try {
+    await loadThreeJSFunction();
+    console.assert(window.THREE !== undefined, "ERROR: THREE global is not defined after script load.");
+    console.assert(window.THREE.OrbitControls !== undefined, "ERROR: OrbitControls is not defined after script load.");
+    console.log("✅ Three.js script loader tests completed successfully!");
+  } catch (e) {
+    console.error("ERROR: Three.js failed to load dynamically: ", e);
+    console.assert(false, "ERROR: Dynamic script load rejected.");
+  }
+}
+
+export function runRenderer3DLifecycleTests(initFn, destroyFn) {
+  console.log("Initializing Renderer3D lifecycle tests...");
+  const tempDiv = document.createElement('div');
+  tempDiv.style.width = '200px';
+  tempDiv.style.height = '200px';
+  document.body.appendChild(tempDiv);
+  
+  try {
+    initFn(tempDiv);
+    console.assert(tempDiv.querySelector('canvas') !== null, "ERROR: WebGL canvas was not appended to container.");
+    
+    destroyFn();
+    console.assert(tempDiv.querySelector('canvas') === null, "ERROR: WebGL canvas was not removed after destroy.");
+    console.log("✅ Renderer3D lifecycle tests completed successfully!");
+  } catch (e) {
+    console.error("ERROR: Renderer3D lifecycle test failed: ", e);
+    console.assert(false, "Renderer3D lifecycle failed.");
+  } finally {
+    if (tempDiv.parentNode) {
+      document.body.removeChild(tempDiv);
+    }
+  }
+}
+
 export function runAllTests() {
+
   runNoiseTests();
   runBiomeTests();
   runTempModelTests();
