@@ -14,7 +14,8 @@ Este repositório foi estruturado para organizar os projetos por escopo de desen
 antigravity-labs/
 ├── index.html   # Painel Dashboard Launcher (Central)
 ├── server.py    # Servidor Central Unificado em Python
-├── ai/          # Projetos e modelos envolvendo Inteligência Artificial (.gitkeep)
+├── ai/          # Projetos e modelos envolvendo Inteligência Artificial
+│   └── neural_canvas/ # Aether Neural Canvas - Reconhecimento de desenhos em tempo real (TensorFlow.js)
 ├── backend/     # APIs, microsserviços e utilitários de servidor
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
@@ -41,6 +42,7 @@ flowchart LR
 
     Launcher --> Games["🎮 Games"]
     Launcher --> Tools["🛠️ Tools"]
+    Launcher --> AI["🤖 AI"]
 
     Games --> Chess["♟️ Aether Chess"]
     Games --> Sweeper["💣 Aether-Sweeper"]
@@ -52,6 +54,8 @@ flowchart LR
     Backend --> LibraryAPI["📚 Library API"]
     
     Tools --> WorldGen["🗺️ World Generator"]
+
+    AI --> NeuralCanvas["🎨 Aether Neural Canvas"]
 
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
     style Launcher fill:#6366f1,stroke:#fff,stroke-width:1.5px,color:#fff
@@ -67,6 +71,7 @@ flowchart LR
     style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
     style LibraryAPI fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style WorldGen fill:#6366f1,stroke:#fff,stroke-width:1px,color:#fff
+    style NeuralCanvas fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
 ---
@@ -85,6 +90,12 @@ flowchart LR
 | **Aether Tic-Tac-Toe ❌** | [games/tictactoe](./games/tictactoe) | `Concluído` | Jogo da velha com IA Minimax e Poda Alpha-Beta, modo PvP local, simulação e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 
 > Para detalhes completos sobre os jogos, consulte suas respectivas documentações.
+
+### AI (Inteligência Artificial)
+
+| Projeto | Caminho | Status | Descrição | Tecnologias |
+| :--- | :--- | :--- | :--- | :--- |
+| **Aether Neural Canvas 🎨** | [ai/neural_canvas](./ai/neural_canvas) | `Concluído` | Tela de desenho com IA local que classifica traços em tempo real via rede neural (DoodleNet), com modos Sandbox e Time Attack e sons sintetizados. | HTML5, CSS3, JS, TensorFlow.js, Python |
 
 ### Backend (APIs e Microsserviços)
 
@@ -115,6 +126,8 @@ Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: World Generator.
+    *   **Inteligência Artificial (AI)**: Aether Neural Canvas.
+*   **Aether Neural Canvas**: [http://localhost:8000/ai/neural_canvas/](http://localhost:8000/ai/neural_canvas/) (Acesso direto)
 *   **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/) (Acesso direto)
 *   **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/) (Acesso direto)
 *   **Aether Poker**: [http://localhost:8000/games/poker/](http://localhost:8000/games/poker/) (Acesso direto)

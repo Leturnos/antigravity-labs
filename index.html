@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aether Suite - Games & Tools</title>
+  <title>Aether Suite - Games, Tools & AI</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +27,8 @@
       --color-snake-glow: rgba(16, 185, 129, 0.3);
       --color-tictactoe: #f43f5e;
       --color-tictactoe-glow: rgba(244, 63, 94, 0.3);
+      --color-neural-canvas: #8b5cf6;
+      --color-neural-canvas-glow: rgba(139, 92, 246, 0.3);
       
       --font-sans: 'Outfit', sans-serif;
       --font-mono: 'JetBrains+Mono', monospace;
@@ -157,6 +159,11 @@
       border-color: var(--color-world-gen);
       box-shadow: 0 12px 30px var(--color-world-gen-glow);
     }
+    .game-card.neural-canvas:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-neural-canvas);
+      box-shadow: 0 12px 30px var(--color-neural-canvas-glow);
+    }
 
     .game-card .top-section {
       position: relative;
@@ -186,6 +193,7 @@
     .game-card.tictactoe h2 { color: #fb7185; }
     .game-card.poker h2 { color: #34d399; }
     .game-card.world-gen h2 { color: #818cf8; }
+    .game-card.neural-canvas h2 { color: #a78bfa; }
 
     .game-card p.description {
       font-size: 0.975rem;
@@ -284,6 +292,14 @@
     .game-card.world-gen .btn-launch:hover {
       background: linear-gradient(135deg, #818cf8 0%, var(--color-world-gen) 100%);
       box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+    }
+    .game-card.neural-canvas .btn-launch {
+      background: linear-gradient(135deg, var(--color-neural-canvas) 0%, #6d28d9 100%);
+      box-shadow: 0 4px 12px var(--color-neural-canvas-glow);
+    }
+    .game-card.neural-canvas .btn-launch:hover {
+      background: linear-gradient(135deg, #a78bfa 0%, var(--color-neural-canvas) 100%);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
     }
 
     .global-stats-container {
@@ -433,7 +449,7 @@
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 2rem;
       width: 100%;
-      max-width: 800px; /* Centered layout for category cards */
+      max-width: 1200px; /* Centered layout for category cards */
       margin: 0 auto;
     }
 
@@ -494,6 +510,11 @@
       border-color: #6366f1;
       box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
     }
+    .category-card.ai:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-neural-canvas);
+      box-shadow: 0 12px 30px var(--color-neural-canvas-glow);
+    }
 
     .category-card h2 {
       font-size: 1.85rem;
@@ -503,6 +524,23 @@
 
     .category-card.games h2 { color: #c084fc; }
     .category-card.tools h2 { color: #818cf8; }
+    .category-card.ai h2 { color: #a78bfa; }
+
+    .category-card.ai .btn-launch {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    .category-card.ai .btn-launch:hover {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .game-card.neural-canvas:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-neural-canvas);
+      box-shadow: 0 12px 30px var(--color-neural-canvas-glow);
+    }
+    .game-card.neural-canvas h2 { color: #a78bfa; }
 
     .category-card p.description {
       font-size: 0.975rem;
@@ -570,7 +608,7 @@
     <section id="view-categories" class="dashboard-view active">
       <header>
         <div class="logo">AETHER SUITE</div>
-        <p>Uma coleção premium de jogos clássicos interativos e ferramentas utilitárias avançadas com design glassmorphic.</p>
+        <p>Uma coleção premium de jogos clássicos interativos, ferramentas utilitárias avançadas e inteligência artificial local com design glassmorphic.</p>
       </header>
 
       <div class="categories-grid">
@@ -595,6 +633,18 @@
           </div>
           <div class="btn-launch">
             Explorar Ferramentas
+          </div>
+        </div>
+
+        <!-- AI Category Card -->
+        <div class="category-card ai" onclick="showView('view-ai')" role="button" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">🧠</div>
+            <h2>Inteligência Artificial</h2>
+            <p class="description">Explore demonstrações interativas de machine learning rodando localmente no navegador: Classificação de desenhos em tempo real com redes neurais convolucionais (CNNs).</p>
+          </div>
+          <div class="btn-launch">
+            Explorar IA
           </div>
         </div>
       </div>
@@ -774,6 +824,42 @@
 
       <footer>
         <p>Aether Tools &copy; 2026. Desenvolvido para otimização e experimentação.</p>
+      </footer>
+    </section>
+
+    <!-- 4. AI VIEW -->
+    <section id="view-ai" class="dashboard-view">
+      <header>
+        <div class="logo" style="font-size: 2.25rem;">AETHER AI</div>
+        <p>Explore demonstrações interativas de machine learning rodando localmente no navegador.</p>
+      </header>
+
+      <div class="view-header">
+        <button class="btn-back" onclick="showView('view-categories')">
+          <span style="font-size: 1.45rem; font-weight: bold; line-height: 1;">←</span> Voltar ao Início
+        </button>
+      </div>
+
+      <div class="tools-grid">
+        <!-- Aether Neural Canvas -->
+        <div class="game-card neural-canvas" onclick="location.href='ai/neural_canvas/'">
+          <div class="top-section">
+            <div class="icon-box">🎨</div>
+            <h2>Aether Neural Canvas</h2>
+            <p class="description">Desenhe na tela e desafie a rede neural convolucional DoodleNet (treinada com o Quick Draw) a adivinhar seus traços em tempo real. Inclui modos Sandbox e Time Attack.</p>
+          </div>
+          <div class="game-stats">
+            Inteligência Artificial Local<br>
+            TensorFlow.js (DoodleNet)
+          </div>
+          <a href="ai/neural_canvas/" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir Aether Neural Canvas
+          </a>
+        </div>
+      </div>
+
+      <footer>
+        <p>Aether AI &copy; 2026. Desenvolvido para experimentação com machine learning.</p>
       </footer>
     </section>
   </main>

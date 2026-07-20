@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Neural Canvas — Reconhecimento de Esboços por IA em Tempo Real</title>
+  <meta name="description" content="Desenhe e desafie a Rede Neural Aether a identificar seus esboços em tempo real. Jogue no Modo Livre ou compita no Modo Contra o Tempo.">
+  
+  <!-- Modern Typography from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Core Design Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Main Container -->
+  <div class="aether-container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="aether-header">
+      <div class="brand-logo">
+        <div class="logo-symbol">Æ</div>
+        <h1 class="logo-text">AETHER <span>NEURAL CANVAS</span></h1>
+      </div>
+      <div class="header-utilities">
+        <span class="utility-btn brand-badge-experimental">EXPERIMENTAL</span>
+        <a href="/" class="utility-btn" id="hub-back-link">
+          <span class="icon">←</span> Voltar ao Painel
+        </a>
+      </div>
+    </header>
+
+    <!-- Menu / Landing View Screen -->
+    <main class="landing-view" id="menu-screen" style="position: relative;">
+      <!-- Blocker overlay while model is loading -->
+      <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <span class="loading-text">Carregando Inteligência Artificial...</span>
+      </div>
+
+      <div class="landing-hero">
+        <h2 class="landing-title">Aether Neural Canvas</h2>
+        <p class="landing-subtitle">
+          Desenhe suas ideias em tempo real e desafie a Rede Neural Aether a identificar seus desenhos.
+        </p>
+      </div>
+      
+      <div class="mode-selectors">
+        <!-- Sandbox Mode Card -->
+        <div class="mode-card" id="sandbox-card">
+          <div>
+            <div class="mode-icon">🎨</div>
+            <h3 class="mode-card-title">Modo Livre (Sandbox)</h3>
+            <p class="mode-card-description">
+              Desenhe livremente sem restrições. Experimente e assista a rede neural classificar seus traços ao vivo.
+            </p>
+          </div>
+          <div class="mode-action-indicator">
+            Começar a Desenhar <span class="icon">→</span>
+          </div>
+        </div>
+
+        <!-- Time Attack Mode Card -->
+        <div class="mode-card" id="time-attack-card">
+          <div>
+            <div class="mode-icon">⚡</div>
+            <h3 class="mode-card-title">Modo Contra o Tempo (Time Attack)</h3>
+            <p class="mode-card-description">
+              Corra contra o relógio para desenhar os objetos sugeridos. Ganhe pontos e conclua o maior número de rounds.
+            </p>
+          </div>
+          <div class="mode-action-indicator">
+            Entrar na Arena <span class="icon">→</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Game View Screen -->
+    <main class="game-view hidden" id="game-screen">
+      <!-- Left Side: Canvas & Stats HUD -->
+      <section class="canvas-section">
+        
+        <!-- Game HUD (Visible in Time Attack, hidden in Sandbox) -->
+        <div class="time-attack-hud hidden" id="game-hud">
+          <!-- Target Word Pill -->
+          <div class="hud-pill" id="target-pill">
+            <div class="target-word-container">
+              <span class="target-label">Desenhe:</span>
+              <span class="target-word" id="hud-target-word">---</span>
+            </div>
+          </div>
+          
+          <!-- Timer & Score Pill -->
+          <div class="hud-pill" id="stats-pill">
+            <div class="hud-score-container">
+              <span class="hud-score-label">Pontos</span>
+              <span class="hud-score-value" id="hud-score-value">0</span>
+            </div>
+            <div class="timer-container">
+              <svg class="timer-svg" viewBox="0 0 44 44">
+                <circle class="timer-circle-bg" cx="22" cy="22" r="20" />
+                <circle class="timer-circle" id="timer-circle" cx="22" cy="22" r="20" />
+              </svg>
+              <span class="countdown-text" id="hud-timer-text">20</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawing Canvas Area -->
+        <div class="canvas-wrapper state-idle" id="canvas-wrapper">
+          <canvas id="canvas" width="400" height="400"></canvas>
+        </div>
+
+        <!-- Canvas controls toolbar -->
+        <div class="canvas-controls">
+          <button class="control-btn" id="undo-btn" title="Desfazer Último Traço" aria-label="Desfazer último traço">
+            <span class="icon">↩</span>
+          </button>
+          <button class="control-btn" id="redo-btn" title="Refazer Traço" aria-label="Refazer traço">
+            <span class="icon">↪</span>
+          </button>
+          <button class="control-btn" id="clear-btn" title="Limpar Tela" aria-label="Limpar tela">
+            <span class="icon">🗑</span>
+          </button>
+          <button class="control-btn" id="export-btn" title="Exportar PNG" aria-label="Exportar desenho como PNG">
+            <span class="icon">💾</span>
+          </button>
+          <button class="control-btn btn-accent" id="exit-btn" title="Sair para o Menu" aria-label="Sair do jogo e voltar ao menu">
+            <span class="icon">✕</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Side: Side Panel (AI Predictions & Game Guide) -->
+      <aside class="side-panel">
+        <div class="side-panel-content">
+          <div class="panel-header-title">Previsões da IA</div>
+          
+          <!-- Top 5 predictions container -->
+          <div class="predictions-panel">
+            <div class="guess-list">
+              <div class="guess-item" id="prediction-0">
+                <div class="guess-info">
+                  <span class="guess-label">Nenhum desenho</span>
+                  <span class="guess-value">0%</span>
+                </div>
+                <div class="guess-bar-container">
+                  <div class="guess-bar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="guess-item" id="prediction-1">
+                <div class="guess-info">
+                  <span class="guess-label">-</span>
+                  <span class="guess-value">0%</span>
+                </div>
+                <div class="guess-bar-container">
+                  <div class="guess-bar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="guess-item" id="prediction-2">
+                <div class="guess-info">
+                  <span class="guess-label">-</span>
+                  <span class="guess-value">0%</span>
+                </div>
+                <div class="guess-bar-container">
+                  <div class="guess-bar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="guess-item" id="prediction-3">
+                <div class="guess-info">
+                  <span class="guess-label">-</span>
+                  <span class="guess-value">0%</span>
+                </div>
+                <div class="guess-bar-container">
+                  <div class="guess-bar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="guess-item" id="prediction-4">
+                <div class="guess-info">
+                  <span class="guess-label">-</span>
+                  <span class="guess-value">0%</span>
+                </div>
+                <div class="guess-bar-container">
+                  <div class="guess-bar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visualizer preview of what the AI model sees (28x28 downscaled) -->
+          <div class="ai-preview-container" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin: 0.75rem 0; padding: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">Visão do Modelo (28x28)</div>
+            <canvas id="debug-preview-canvas" width="28" height="28" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; width: 56px; height: 56px; image-rendering: pixelated; background: #000;"></canvas>
+          </div>
+
+          <!-- Dynamic guide context instructions -->
+          <div class="info-panel" id="sandbox-guide">
+            <div class="info-title">
+              <span class="icon">💡</span> Modo Livre (Sandbox)
+            </div>
+            <p class="info-text">
+              Desenhe livremente! A IA analisará seus traços de forma contínua e listará os 5 melhores palpites em tempo real. Use a barra abaixo do canvas para gerenciar o traço.
+            </p>
+          </div>
+
+          <div class="info-panel hidden" id="time-attack-guide">
+            <div class="info-title">
+              <span class="icon">⚡</span> Modo Contra o Tempo
+            </div>
+            <p class="info-text">
+              Desenhe a palavra sugerida antes que o tempo acabe. Quando a IA acertar o desenho dentro dos 3 melhores palpites:
+            </p>
+            <ul class="info-list">
+              <li>Você avançará de round</li>
+              <li>Seu tempo será reiniciado</li>
+              <li>Sua pontuação aumentará</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Engine Status Footer with Toggle Model Source -->
+        <div class="panel-footer" style="display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span class="panel-footer-engine">MOTOR DE IA</span>
+            <span id="model-status" class="panel-footer-status">CARREGANDO...</span>
+          </div>
+          <button id="btn-toggle-model-source" class="aether-btn" style="padding: 6px 12px; font-size: 11px; margin: 0; width: 100%; height: auto; line-height: 1.2;">Carregar Modelo Local</button>
+        </div>
+      </aside>
+    </main>
+
+  </div>
+
+  <!-- Modal Overlay (Shared for game end states: victory/defeat) -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content" id="modal-content">
+      <span class="modal-icon" id="modal-icon">🏆</span>
+      <h2 class="modal-title" id="modal-title">Vitória!</h2>
+      <div class="modal-body" id="modal-body">
+        Você desenhou um GATO e a IA adivinhou com sucesso!
+      </div>
+      
+      <!-- Stats box inside modal -->
+      <div class="modal-stats" id="modal-stats">
+        <div class="stat-box">
+          <span class="stat-label">Pontuação Final</span>
+          <span class="stat-value" id="modal-stat-score">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Rounds Concluídos</span>
+          <span class="stat-value" id="modal-stat-rounds">0</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="aether-btn btn-success" id="modal-action-btn">Próximo Round</button>
+        <button class="aether-btn" id="modal-close-btn">Sair para o Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="aether-toast" id="aether-toast">
+    <div class="toast-icon" id="toast-icon"></div>
+    <span id="toast-message">Modelo de IA carregado!</span>
+  </div>
+
+  <!-- Script Loading -->
+  <!-- Load TensorFlow.js from a stable CDN as required by the brief -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <!-- Load Quick Draw dataset category names and translations -->
+  <script src="class_names.js"></script>
+  <!-- Load Core Game & Prediction Application Logic -->
+  <script src="app.js" defer></script>
+</body>
+</html>
