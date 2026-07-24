@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Audio Synth - Estúdio Retro & Sequenciador</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="synth-container">
+    <!-- Header & Global Transport Controls -->
+    <header class="synth-header">
+      <div class="brand">
+        <a href="/?view=view-tools" class="btn-back">← Voltar ao Início</a>
+        <h1 class="logo">AETHER AUDIO SYNTH</h1>
+        <span class="badge">ESTÚDIO 8-BIT RETRO</span>
+      </div>
+      <div class="mode-tabs">
+        <button id="btn-mode-modular" class="tab-btn active">⚡ Estúdio Modular</button>
+        <button id="btn-mode-sfxr" class="tab-btn">🎲 Gerador SFX 8-Bit</button>
+        <button id="btn-mode-tracker" class="tab-btn">🎼 Tracker / Arranjador</button>
+      </div>
+    </header>
+
+    <!-- CRT Oscilloscope Screen -->
+    <section class="display-section">
+      <div class="screen-frame">
+        <div class="crt-overlay"></div>
+        <canvas id="oscillator-canvas" width="800" height="180"></canvas>
+      </div>
+      <div class="transport-bar">
+        <button id="btn-play" class="btn-ctrl primary">▶ TOCAR</button>
+        <button id="btn-stop" class="btn-ctrl danger">■ PARAR</button>
+        <div class="ctrl-group">
+          <label for="input-bpm">BPM (ANDAMENTO)</label>
+          <input type="number" id="input-bpm" min="40" max="240" value="120">
+        </div>
+        <div class="ctrl-group">
+          <label for="input-swing">SWING (SWINGUE) %</label>
+          <input type="range" id="input-swing" min="0" max="50" value="0">
+          <span id="val-swing">0%</span>
+        </div>
+        <div class="ctrl-group">
+          <label for="input-master-vol">VOLUME MASTER</label>
+          <input type="range" id="input-master-vol" min="0" max="1" step="0.01" value="0.8">
+        </div>
+        <button id="btn-export-wav" class="btn-ctrl action">💾 GRAVAR WAV</button>
+      </div>
+    </section>
+
+    <!-- Synth Control Panels (Fase 1: Modular Panel) -->
+    <main class="synth-body" id="panel-modular">
+      <!-- Panel Oscillators & Noise -->
+      <div class="panel-card">
+        <h3>OSCILADORES (OSC 1 & 2)</h3>
+        <div class="controls-grid">
+          <div class="ctrl-group">
+            <label>ONDA DO OSC 1</label>
+            <select id="osc1-type">
+              <option value="square" selected>Quadrada (Square)</option>
+              <option value="sawtooth">Dente de Serra (Sawtooth)</option>
+              <option value="triangle">Triângulo (Triangle)</option>
+              <option value="sine">Senoidal (Sine)</option>
+              <option value="noise">Ruído Branco (Noise)</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label>ONDA DO OSC 2</label>
+            <select id="osc2-type">
+              <option value="sine" selected>Senoidal (Sine)</option>
+              <option value="square">Quadrada (Square)</option>
+              <option value="sawtooth">Dente de Serra (Sawtooth)</option>
+              <option value="triangle">Triângulo (Triangle)</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label for="osc2-detune">DESAFINAÇÃO OSC 2</label>
+            <input type="range" id="osc2-detune" min="-24" max="24" value="7">
+            <span id="val-osc2-detune">+7 semitonos</span>
+          </div>
+          <div class="ctrl-group">
+            <label for="fm-depth">INTENSIDADE FM</label>
+            <input type="range" id="fm-depth" min="0" max="1000" value="0">
+          </div>
+          <div class="ctrl-group">
+            <label for="am-depth">INTENSIDADE AM</label>
+            <input type="range" id="am-depth" min="0" max="1" step="0.01" value="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel ADSR & Filter & LFO -->
+      <div class="panel-card">
+        <h3>ENVELOPE, FILTRO & LFO</h3>
+        <div class="controls-grid">
+          <div class="ctrl-group">
+            <label for="env-attack">ATAQUE (ATTACK)</label>
+            <input type="range" id="env-attack" min="0.001" max="1" step="0.01" value="0.01">
+          </div>
+          <div class="ctrl-group">
+            <label for="env-decay">DECAIMENTO (DECAY)</label>
+            <input type="range" id="env-decay" min="0.01" max="2" step="0.01" value="0.2">
+          </div>
+          <div class="ctrl-group">
+            <label for="env-sustain">SUSTENTAÇÃO (SUSTAIN)</label>
+            <input type="range" id="env-sustain" min="0" max="1" step="0.01" value="0.5">
+          </div>
+          <div class="ctrl-group">
+            <label for="env-release">REPOUSO (RELEASE)</label>
+            <input type="range" id="env-release" min="0.01" max="3" step="0.01" value="0.3">
+          </div>
+          <div class="ctrl-group">
+            <label for="filter-cutoff">CORTE DO FILTRO (Hz)</label>
+            <input type="range" id="filter-cutoff" min="100" max="10000" value="4000">
+          </div>
+          <div class="ctrl-group">
+            <label for="filter-res">RESSONÂNCIA (Q)</label>
+            <input type="range" id="filter-res" min="0.1" max="20" step="0.1" value="2">
+          </div>
+          <div class="ctrl-group">
+            <label for="lfo-rate">FREQUÊNCIA LFO (Hz)</label>
+            <input type="range" id="lfo-rate" min="0.1" max="20" step="0.1" value="4">
+          </div>
+          <div class="ctrl-group">
+            <label for="lfo-depth">INTENSIDADE LFO</label>
+            <input type="range" id="lfo-depth" min="0" max="2000" value="0">
+          </div>
+          <div class="ctrl-group">
+            <label for="lfo-target">DESTINO DO LFO</label>
+            <select id="lfo-target">
+              <option value="filter" selected>Corte do Filtro</option>
+              <option value="pitch">Tom do Oscilador 1</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 16-Step Sequencer Grid -->
+    <section class="sequencer-section">
+      <div class="seq-header">
+        <h2>SEQUENCIADOR DE 16 PASSOS</h2>
+        <div class="step-indicators" id="step-indicators">
+          <!-- 16 LEDs gerados dinamicamente -->
+        </div>
+      </div>
+      <div class="seq-grid" id="seq-grid">
+        <!-- Trilhas geradas dinamicamente -->
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

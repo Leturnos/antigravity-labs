@@ -31,6 +31,8 @@
       --color-tictactoe-glow: rgba(244, 63, 94, 0.3);
       --color-neural-canvas: #8b5cf6;
       --color-neural-canvas-glow: rgba(139, 92, 246, 0.3);
+      --color-audio-synth: #8b5cf6;
+      --color-audio-synth-glow: rgba(139, 92, 246, 0.3);
       
       --font-sans: 'Outfit', sans-serif;
       --font-mono: 'JetBrains+Mono', monospace;
@@ -166,6 +168,11 @@
       border-color: var(--color-neural-canvas);
       box-shadow: 0 12px 30px var(--color-neural-canvas-glow);
     }
+    .game-card.audio-synth:hover {
+      transform: translateY(-8px);
+      border-color: var(--color-audio-synth);
+      box-shadow: 0 12px 30px var(--color-audio-synth-glow);
+    }
 
     .game-card .top-section {
       position: relative;
@@ -175,10 +182,23 @@
       gap: 0.75rem;
     }
 
-    .game-card .icon-box {
+    .game-card .icon-box, .category-card .icon-box, .icon-box {
       font-size: 3rem;
-      display: inline-block;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 0.25rem;
+      font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Android Emoji', sans-serif;
+      line-height: 1;
+    }
+
+    .icon-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
     }
 
     .game-card h2 {
@@ -196,6 +216,7 @@
     .game-card.poker h2 { color: #34d399; }
     .game-card.world-gen h2 { color: #818cf8; }
     .game-card.neural-canvas h2 { color: #a78bfa; }
+    .game-card.audio-synth h2 { color: #c084fc; }
 
     .game-card p.description {
       font-size: 0.975rem;
@@ -301,6 +322,14 @@
     }
     .game-card.neural-canvas .btn-launch:hover {
       background: linear-gradient(135deg, #a78bfa 0%, var(--color-neural-canvas) 100%);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
+    }
+    .game-card.audio-synth .btn-launch {
+      background: linear-gradient(135deg, var(--color-audio-synth) 0%, #6d28d9 100%);
+      box-shadow: 0 4px 12px var(--color-audio-synth-glow);
+    }
+    .game-card.audio-synth .btn-launch:hover {
+      background: linear-gradient(135deg, #a78bfa 0%, var(--color-audio-synth) 100%);
       box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
     }
 
@@ -456,9 +485,10 @@
     }
 
     .tools-grid {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 380px));
       justify-content: center;
-      flex-wrap: wrap;
+      align-items: stretch;
       gap: 2rem;
       width: 100%;
       max-width: 1200px;
@@ -466,8 +496,9 @@
     }
 
     .tools-grid .game-card {
-      max-width: 380px;
       width: 100%;
+      height: 100%;
+      box-sizing: border-box;
     }
 
     .category-card {
@@ -820,6 +851,22 @@
           </div>
           <a href="tools/world_generation/" class="btn-launch" onclick="event.stopPropagation()">
             Abrir World Generator
+          </a>
+        </div>
+
+        <!-- Aether Audio Synth Tool -->
+        <div class="game-card audio-synth" onclick="location.href='tools/aether_synth/'" style="--color-audio-synth: #8b5cf6; --color-audio-synth-glow: rgba(139, 92, 246, 0.3);">
+          <div class="top-section">
+            <div class="icon-box">🎹</div>
+            <h2>Aether Audio Synth</h2>
+            <p class="description">Estúdio retro com sintetizador FM/AM de 2 osciladores, gerador de ruído branco, sequenciador de 16 passos e gravação WAV.</p>
+          </div>
+          <div class="game-stats">
+            Sintetizador & Sequenciador<br>
+            Fase 1: Estúdio Modular & CRT Oscilloscope
+          </div>
+          <a href="tools/aether_synth/" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir Audio Synth
           </a>
         </div>
       </div>
