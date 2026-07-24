@@ -204,6 +204,47 @@
       </div>
     </main>
 
+    <!-- Synth Control Panels (Fase 3: Tracker / Song Arranger Panel) -->
+    <main class="synth-body hidden" id="panel-tracker">
+      <div class="panel-card">
+        <h3>SELETOR DE PADRÃO (PATTERNS 1-4)</h3>
+        <div class="pattern-selector-bar">
+          <button class="btn-pattern active" data-pattern="1">PADRÃO 1</button>
+          <button class="btn-pattern" data-pattern="2">PADRÃO 2</button>
+          <button class="btn-pattern" data-pattern="3">PADRÃO 3</button>
+          <button class="btn-pattern" data-pattern="4">PADRÃO 4</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>ARRANJADOR DA LINHA DO TEMPO (SONG TIMELINE)</h3>
+        <div class="song-mode-toggle" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;">
+          <label style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan); font-weight: 700;">MODO DE REPRODUÇÃO:</label>
+          <button id="btn-toggle-songmode" class="btn-ctrl primary">🔁 PADRÃO ATUAL (LOOP)</button>
+        </div>
+        <div class="timeline-slots-container" id="timeline-slots">
+          <!-- Timeline slots dynamically generated -->
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button id="btn-add-timeline-slot" class="btn-ctrl action">+ PASSO NA TIMELINE</button>
+          <button id="btn-clear-timeline" class="btn-ctrl danger">🧹 LIMPAR TIMELINE</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>PROJETOS & MÚSICAS DEMO</h3>
+        <div class="preset-buttons-grid">
+          <button id="demo-cyberpunk" class="btn-preset">⚡ DEMO: CYBERPUNK DRIVE</button>
+          <button id="demo-chiptune" class="btn-preset">👾 DEMO: CHIPTUNE ARCADE</button>
+        </div>
+        <div class="project-actions-bar" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button id="btn-export-json" class="btn-ctrl action">💾 EXPORTAR PROJETO JSON</button>
+          <button id="btn-import-json" class="btn-ctrl primary">📂 IMPORTAR PROJETO JSON</button>
+          <input type="file" id="input-json-file" accept=".json" class="hidden">
+        </div>
+      </div>
+    </main>
+
     <!-- 16-Step Sequencer Grid -->
     <section class="sequencer-section">
       <div class="seq-header">

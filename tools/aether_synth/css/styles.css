@@ -325,3 +325,86 @@ body {
   background: #fbbf24;
   box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
 }
+
+/* Tracker & Timeline Styles */
+.pattern-selector-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-pattern {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-muted);
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-pattern:hover {
+  border-color: var(--accent-cyan);
+  color: var(--text-main);
+}
+
+.btn-pattern.active {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #000;
+  box-shadow: 0 0 12px var(--accent-cyan-glow);
+}
+
+.timeline-slots-container {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 48px;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.timeline-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+}
+
+.timeline-slot.current {
+  border-color: var(--accent-purple);
+  background: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+.timeline-slot select {
+  background: #0f172a;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: inherit;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.timeline-slot .btn-remove-slot {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0 4px;
+}

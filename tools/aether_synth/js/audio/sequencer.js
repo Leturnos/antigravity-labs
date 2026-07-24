@@ -34,10 +34,15 @@ export class Sequencer {
     ];
 
     this.onStepChangeCallbacks = [];
+    this.onLoopCompleteCallbacks = [];
   }
 
   onStepChange(callback) {
     this.onStepChangeCallbacks.push(callback);
+  }
+
+  onLoopComplete(callback) {
+    this.onLoopCompleteCallbacks.push(callback);
   }
 
   start(synthParamsGetter) {
@@ -104,6 +109,11 @@ export class Sequencer {
     }
 
     this.nextStepTime += stepDuration;
+    
+    if (this.currentStep === 15) {
+      this.onLoopCompleteCallbacks.forEach(cb => cb());
+    }
+
     this.currentStep = (this.currentStep + 1) % 16;
   }
 }

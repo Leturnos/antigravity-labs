@@ -4,6 +4,7 @@ import { DrumSynth } from './audio/drums.js';
 import { Sequencer } from './audio/sequencer.js';
 import { OscilloscopeVisualizer } from './ui/visualizer.js';
 import { SFXGenerator } from './audio/sfxr.js';
+import { TrackerManager } from './audio/tracker.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const audioEngine = new AudioEngine();
@@ -11,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const drumSynth = new DrumSynth(synthVoice);
   const sequencer = new Sequencer(audioEngine, synthVoice, drumSynth);
   const sfxGenerator = new SFXGenerator();
+  const trackerManager = new TrackerManager(sequencer);
 
   // Mode Tab Navigation
   const btnModeModular = document.getElementById('btn-mode-modular');
@@ -19,20 +21,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const panelModular = document.getElementById('panel-modular');
   const panelSfxr = document.getElementById('panel-sfxr');
+  const panelTracker = document.getElementById('panel-tracker');
   const sequencerSection = document.querySelector('.sequencer-section');
 
   function switchMode(mode) {
-    btnModeModular.classList.toggle('active', mode === 'modular');
-    btnModeSfxr.classList.toggle('active', mode === 'sfxr');
-    btnModeTracker.classList.toggle('active', mode === 'tracker');
+    btnModeModular?.classList.toggle('active', mode === 'modular');
+    btnModeSfxr?.classList.toggle('active', mode === 'sfxr');
+    btnModeTracker?.classList.toggle('active', mode === 'tracker');
 
-    panelModular.classList.toggle('hidden', mode !== 'modular');
-    panelSfxr.classList.toggle('hidden', mode !== 'sfxr');
+    panelModular?.classList.toggle('hidden', mode !== 'modular');
+    panelSfxr?.classList.toggle('hidden', mode !== 'sfxr');
+    panelTracker?.classList.toggle('hidden', mode !== 'tracker');
 
     if (mode === 'sfxr') {
-      sequencerSection.classList.add('hidden');
+      sequencerSection?.classList.add('hidden');
     } else {
-      sequencerSection.classList.remove('hidden');
+      sequencerSection?.classList.remove('hidden');
     }
   }
 
@@ -59,25 +63,43 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper to read synthesizer parameter values from UI controls
   function getSynthParams() {
     return {
-      osc1Type: document.getElementById('osc1-type').value,
-      osc2Type: document.getElementById('osc2-type').value,
-      osc2DetuneSemitones: parseFloat(document.getElementById('osc2-detune').value),
-      fmDepth: parseFloat(document.getElementById('fm-depth').value),
-      amDepth: parseFloat(document.getElementById('am-depth').value),
-      attack: parseFloat(document.getElementById('env-attack').value),
-      decay: parseFloat(document.getElementById('env-decay').value),
-      sustain: parseFloat(document.getElementById('env-sustain').value),
-      release: parseFloat(document.getElementById('env-release').value),
-      cutoff: parseFloat(document.getElementById('filter-cutoff').value),
-      resonance: parseFloat(document.getElementById('filter-res').value),
-      lfoRate: parseFloat(document.getElementById('lfo-rate').value),
-      lfoDepth: parseFloat(document.getElementById('lfo-depth').value),
-      lfoTarget: document.getElementById('lfo-target').value
+      osc1Type: document.getElementById('osc1-type')?.value || 'square',
+      osc2Type: document.getElementById('osc2-type')?.value || 'sine',
+      osc2DetuneSemitones: parseFloat(document.getElementById('osc2-detune')?.value || 7),
+      fmDepth: parseFloat(document.getElementById('fm-depth')?.value || 0),
+      amDepth: parseFloat(document.getElementById('am-depth')?.value || 0),
+      attack: parseFloat(document.getElementById('env-attack')?.value || 0.01),
+      decay: parseFloat(document.getElementById('env-decay')?.value || 0.2),
+      sustain: parseFloat(document.getElementById('env-sustain')?.value || 0.5),
+      release: parseFloat(document.getElementById('env-release')?.value || 0.3),
+      cutoff: parseFloat(document.getElementById('filter-cutoff')?.value || 4000),
+      resonance: parseFloat(document.getElementById('filter-res')?.value || 2),
+      lfoRate: parseFloat(document.getElementById('lfo-rate')?.value || 4),
+      lfoDepth: parseFloat(document.getElementById('lfo-depth')?.value || 0),
+      lfoTarget: document.getElementById('lfo-target')?.value || 'filter'
     };
   }
 
+  function setSynthParamsUI(params) {
+    if (!params) return;
+    if (params.osc1Type) document.getElementById('osc1-type').value = params.osc1Type;
+    if (params.osc2Type) document.getElementById('osc2-type').value = params.osc2Type;
+    if (params.osc2DetuneSemitones !== undefined) document.getElementById('osc2-detune').value = params.osc2DetuneSemitones;
+    if (params.fmDepth !== undefined) document.getElementById('fm-depth').value = params.fmDepth;
+    if (params.amDepth !== undefined) document.getElementById('am-depth').value = params.amDepth;
+    if (params.attack !== undefined) document.getElementById('env-attack').value = params.attack;
+    if (params.decay !== undefined) document.getElementById('env-decay').value = params.decay;
+    if (params.sustain !== undefined) document.getElementById('env-sustain').value = params.sustain;
+    if (params.release !== undefined) document.getElementById('env-release').value = params.release;
+    if (params.cutoff !== undefined) document.getElementById('filter-cutoff').value = params.cutoff;
+    if (params.resonance !== undefined) document.getElementById('filter-res').value = params.resonance;
+    if (params.lfoRate !== undefined) document.getElementById('lfo-rate').value = params.lfoRate;
+    if (params.lfoDepth !== undefined) document.getElementById('lfo-depth').value = params.lfoDepth;
+    if (params.lfoTarget) document.getElementById('lfo-target').value = params.lfoTarget;
+  }
+
   // Transport Control Events
-  btnPlay.addEventListener('click', () => {
+  btnPlay?.addEventListener('click', () => {
     audioEngine.init();
     if (!visualizer) {
       visualizer = new OscilloscopeVisualizer(canvas, audioEngine.analyser);
@@ -88,26 +110,26 @@ document.addEventListener('DOMContentLoaded', () => {
     sequencer.start(getSynthParams);
   });
 
-  btnStop.addEventListener('click', () => {
+  btnStop?.addEventListener('click', () => {
     sequencer.stop();
   });
 
-  inputBpm.addEventListener('change', () => {
+  inputBpm?.addEventListener('change', () => {
     sequencer.bpm = parseInt(inputBpm.value) || 120;
   });
 
-  inputSwing.addEventListener('input', () => {
+  inputSwing?.addEventListener('input', () => {
     const val = parseInt(inputSwing.value) || 0;
     valSwing.textContent = `${val}%`;
     sequencer.swing = val;
   });
 
-  inputMasterVol.addEventListener('input', () => {
+  inputMasterVol?.addEventListener('input', () => {
     audioEngine.setMasterVolume(parseFloat(inputMasterVol.value));
   });
 
   // WAV Exporter via OfflineAudioContext
-  btnExportWav.addEventListener('click', async () => {
+  btnExportWav?.addEventListener('click', async () => {
     btnExportWav.disabled = true;
     btnExportWav.textContent = '⏳ GRAVANDO...';
 
@@ -115,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const synthParams = getSynthParams();
 
     const wavBlob = await audioEngine.renderOfflineWav((offlineCtx, offlineDestination) => {
-      // Re-schedule the full 16-step sequence for offline rendering context
+      // Re-schedule the full sequence for offline rendering
       const bpm = sequencer.bpm;
       const stepDuration = (60.0 / bpm) / 4.0;
       
@@ -132,9 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
-    }, 4); // Record 4 seconds of audio
+    }, 4);
 
-    // Download WAV file
     const url = URL.createObjectURL(wavBlob);
     const a = document.createElement('a');
     a.href = url;
@@ -250,17 +271,205 @@ document.addEventListener('DOMContentLoaded', () => {
     sfxGenerator.exportWAV(audioEngine.ctx);
   });
 
-  // Attach input event listeners for live tweaking
   [sfxWave, sfxFreq, sfxSlide, sfxAttack, sfxSustain, sfxDecay, sfxDuty, sfxVibDepth].forEach(input => {
     input?.addEventListener('input', () => {
       readSFXControlsUI();
     });
   });
 
+  // --- TRACKER & TIMELINE ARRANGER CONTROLS ---
+
+  const patternButtons = document.querySelectorAll('.btn-pattern');
+  const btnToggleSongmode = document.getElementById('btn-toggle-songmode');
+  const timelineSlotsContainer = document.getElementById('timeline-slots');
+  const btnAddTimelineSlot = document.getElementById('btn-add-timeline-slot');
+  const btnClearTimeline = document.getElementById('btn-clear-timeline');
+
+  const btnDemoCyberpunk = document.getElementById('demo-cyberpunk');
+  const btnDemoChiptune = document.getElementById('demo-chiptune');
+  const btnExportJson = document.getElementById('btn-export-json');
+  const btnImportJson = document.getElementById('btn-import-json');
+  const inputJsonFile = document.getElementById('input-json-file');
+
+  // Switch Active Pattern (1 to 4)
+  function updatePatternSelectorUI() {
+    patternButtons.forEach(btn => {
+      const pid = parseInt(btn.getAttribute('data-pattern'));
+      btn.classList.toggle('active', pid === trackerManager.activePatternId);
+    });
+  }
+
+  patternButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pid = parseInt(btn.getAttribute('data-pattern'));
+      trackerManager.saveActiveSequencerPattern();
+      trackerManager.loadPatternToSequencer(pid);
+      updatePatternSelectorUI();
+      renderSequencerUI(sequencer);
+    });
+  });
+
+  // Toggle Song Mode vs Current Pattern Mode
+  btnToggleSongmode?.addEventListener('click', () => {
+    trackerManager.songMode = !trackerManager.songMode;
+    if (trackerManager.songMode) {
+      btnToggleSongmode.textContent = '🎵 MÚSICA COMPLETA (SONG)';
+      btnToggleSongmode.classList.remove('primary');
+      btnToggleSongmode.classList.add('action');
+    } else {
+      btnToggleSongmode.textContent = '🔁 PADRÃO ATUAL (LOOP)';
+      btnToggleSongmode.classList.remove('action');
+      btnToggleSongmode.classList.add('primary');
+    }
+  });
+
+  // Render Timeline Sequence Slots
+  function renderTimelineUI() {
+    if (!timelineSlotsContainer) return;
+    timelineSlotsContainer.innerHTML = '';
+
+    trackerManager.songSequence.forEach((patternId, index) => {
+      const slot = document.createElement('div');
+      slot.className = 'timeline-slot';
+      if (trackerManager.songMode && trackerManager.currentTimelineIndex === index) {
+        slot.classList.add('current');
+      }
+
+      const label = document.createElement('span');
+      label.textContent = `#${index + 1}:`;
+
+      const select = document.createElement('select');
+      [1, 2, 3, 4].forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = `PADRÃO ${p}`;
+        if (p === patternId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', (e) => {
+        trackerManager.songSequence[index] = parseInt(e.target.value);
+        trackerManager.saveToLocalStorage(getSynthParams());
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'btn-remove-slot';
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', () => {
+        trackerManager.songSequence.splice(index, 1);
+        if (trackerManager.songSequence.length === 0) {
+          trackerManager.songSequence = [1];
+        }
+        renderTimelineUI();
+        trackerManager.saveToLocalStorage(getSynthParams());
+      });
+
+      slot.appendChild(label);
+      slot.appendChild(select);
+      slot.appendChild(removeBtn);
+      timelineSlotsContainer.appendChild(slot);
+    });
+  }
+
+  btnAddTimelineSlot?.addEventListener('click', () => {
+    trackerManager.songSequence.push(trackerManager.activePatternId);
+    renderTimelineUI();
+    trackerManager.saveToLocalStorage(getSynthParams());
+  });
+
+  btnClearTimeline?.addEventListener('click', () => {
+    trackerManager.songSequence = [1];
+    renderTimelineUI();
+    trackerManager.saveToLocalStorage(getSynthParams());
+  });
+
+  // Trigger Song Timeline Advancement on Loop Completion
+  sequencer.onLoopComplete(() => {
+    if (trackerManager.songMode) {
+      trackerManager.advanceSongTimeline();
+      updatePatternSelectorUI();
+      renderSequencerUI(sequencer);
+      renderTimelineUI();
+    }
+  });
+
+  // Demo Songs
+  btnDemoCyberpunk?.addEventListener('click', () => {
+    trackerManager.loadDemoCyberpunk();
+    if (inputBpm) inputBpm.value = sequencer.bpm;
+    if (inputSwing) inputSwing.value = sequencer.swing;
+    if (valSwing) valSwing.textContent = `${sequencer.swing}%`;
+    updatePatternSelectorUI();
+    renderSequencerUI(sequencer);
+    renderTimelineUI();
+  });
+
+  btnDemoChiptune?.addEventListener('click', () => {
+    trackerManager.loadDemoChiptune();
+    if (inputBpm) inputBpm.value = sequencer.bpm;
+    if (inputSwing) inputSwing.value = sequencer.swing;
+    if (valSwing) valSwing.textContent = `${sequencer.swing}%`;
+    updatePatternSelectorUI();
+    renderSequencerUI(sequencer);
+    renderTimelineUI();
+  });
+
+  // Export JSON
+  btnExportJson?.addEventListener('click', () => {
+    const jsonStr = trackerManager.exportProjectJSON(getSynthParams());
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aether_synth_project_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import JSON
+  btnImportJson?.addEventListener('click', () => {
+    inputJsonFile?.click();
+  });
+
+  inputJsonFile?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const loadedData = trackerManager.importProjectJSON(event.target.result);
+        if (loadedData.synthParams) setSynthParamsUI(loadedData.synthParams);
+        if (inputBpm) inputBpm.value = sequencer.bpm;
+        if (inputSwing) inputSwing.value = sequencer.swing;
+        if (valSwing) valSwing.textContent = `${sequencer.swing}%`;
+
+        updatePatternSelectorUI();
+        renderSequencerUI(sequencer);
+        renderTimelineUI();
+      } catch (err) {
+        alert('Erro ao carregar o projeto JSON. Verifique o formato do arquivo.');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Initial LocalStorage Restoration or Render
+  const restoredData = trackerManager.loadFromLocalStorage();
+  if (restoredData && restoredData.synthParams) {
+    setSynthParamsUI(restoredData.synthParams);
+    if (inputBpm) inputBpm.value = sequencer.bpm;
+    if (inputSwing) inputSwing.value = sequencer.swing;
+    if (valSwing) valSwing.textContent = `${sequencer.swing}%`;
+  }
+  updatePatternSelectorUI();
+  renderTimelineUI();
+
   // Step Grid UI Renderer
   function renderSequencerUI(seq) {
     const indicatorsContainer = document.getElementById('step-indicators');
     const gridContainer = document.getElementById('seq-grid');
+
+    if (!indicatorsContainer || !gridContainer) return;
 
     indicatorsContainer.innerHTML = '';
     gridContainer.innerHTML = '';
@@ -300,6 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stepBtn.addEventListener('click', () => {
           track.steps[i] = !track.steps[i];
           stepBtn.classList.toggle('active', track.steps[i]);
+          trackerManager.saveToLocalStorage(getSynthParams());
         });
 
         stepsContainer.appendChild(stepBtn);
