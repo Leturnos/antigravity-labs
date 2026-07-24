@@ -140,6 +140,70 @@
       </div>
     </main>
 
+    <!-- Synth Control Panels (Fase 2: SFX 8-Bit Generator Panel) -->
+    <main class="synth-body hidden" id="panel-sfxr">
+      <div class="panel-card">
+        <h3>PRESETS INSTANTÂNEOS DE SFX 8-BIT</h3>
+        <div class="preset-buttons-grid">
+          <button id="sfx-laser" class="btn-preset">⚡ LASER / TIRO</button>
+          <button id="sfx-explosion" class="btn-preset">💥 EXPLOSÃO</button>
+          <button id="sfx-coin" class="btn-preset">🪙 MOEDA / PICKUP</button>
+          <button id="sfx-jump" class="btn-preset">🦘 PULO</button>
+          <button id="sfx-powerup" class="btn-preset">⭐ POWER-UP</button>
+          <button id="sfx-hit" class="btn-preset">🩹 DANO / HIT</button>
+        </div>
+        <div class="sfx-actions-bar" style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button id="sfx-mutate" class="btn-ctrl action">🧬 MUTAR (MUTATE)</button>
+          <button id="sfx-random" class="btn-ctrl warning">🎲 RANDOMIZAR</button>
+          <button id="sfx-play" class="btn-ctrl primary">▶ TOCAR EFEITO</button>
+          <button id="sfx-export-wav" class="btn-ctrl action">💾 GRAVAR WAV</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>PARÂMETROS DE SÍNTESE DO SFX</h3>
+        <div class="controls-grid">
+          <div class="ctrl-group">
+            <label for="sfx-wave">FORMA DE ONDA</label>
+            <select id="sfx-wave">
+              <option value="square" selected>Quadrada (Square)</option>
+              <option value="sawtooth">Dente de Serra (Sawtooth)</option>
+              <option value="sine">Senoidal (Sine)</option>
+              <option value="noise">Ruído Branco (Noise)</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-freq">FREQ. INICIAL (Hz)</label>
+            <input type="range" id="sfx-freq" min="20" max="3000" value="440">
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-slide">DESLIZAMENTO (SLIDE)</label>
+            <input type="range" id="sfx-slide" min="-2500" max="2500" value="0">
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-attack">ATAQUE (ATTACK)</label>
+            <input type="range" id="sfx-attack" min="0" max="0.5" step="0.01" value="0">
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-sustain">SUSTENTAÇÃO (SUSTAIN)</label>
+            <input type="range" id="sfx-sustain" min="0.01" max="1" step="0.01" value="0.15">
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-decay">DECAIMENTO (DECAY)</label>
+            <input type="range" id="sfx-decay" min="0.01" max="1.5" step="0.01" value="0.2">
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-duty">DUTY CYCLE (%)</label>
+            <input type="range" id="sfx-duty" min="0.05" max="0.95" step="0.01" value="0.5">
+          </div>
+          <div class="ctrl-group">
+            <label for="sfx-vib-depth">VIBRATO (INTENSIDADE)</label>
+            <input type="range" id="sfx-vib-depth" min="0" max="1" step="0.01" value="0">
+          </div>
+        </div>
+      </div>
+    </main>
+
     <!-- 16-Step Sequencer Grid -->
     <section class="sequencer-section">
       <div class="seq-header">
