@@ -5,6 +5,9 @@ import { Sequencer } from './audio/sequencer.js';
 import { OscilloscopeVisualizer } from './ui/visualizer.js';
 import { SFXGenerator } from './audio/sfxr.js';
 import { TrackerManager } from './audio/tracker.js';
+import { MasterEffects } from './audio/fx.js';
+import { PitchPicker } from './ui/picker.js';
+import { VirtualKeyboard } from './ui/keyboard.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const audioEngine = new AudioEngine();
@@ -13,6 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const sequencer = new Sequencer(audioEngine, synthVoice, drumSynth);
   const sfxGenerator = new SFXGenerator();
   const trackerManager = new TrackerManager(sequencer);
+  const masterFX = new MasterEffects();
+  const pitchPicker = new PitchPicker();
+  const virtualKeyboard = new VirtualKeyboard(synthVoice, audioEngine, getSynthParams);
+
+  // Global Mixer Mute & Solo Sets
+  const mutedTracks = new Set();
+  const soloedTracks = new Set();
+
+  function isTrackAudible(trackId) {
+    if (soloedTracks.size > 0) {
+      return soloedTracks.has(trackId);
+    }
+    return !mutedTracks.has(trackId);
+  }
 
   // Mode Tab Navigation
   const btnModeModular = document.getElementById('btn-mode-modular');
@@ -23,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const panelSfxr = document.getElementById('panel-sfxr');
   const panelTracker = document.getElementById('panel-tracker');
   const sequencerSection = document.querySelector('.sequencer-section');
+  const keyboardSection = document.querySelector('.keyboard-section');
 
   function switchMode(mode) {
     btnModeModular?.classList.toggle('active', mode === 'modular');
@@ -35,14 +53,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mode === 'sfxr') {
       sequencerSection?.classList.add('hidden');
+      keyboardSection?.classList.add('hidden');
     } else {
       sequencerSection?.classList.remove('hidden');
+      keyboardSection?.classList.remove('hidden');
     }
   }
 
   btnModeModular?.addEventListener('click', () => switchMode('modular'));
   btnModeSfxr?.addEventListener('click', () => switchMode('sfxr'));
   btnModeTracker?.addEventListener('click', () => switchMode('tracker'));
+
+  // Initialize Master FX in AudioEngine
+  audioEngine.init();
+  masterFX.init(audioEngine.ctx, audioEngine.masterGain);
+
+  // Initialize On-Screen Keyboard
+  virtualKeyboard.init(document.getElementById('piano-keyboard-container'));
 
   // DOM Elements - Modular Synth & Sequencer Controls
   const btnPlay = document.getElementById('btn-play');
@@ -51,14 +78,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputSwing = document.getElementById('input-swing');
   const valSwing = document.getElementById('val-swing');
   const inputMasterVol = document.getElementById('input-master-vol');
+  const btnVizMode = document.getElementById('btn-viz-mode');
   const btnExportWav = document.getElementById('btn-export-wav');
   const canvas = document.getElementById('oscillator-canvas');
 
-  // Initialize Sequencer UI
-  renderSequencerUI(sequencer);
+  // Initialize Visualizer
+  let visualizer = new OscilloscopeVisualizer(canvas, audioEngine.analyser);
+  visualizer.start();
 
-  // Initialize Oscilloscope
-  let visualizer = null;
+  btnVizMode?.addEventListener('click', () => {
+    const nextMode = visualizer.mode === 'oscilloscope' ? 'spectrum' : 'oscilloscope';
+    visualizer.setMode(nextMode);
+    btnVizMode.textContent = nextMode === 'oscilloscope' ? '📊 MODO: OSCILOSCÓPIO' : '📈 MODO: ESPECTRO FFT';
+  });
+
+  // Render Mixer & Sequencer Grid UI
+  renderMixerUI();
+  renderSequencerUI(sequencer);
 
   // Helper to read synthesizer parameter values from UI controls
   function getSynthParams() {
@@ -99,14 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Transport Control Events
+  sequencer.isTrackAudibleGetter = isTrackAudible;
+
   btnPlay?.addEventListener('click', () => {
     audioEngine.init();
-    if (!visualizer) {
-      visualizer = new OscilloscopeVisualizer(canvas, audioEngine.analyser);
-      visualizer.start();
-    }
+    audioEngine.resume();
     sequencer.bpm = parseInt(inputBpm.value) || 120;
     sequencer.swing = parseInt(inputSwing.value) || 0;
+    masterFX.setDelayBpm(sequencer.bpm);
     sequencer.start(getSynthParams);
   });
 
@@ -115,7 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   inputBpm?.addEventListener('change', () => {
-    sequencer.bpm = parseInt(inputBpm.value) || 120;
+    const bpm = parseInt(inputBpm.value) || 120;
+    sequencer.bpm = bpm;
+    masterFX.setDelayBpm(bpm);
   });
 
   inputSwing?.addEventListener('input', () => {
@@ -128,7 +166,35 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEngine.setMasterVolume(parseFloat(inputMasterVol.value));
   });
 
-  // WAV Exporter via OfflineAudioContext
+  // Master FX Controls Wiring
+  const fxDelayDiv = document.getElementById('fx-delay-div');
+  const fxDelayFeedback = document.getElementById('fx-delay-feedback');
+  const fxDelayWet = document.getElementById('fx-delay-wet');
+  const fxReverbDecay = document.getElementById('fx-reverb-decay');
+  const fxReverbWet = document.getElementById('fx-reverb-wet');
+
+  fxDelayDiv?.addEventListener('change', () => {
+    masterFX.setDelayBpm(sequencer.bpm, fxDelayDiv.value);
+  });
+
+  fxDelayFeedback?.addEventListener('input', () => {
+    masterFX.setDelayFeedback(parseFloat(fxDelayFeedback.value));
+  });
+
+  fxDelayWet?.addEventListener('input', () => {
+    masterFX.setDelayWet(parseFloat(fxDelayWet.value));
+  });
+
+  // Debounced IR Reverb regeneration on change / mouseup only to prevent CPU spikes
+  fxReverbDecay?.addEventListener('change', () => {
+    masterFX.generateReverbIR(parseFloat(fxReverbDecay.value));
+  });
+
+  fxReverbWet?.addEventListener('input', () => {
+    masterFX.setReverbWet(parseFloat(fxReverbWet.value));
+  });
+
+  // WAV Exporter
   btnExportWav?.addEventListener('click', async () => {
     btnExportWav.disabled = true;
     btnExportWav.textContent = '⏳ GRAVANDO...';
@@ -137,14 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const synthParams = getSynthParams();
 
     const wavBlob = await audioEngine.renderOfflineWav((offlineCtx, offlineDestination) => {
-      // Re-schedule the full sequence for offline rendering
       const bpm = sequencer.bpm;
       const stepDuration = (60.0 / bpm) / 4.0;
       
       for (let step = 0; step < 16; step++) {
         const time = step * stepDuration;
         sequencer.tracks.forEach(track => {
-          if (track.steps[step]) {
+          if (track.steps[step] && isTrackAudible(track.id)) {
             if (track.type === 'drum') {
               drumSynth.trigger(offlineCtx, offlineDestination, track.id, time);
             } else if (track.type === 'synth') {
@@ -203,67 +268,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function playSFX() {
     audioEngine.init();
-    if (!visualizer) {
-      visualizer = new OscilloscopeVisualizer(canvas, audioEngine.analyser);
-      visualizer.start();
-    }
     readSFXControlsUI();
     sfxGenerator.play(audioEngine.ctx, audioEngine.masterGain);
   }
 
-  // SFX Presets
-  document.getElementById('sfx-laser')?.addEventListener('click', () => {
-    sfxGenerator.presetLaser();
-    updateSFXControlsUI();
-    playSFX();
-  });
+  document.getElementById('sfx-laser')?.addEventListener('click', () => { sfxGenerator.presetLaser(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-explosion')?.addEventListener('click', () => { sfxGenerator.presetExplosion(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-coin')?.addEventListener('click', () => { sfxGenerator.presetCoin(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-jump')?.addEventListener('click', () => { sfxGenerator.presetJump(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-powerup')?.addEventListener('click', () => { sfxGenerator.presetPowerup(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-hit')?.addEventListener('click', () => { sfxGenerator.presetHit(); updateSFXControlsUI(); playSFX(); });
 
-  document.getElementById('sfx-explosion')?.addEventListener('click', () => {
-    sfxGenerator.presetExplosion();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  document.getElementById('sfx-coin')?.addEventListener('click', () => {
-    sfxGenerator.presetCoin();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  document.getElementById('sfx-jump')?.addEventListener('click', () => {
-    sfxGenerator.presetJump();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  document.getElementById('sfx-powerup')?.addEventListener('click', () => {
-    sfxGenerator.presetPowerup();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  document.getElementById('sfx-hit')?.addEventListener('click', () => {
-    sfxGenerator.presetHit();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  // SFX Actions
-  document.getElementById('sfx-mutate')?.addEventListener('click', () => {
-    sfxGenerator.mutate();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  document.getElementById('sfx-random')?.addEventListener('click', () => {
-    sfxGenerator.randomize();
-    updateSFXControlsUI();
-    playSFX();
-  });
-
-  document.getElementById('sfx-play')?.addEventListener('click', () => {
-    playSFX();
-  });
+  document.getElementById('sfx-mutate')?.addEventListener('click', () => { sfxGenerator.mutate(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-random')?.addEventListener('click', () => { sfxGenerator.randomize(); updateSFXControlsUI(); playSFX(); });
+  document.getElementById('sfx-play')?.addEventListener('click', () => { playSFX(); });
 
   document.getElementById('sfx-export-wav')?.addEventListener('click', () => {
     audioEngine.init();
@@ -272,9 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   [sfxWave, sfxFreq, sfxSlide, sfxAttack, sfxSustain, sfxDecay, sfxDuty, sfxVibDepth].forEach(input => {
-    input?.addEventListener('input', () => {
-      readSFXControlsUI();
-    });
+    input?.addEventListener('input', () => { readSFXControlsUI(); });
   });
 
   // --- TRACKER & TIMELINE ARRANGER CONTROLS ---
@@ -291,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnImportJson = document.getElementById('btn-import-json');
   const inputJsonFile = document.getElementById('input-json-file');
 
-  // Switch Active Pattern (1 to 4)
   function updatePatternSelectorUI() {
     patternButtons.forEach(btn => {
       const pid = parseInt(btn.getAttribute('data-pattern'));
@@ -309,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Toggle Song Mode vs Current Pattern Mode
   btnToggleSongmode?.addEventListener('click', () => {
     trackerManager.songMode = !trackerManager.songMode;
     if (trackerManager.songMode) {
@@ -323,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Render Timeline Sequence Slots
   function renderTimelineUI() {
     if (!timelineSlotsContainer) return;
     timelineSlotsContainer.innerHTML = '';
@@ -383,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
     trackerManager.saveToLocalStorage(getSynthParams());
   });
 
-  // Trigger Song Timeline Advancement on Loop Completion
   sequencer.onLoopComplete(() => {
     if (trackerManager.songMode) {
       trackerManager.advanceSongTimeline();
@@ -393,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Demo Songs
   btnDemoCyberpunk?.addEventListener('click', () => {
     trackerManager.loadDemoCyberpunk();
     if (inputBpm) inputBpm.value = sequencer.bpm;
@@ -414,9 +425,32 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTimelineUI();
   });
 
-  // Export JSON
+  // JSON v1.1 Export / Import Extended Schema
   btnExportJson?.addEventListener('click', () => {
-    const jsonStr = trackerManager.exportProjectJSON(getSynthParams());
+    const projectData = {
+      version: '1.1',
+      title: 'Aether Synth Project',
+      timestamp: new Date().toISOString(),
+      bpm: sequencer.bpm,
+      swing: sequencer.swing,
+      activePatternId: trackerManager.activePatternId,
+      songSequence: trackerManager.songSequence,
+      patterns: trackerManager.patterns,
+      synthParams: getSynthParams(),
+      mixer: {
+        muted: Array.from(mutedTracks),
+        soloed: Array.from(soloedTracks)
+      },
+      fx: {
+        delayDivision: masterFX.delayDivision,
+        delayFeedback: parseFloat(fxDelayFeedback?.value || 0.4),
+        delayWet: parseFloat(fxDelayWet?.value || 0),
+        reverbDecay: masterFX.reverbDecay,
+        reverbWet: parseFloat(fxReverbWet?.value || 0)
+      }
+    };
+
+    const jsonStr = JSON.stringify(projectData, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -426,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   });
 
-  // Import JSON
   btnImportJson?.addEventListener('click', () => {
     inputJsonFile?.click();
   });
@@ -443,11 +476,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputSwing) inputSwing.value = sequencer.swing;
         if (valSwing) valSwing.textContent = `${sequencer.swing}%`;
 
+        if (loadedData.mixer) {
+          mutedTracks.clear();
+          soloedTracks.clear();
+          (loadedData.mixer.muted || []).forEach(id => mutedTracks.add(id));
+          (loadedData.mixer.soloed || []).forEach(id => soloedTracks.add(id));
+          renderMixerUI();
+        }
+
+        if (loadedData.fx) {
+          if (fxDelayDiv) fxDelayDiv.value = loadedData.fx.delayDivision || '1/8';
+          if (fxDelayFeedback) fxDelayFeedback.value = loadedData.fx.delayFeedback || 0.4;
+          if (fxDelayWet) fxDelayWet.value = loadedData.fx.delayWet || 0;
+          if (fxReverbDecay) fxReverbDecay.value = loadedData.fx.reverbDecay || 1.5;
+          if (fxReverbWet) fxReverbWet.value = loadedData.fx.reverbWet || 0;
+
+          masterFX.setDelayBpm(sequencer.bpm, fxDelayDiv?.value);
+          masterFX.setDelayFeedback(parseFloat(fxDelayFeedback?.value));
+          masterFX.setDelayWet(parseFloat(fxDelayWet?.value));
+          masterFX.generateReverbIR(parseFloat(fxReverbDecay?.value));
+          masterFX.setReverbWet(parseFloat(fxReverbWet?.value));
+        }
+
         updatePatternSelectorUI();
         renderSequencerUI(sequencer);
         renderTimelineUI();
       } catch (err) {
-        alert('Erro ao carregar o projeto JSON. Verifique o formato do arquivo.');
+        alert('Erro ao carregar o projeto JSON.');
       }
     };
     reader.readAsText(file);
@@ -464,6 +519,56 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePatternSelectorUI();
   renderTimelineUI();
 
+  // Render Mixer Channels (Volume, Mute, Solo)
+  function renderMixerUI() {
+    const mixerContainer = document.getElementById('mixer-tracks-grid');
+    if (!mixerContainer) return;
+    mixerContainer.innerHTML = '';
+
+    sequencer.tracks.forEach(track => {
+      const channel = document.createElement('div');
+      channel.className = 'mixer-channel';
+
+      const label = document.createElement('div');
+      label.className = 'mixer-channel-label';
+      label.textContent = track.label;
+
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'mixer-btn-group';
+
+      const muteBtn = document.createElement('button');
+      muteBtn.className = `btn-track-mute ${mutedTracks.has(track.id) ? 'active' : ''}`;
+      muteBtn.textContent = 'MUTE';
+      muteBtn.addEventListener('click', () => {
+        if (mutedTracks.has(track.id)) {
+          mutedTracks.delete(track.id);
+        } else {
+          mutedTracks.add(track.id);
+        }
+        renderMixerUI();
+      });
+
+      const soloBtn = document.createElement('button');
+      soloBtn.className = `btn-track-solo ${soloedTracks.has(track.id) ? 'active' : ''}`;
+      soloBtn.textContent = 'SOLO';
+      soloBtn.addEventListener('click', () => {
+        if (soloedTracks.has(track.id)) {
+          soloedTracks.delete(track.id);
+        } else {
+          soloedTracks.add(track.id);
+        }
+        renderMixerUI();
+      });
+
+      btnGroup.appendChild(muteBtn);
+      btnGroup.appendChild(soloBtn);
+
+      channel.appendChild(label);
+      channel.appendChild(btnGroup);
+      mixerContainer.appendChild(channel);
+    });
+  }
+
   // Step Grid UI Renderer
   function renderSequencerUI(seq) {
     const indicatorsContainer = document.getElementById('step-indicators');
@@ -474,7 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
     indicatorsContainer.innerHTML = '';
     gridContainer.innerHTML = '';
 
-    // Top LEDs
     const leds = [];
     for (let i = 0; i < 16; i++) {
       const led = document.createElement('div');
@@ -506,9 +610,46 @@ document.addEventListener('DOMContentLoaded', () => {
         stepBtn.className = 'step-btn';
         if (track.steps[i]) stepBtn.classList.add('active');
 
-        stepBtn.addEventListener('click', () => {
-          track.steps[i] = !track.steps[i];
-          stepBtn.classList.toggle('active', track.steps[i]);
+        // Display note text on synth track step buttons
+        if (track.type === 'synth' && track.steps[i]) {
+          stepBtn.textContent = track.notes[i] || 'C4';
+          stepBtn.style.fontSize = '0.65rem';
+          stepBtn.style.fontWeight = '700';
+          stepBtn.style.color = '#fff';
+        }
+
+        stepBtn.addEventListener('click', (e) => {
+          if (!track.steps[i]) {
+            track.steps[i] = true;
+            stepBtn.classList.add('active');
+            if (track.type === 'synth') {
+              stepBtn.textContent = track.notes[i] || 'C4';
+              stepBtn.style.fontSize = '0.65rem';
+              stepBtn.style.fontWeight = '700';
+              stepBtn.style.color = '#fff';
+            }
+          } else {
+            // If already active on synth track, open pitch picker popover
+            if (track.type === 'synth') {
+              pitchPicker.show(stepBtn, track.notes[i] || 'C4', (selectedNote) => {
+                track.notes[i] = selectedNote;
+                stepBtn.textContent = selectedNote;
+                trackerManager.saveToLocalStorage(getSynthParams());
+              });
+            } else {
+              track.steps[i] = false;
+              stepBtn.classList.remove('active');
+            }
+          }
+          trackerManager.saveToLocalStorage(getSynthParams());
+        });
+
+        // Context menu / right-click to deactivate step
+        stepBtn.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          track.steps[i] = false;
+          stepBtn.classList.remove('active');
+          stepBtn.textContent = '';
           trackerManager.saveToLocalStorage(getSynthParams());
         });
 

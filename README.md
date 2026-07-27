@@ -26,6 +26,7 @@ antigravity-labs/
 │   ├── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 │   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
 └── tools/       # Ferramentas, scripts de automação e utilitários
+    ├── aether_synth/ # Aether Audio Synth - Estúdio de Síntese Modular (FM/AM), Gerador 8-Bit sfxr, Tracker, FX & Performance
     └── world_generation/ # Gerador Procedural de Mundos (Fase 6: Visualização 3D)
 ```
 
@@ -54,6 +55,7 @@ flowchart LR
     Backend --> LibraryAPI["📚 Library API"]
     
     Tools --> WorldGen["🗺️ World Generator"]
+    Tools --> AudioSynth["🎹 Aether Audio Synth"]
 
     AI --> NeuralCanvas["🎨 Aether Neural Canvas"]
 
@@ -71,6 +73,7 @@ flowchart LR
     style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
     style LibraryAPI fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style WorldGen fill:#6366f1,stroke:#fff,stroke-width:1px,color:#fff
+    style AudioSynth fill:#ec4899,stroke:#fff,stroke-width:1px,color:#fff
     style NeuralCanvas fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
@@ -107,6 +110,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Audio Synth 🎹** | [tools/aether_synth](./tools/aether_synth) | `Concluído` | Estúdio de síntese de áudio retro em Web Audio API: Síntese Modular Dual (FM/AM), Gerador SFX 8-Bit (sfxr), Sequenciador 16 passos, Tracker / Arranjador de Músicas, Efeitos (Stereo Delay & Space Reverb), Mixer 5 faixas (Mute/Solo), Teclado Virtual QWERTY/MIDI, Osciloscópio & Espectrograma FFT CRT e exportação WAV/JSON. | HTML5, CSS3, JS, Web Audio API, Web MIDI API, Canvas |
 | **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Concluído` | Gerador procedural de mundos 2D e 3D (Three.js) com relevo, rios, reinos, estradas (A*), recursos, simulação histórica interativa (logs clicáveis, timeline, partículas 3D) e exportação completa em JSON. | HTML5, CSS3, JS, Three.js, Python |
 
 ---
@@ -122,11 +126,12 @@ Execute a partir do diretório raiz:
 python server.py
 ```
 
-Acesse no navegador:
+Acessee no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
-    *   **Ferramentas (Tools)**: World Generator.
+    *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
     *   **Inteligência Artificial (AI)**: Aether Neural Canvas.
+*   **Aether Audio Synth**: [http://localhost:8000/tools/aether_synth/](http://localhost:8000/tools/aether_synth/) (Acesso direto)
 *   **Aether Neural Canvas**: [http://localhost:8000/ai/neural_canvas/](http://localhost:8000/ai/neural_canvas/) (Acesso direto)
 *   **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/) (Acesso direto)
 *   **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/) (Acesso direto)

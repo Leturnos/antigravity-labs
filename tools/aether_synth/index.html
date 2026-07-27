@@ -48,6 +48,7 @@
           <label for="input-master-vol">VOLUME MASTER</label>
           <input type="range" id="input-master-vol" min="0" max="1" step="0.01" value="0.8">
         </div>
+        <button id="btn-viz-mode" class="btn-ctrl action">📊 MODO: OSCILOSCÓPIO</button>
         <button id="btn-export-wav" class="btn-ctrl action">💾 GRAVAR WAV</button>
       </div>
     </section>
@@ -136,6 +137,46 @@
               <option value="pitch">Tom do Oscilador 1</option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <!-- Panel Master FX (Stereo Delay & Space Reverb) -->
+      <div class="panel-card">
+        <h3>EFEITOS MASTER (DELAY & REVERB)</h3>
+        <div class="controls-grid">
+          <div class="ctrl-group">
+            <label for="fx-delay-div">TEMPO DO DELAY (BPM)</label>
+            <select id="fx-delay-div">
+              <option value="1/4">1/4 (Semínima)</option>
+              <option value="1/8" selected>1/8 (Colcheia)</option>
+              <option value="1/16">1/16 (Semicolcheia)</option>
+              <option value="3/16">3/16 (Dotted 1/8)</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label for="fx-delay-feedback">ECO (FEEDBACK)</label>
+            <input type="range" id="fx-delay-feedback" min="0" max="0.85" step="0.01" value="0.4">
+          </div>
+          <div class="ctrl-group">
+            <label for="fx-delay-wet">DELAY MIX (DRY/WET)</label>
+            <input type="range" id="fx-delay-wet" min="0" max="1" step="0.01" value="0">
+          </div>
+          <div class="ctrl-group">
+            <label for="fx-reverb-decay">REVERB DECAY (s)</label>
+            <input type="range" id="fx-reverb-decay" min="0.1" max="3" step="0.1" value="1.5">
+          </div>
+          <div class="ctrl-group">
+            <label for="fx-reverb-wet">REVERB MIX (DRY/WET)</label>
+            <input type="range" id="fx-reverb-wet" min="0" max="1" step="0.01" value="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Mixer (5 Tracks Volume, Mute & Solo) -->
+      <div class="panel-card">
+        <h3>MIXER DE TRILHAS (VOLUME, MUTE & SOLO)</h3>
+        <div class="mixer-tracks-grid" id="mixer-tracks-grid">
+          <!-- Mixer channels generated dynamically -->
         </div>
       </div>
     </main>
@@ -256,6 +297,14 @@
       <div class="seq-grid" id="seq-grid">
         <!-- Trilhas geradas dinamicamente -->
       </div>
+    </section>
+
+    <!-- Virtual Piano Keyboard & Live Performance -->
+    <section class="keyboard-section">
+      <div class="keyboard-header">
+        <h2>TECLADO VIRTUAL & PERFORMANCE AO VIVO (TECLADO PC 'A-K' / MIDI)</h2>
+      </div>
+      <div id="piano-keyboard-container"></div>
     </section>
   </div>
 

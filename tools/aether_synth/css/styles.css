@@ -408,3 +408,194 @@ body {
   cursor: pointer;
   padding: 0 4px;
 }
+
+/* Pitch Picker Popover */
+.pitch-picker-popover {
+  position: absolute;
+  z-index: 1000;
+  background: #0f172a;
+  border: 1px solid var(--accent-cyan);
+  border-radius: 10px;
+  padding: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 12px var(--accent-cyan-glow);
+  width: 220px;
+}
+
+.octave-tabs {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.oct-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.oct-btn.active {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #000;
+}
+
+.picker-keys-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.picker-key-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 4px;
+  padding: 0.4rem 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+
+.picker-key-btn.sharp {
+  background: #1e293b;
+  color: var(--accent-cyan);
+}
+
+.picker-key-btn.selected {
+  background: var(--accent-purple);
+  border-color: var(--accent-purple);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+}
+
+/* Piano Keyboard Section */
+.keyboard-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.keyboard-header h2 {
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.piano-keyboard-wrapper {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  user-select: none;
+}
+
+.piano-key {
+  position: relative;
+  flex: 1;
+  min-width: 36px;
+  height: 120px;
+  background: #f8fafc;
+  border: 1px solid #94a3b8;
+  border-radius: 0 0 6px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #0f172a;
+  font-weight: 700;
+  transition: all 0.1s ease;
+}
+
+.piano-key.black {
+  background: #0f172a;
+  border-color: #334155;
+  color: var(--accent-cyan);
+  height: 75px;
+  min-width: 28px;
+  margin-left: -14px;
+  margin-right: -14px;
+  z-index: 2;
+}
+
+.piano-key.active, .piano-key:active {
+  background: var(--accent-cyan) !important;
+  color: #000 !important;
+  box-shadow: 0 0 14px var(--accent-cyan-glow);
+  transform: translateY(2px);
+}
+
+/* Mixer Grid */
+.mixer-tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+}
+
+.mixer-channel {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mixer-channel-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-main);
+  text-align: center;
+  font-weight: 700;
+}
+
+.mixer-btn-group {
+  display: flex;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.btn-track-mute, .btn-track-solo {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.btn-track-mute.active {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.btn-track-solo.active {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}

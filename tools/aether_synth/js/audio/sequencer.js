@@ -88,7 +88,8 @@ export class Sequencer {
 
     // Execute scheduled notes
     this.tracks.forEach(track => {
-      if (track.steps[stepIndex]) {
+      const isAudible = this.isTrackAudibleGetter ? this.isTrackAudibleGetter(track.id) : true;
+      if (track.steps[stepIndex] && isAudible) {
         if (track.type === 'drum') {
           this.drumSynth.trigger(ctx, dest, track.id, time);
         } else if (track.type === 'synth') {
