@@ -13,7 +13,7 @@
   
   <!-- Core Design Stylesheet -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -271,11 +271,9 @@
   </div>
 
   <!-- Script Loading -->
-  <!-- Load TensorFlow.js from a stable CDN as required by the brief -->
+  <!-- Load TensorFlow.js from a stable CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-  <!-- Load Quick Draw dataset category names and translations -->
-  <script src="class_names.js"></script>
-  <!-- Load Core Game & Prediction Application Logic -->
-  <script src="app.js" defer></script>
+  <!-- Load Modular ES6 Core Application -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
