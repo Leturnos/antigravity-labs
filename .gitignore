@@ -19,6 +19,8 @@ Thumbs.db
 
 # Database
 *.db
+*.db-wal
+*.db-shm
 scores_db.json
 
 # Scratch folder
