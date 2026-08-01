@@ -17,6 +17,7 @@ antigravity-labs/
 ├── ai/          # Projetos e modelos envolvendo Inteligência Artificial
 │   └── neural_canvas/ # Aether Neural Canvas - Reconhecimento de desenhos em tempo real (TensorFlow.js)
 ├── backend/     # APIs, microsserviços e utilitários de servidor
+│   ├── aether_event_hub/ # Aether Event Hub & Task Queue - Fila de eventos e agendamento async (FastAPI, SQLite WAL, WebSockets)
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
 │   ├── aether_rogue/ # Aether Rogue - Roguelike 2D procedural
@@ -45,6 +46,7 @@ flowchart LR
     Launcher --> Games["🎮 Games"]
     Launcher --> Tools["🛠️ Tools"]
     Launcher --> AI["🤖 AI"]
+    Launcher --> Backend["⚙️ Backend"]
 
     Games --> Rogue["🎮 Aether Rogue"]
     Games --> Chess["♟️ Aether Chess"]
@@ -54,6 +56,7 @@ flowchart LR
     Games --> Tetris["🌌 Aether Tetris"]
     Games --> TicTacToe["❌ Aether Tic-Tac-Toe"]
 
+    Backend --> EventHub["⚙️ Aether Event Hub"]
     Backend --> LibraryAPI["📚 Library API"]
     
     Tools --> WorldGen["🗺️ World Generator"]
@@ -64,7 +67,7 @@ flowchart LR
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
     style Launcher fill:#6366f1,stroke:#fff,stroke-width:1.5px,color:#fff
     style Games fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff
-    style Backend fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
+    style Backend fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
     style Rogue fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
@@ -74,6 +77,7 @@ flowchart LR
     style Snake fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style Tetris fill:#5e6ad2,stroke:#fff,stroke-width:1px,color:#fff
     style TicTacToe fill:#f43f5e,stroke:#fff,stroke-width:1px,color:#fff
+    style EventHub fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
     style LibraryAPI fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style WorldGen fill:#6366f1,stroke:#fff,stroke-width:1px,color:#fff
     style AudioSynth fill:#ec4899,stroke:#fff,stroke-width:1px,color:#fff
@@ -104,10 +108,11 @@ flowchart LR
 | :--- | :--- | :--- | :--- | :--- |
 | **Aether Neural Canvas 🎨** | [ai/neural_canvas](./ai/neural_canvas) | `Concluído` | Tela de desenho com IA local que classifica traços em tempo real via rede neural (DoodleNet), com modos Sandbox e Time Attack e sons sintetizados. | HTML5, CSS3, JS, TensorFlow.js, Python |
 
-### Backend (APIs e Microsserviços)
+### Backend (APIs, Fila de Eventos e Microsserviços)
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Event Hub ⚙️** | [backend/aether_event_hub](./backend/aether_event_hub) | `Concluído` | Sistema leve de agendamento de tarefas e fila de eventos distribuídos em background com monitoramento visual em tempo real via WebSockets, SQLite WAL e FastAPI. | Python, FastAPI, aiosqlite, WebSockets, HTML5, CSS3, JS |
 | **Library API 📚** | [backend/library_api](./backend/library_api) | `Concluído` | API RESTful para gerenciamento de biblioteca (catálogo de livros, controle de leitores, autenticação JWT e gestão atômica de empréstimos/devoluções). | Python, FastAPI, SQLite, SQLAlchemy, PyJWT, Pytest |
 
 ### Tools (Ferramentas)
@@ -121,7 +126,7 @@ flowchart LR
 
 ## 🚀 Como Executar
 
-O repositório utiliza um **Servidor Central Unificado** em Python para servir todos os projetos e um Painel Dashboard Launcher na raiz. O Dashboard Launcher oferece navegação dinâmica e categorizada entre **Games (Jogos)** e **Tools (Ferramentas)**.
+O repositório utiliza um **Servidor Central Unificado** em Python para servir todos os projetos e um Painel Dashboard Launcher na raiz. O Dashboard Launcher oferece navegação dinâmica e categorizada entre **Games (Jogos)**, **Tools (Ferramentas)**, **AI (Inteligência Artificial)** e **Backend**.
 
 ### Inicializando o Servidor Central
 Execute a partir do diretório raiz:
@@ -130,20 +135,17 @@ Execute a partir do diretório raiz:
 python server.py
 ```
 
-Acessee no navegador:
+Ou para o **Aether Event Hub & Task Queue**:
+```bash
+uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
+```
+
+Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
     *   **Inteligência Artificial (AI)**: Aether Neural Canvas.
-*   **Aether Audio Synth**: [http://localhost:8000/tools/aether_synth/](http://localhost:8000/tools/aether_synth/) (Acesso direto)
-*   **Aether Neural Canvas**: [http://localhost:8000/ai/neural_canvas/](http://localhost:8000/ai/neural_canvas/) (Acesso direto)
-*   **Aether Chess**: [http://localhost:8000/games/chess/](http://localhost:8000/games/chess/) (Acesso direto)
-*   **Aether-Sweeper**: [http://localhost:8000/games/minesweeper/](http://localhost:8000/games/minesweeper/) (Acesso direto)
-*   **Aether Poker**: [http://localhost:8000/games/poker/](http://localhost:8000/games/poker/) (Acesso direto)
-*   **Aether Snake**: [http://localhost:8000/games/snake/](http://localhost:8000/games/snake/) (Acesso direto)
-*   **Aether Tetris**: [http://localhost:8000/games/tetris/](http://localhost:8000/games/tetris/) (Acesso direto)
-*   **Aether Tic-Tac-Toe**: [http://localhost:8000/games/tictactoe/](http://localhost:8000/games/tictactoe/) (Acesso direto)
-*   **World Generator**: [http://localhost:8000/tools/world_generation/](http://localhost:8000/tools/world_generation/) (Acesso direto)
+    *   **Backend**: Aether Event Hub & Task Queue.
 
 ---
 
@@ -152,9 +154,9 @@ Acessee no navegador:
 O repositório é agnóstico de stack, utilizando a tecnologia mais apropriada para cada caso:
 
 *   **Frontend:** HTML5, CSS3 Vanilla, JavaScript Moderno (ES6+)
-*   **Backend:** Python (FastAPI, Flask, http.server), SQLite
-*   **IA/Algoritmos:** Algoritmos de busca (Minimax, Alpha-Beta), heurísticas posicionais e caching avançado
-*   **Integrações:** Web Audio API, Canvas, Confetti CSS
+*   **Backend:** Python (FastAPI, aiosqlite, SQLAlchemy, http.server), SQLite WAL, WebSockets
+*   **IA/Algoritmos:** Algoritmos de busca (Minimax, Alpha-Beta, A*, BFS), heurísticas posicionais e redes neurais convolucionais
+*   **Integrações:** Web Audio API, Canvas 2D/3D (Three.js)
 
 ---
 

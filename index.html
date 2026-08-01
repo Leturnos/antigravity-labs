@@ -58,6 +58,18 @@
             Explorar IA
           </div>
         </div>
+
+        <!-- Backend Category Card -->
+        <div class="category-card backend" onclick="showView('view-backend')" role="button" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">⚙️</div>
+            <h2>Backend</h2>
+            <p class="description">Explore sistemas de processamento assíncrono em background, agendamento resiliente de tarefas e filas de eventos com monitoramento visual em tempo real via WebSockets.</p>
+          </div>
+          <div class="btn-launch">
+            Explorar Backend
+          </div>
+        </div>
       </div>
 
       <footer>
@@ -303,6 +315,42 @@
 
       <footer>
         <p>Aether AI &copy; 2026. Desenvolvido para experimentação com machine learning.</p>
+      </footer>
+    </section>
+
+    <!-- 5. BACKEND VIEW -->
+    <section id="view-backend" class="dashboard-view">
+      <header>
+        <div class="logo" style="font-size: 2.25rem;">AETHER BACKEND</div>
+        <p>Microsserviços, motores de fila distribuída em background e APIs de alta performance com FastAPI e SQLite WAL.</p>
+      </header>
+
+      <div class="view-header">
+        <button class="btn-back" onclick="showView('view-categories')">
+          <span style="font-size: 1.45rem; font-weight: bold; line-height: 1;">←</span> Voltar ao Início
+        </button>
+      </div>
+
+      <div class="tools-grid">
+        <!-- Aether Event Hub & Task Queue -->
+        <div class="game-card event-hub" onclick="location.href='backend/aether_event_hub/static/'">
+          <div class="top-section">
+            <div class="icon-box">⚙️</div>
+            <h2>Aether Event Hub</h2>
+            <p class="description">Sistema leve de agendamento de tarefas e fila de eventos distribuídos em background. Monitoramento em tempo real via WebSockets, SQLite WAL e FastAPI.</p>
+          </div>
+          <div class="game-stats">
+            Fila & Agendamento Async<br>
+            SQLite WAL • WebSockets Telemetry
+          </div>
+          <a href="backend/aether_event_hub/static/" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir Aether Event Hub
+          </a>
+        </div>
+      </div>
+
+      <footer>
+        <p>Aether Backend &copy; 2026. Desenvolvido para microsserviços e processamento em background.</p>
       </footer>
     </section>
   </main>

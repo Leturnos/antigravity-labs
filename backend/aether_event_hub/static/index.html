@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Event Hub & Task Queue</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">⚙️</div>
+        <div class="brand-text">
+          <h1>Aether Event Hub & Task Queue</h1>
+          <p>Fila de Tarefas em Background • SQLite WAL Não-Bloqueante • Telemetria em Tempo Real via WebSockets</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <div id="ws-status" class="status-badge offline" title="Se estiver desativado, rode no terminal: uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000 (ou python server.py)">
+          <span class="status-dot"></span>
+          <span id="ws-status-text">Conectando...</span>
+        </div>
+        <span class="info-help" title="Para ativar a fila e WebSockets em tempo real, certifique-se de executar no terminal: uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000 (ou python server.py)">❓</span>
+        <button id="btn-refresh" class="btn btn-secondary btn-sm" onclick="fetchTasks(); fetchMetrics();">
+          🔄 Atualizar
+        </button>
+        <a href="/" class="btn btn-secondary btn-sm" style="text-decoration: none;">
+          🏠 Menu Principal
+        </a>
+      </div>
+    </header>
+
+    <!-- Metrics Telemetry Grid -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Trabalhadores Ativos</span>
+          <span class="metric-icon">⚡</span>
+        </div>
+        <div id="metric-workers" class="metric-value">0 / 5</div>
+        <div class="metric-sub">Capacidade Concorrente</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Fila Pendente</span>
+          <span class="metric-icon">⏳</span>
+        </div>
+        <div id="metric-pending" class="metric-value">0</div>
+        <div class="metric-sub">Agendadas e Reexecuções</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Concluídas</span>
+          <span class="metric-icon">✅</span>
+        </div>
+        <div id="metric-completed" class="metric-value">0</div>
+        <div class="metric-sub">Execuções com Sucesso</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Falhas / DLQ</span>
+          <span class="metric-icon">💀</span>
+        </div>
+        <div id="metric-failed" class="metric-value">0</div>
+        <div class="metric-sub">Fila de Erros Mortos</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span>Latência Média</span>
+          <span class="metric-icon">⏱️</span>
+        </div>
+        <div id="metric-latency" class="metric-value">0.0 ms</div>
+        <div class="metric-sub">Duração Média de Execução</div>
+      </div>
+    </section>
+
+    <!-- Main Section -->
+    <div class="main-grid">
+      <!-- Task Ingestion Panel -->
+      <aside class="glass-card">
+        <h2 class="card-title">🚀 Disparar Tarefa</h2>
+
+        <form id="task-form" onsubmit="submitTask(event)">
+          <div class="form-group">
+            <label for="task-name">Tipo de Tarefa (Handler)</label>
+            <select id="task-name" class="form-control">
+              <option value="send_email">send_email (Envio de E-mail Async)</option>
+              <option value="process_image">process_image (Processamento I/O Async)</option>
+              <option value="cpu_intensive">cpu_intensive (Carga CPU Thread Pool)</option>
+              <option value="fail_demo">fail_demo (Simulador de Falha & Retry)</option>
+              <option value="timeout_demo">timeout_demo (Simulador de Timeout)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="task-priority">Prioridade (1 = Baixa, 10 = Alta)</label>
+            <input type="number" id="task-priority" class="form-control" min="1" max="10" value="5">
+          </div>
+
+          <div class="form-group">
+            <label for="task-cron">Expressão Cron (Opcional)</label>
+            <input type="text" id="task-cron" class="form-control" placeholder="ex: */1 * * * * (A cada 1 min)">
+          </div>
+
+          <div class="form-group">
+            <label for="task-interval">Intervalo Fixo em Segundos (Opcional)</label>
+            <input type="number" id="task-interval" class="form-control" placeholder="ex: 10">
+          </div>
+
+          <div class="form-group">
+            <label for="task-timeout">Timeout Limite (Segundos)</label>
+            <input type="number" id="task-timeout" class="form-control" value="60" min="1">
+          </div>
+
+          <div class="form-group">
+            <label for="task-payload">Parâmetros Payload (JSON)</label>
+            <textarea id="task-payload" class="form-control" rows="3">{"alvo": "usuario_demo"}</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+            ⚡ Enfileirar Tarefa
+          </button>
+        </form>
+      </aside>
+
+      <!-- Task Data Table & Real-Time Feed -->
+      <main class="glass-card">
+        <div class="table-header-bar">
+          <h2 class="card-title">📊 Monitor de Execução em Tempo Real</h2>
+
+          <div class="filters-bar">
+            <button class="filter-btn active" onclick="setFilter('ALL', this)">Todas</button>
+            <button class="filter-btn" onclick="setFilter('PENDING', this)">Pendentes</button>
+            <button class="filter-btn" onclick="setFilter('RUNNING', this)">Executando</button>
+            <button class="filter-btn" onclick="setFilter('COMPLETED', this)">Concluídas</button>
+            <button class="filter-btn" onclick="setFilter('FAILED', this)">Falhas</button>
+            <button class="filter-btn" onclick="setFilter('DLQ', this)">DLQ</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome da Tarefa</th>
+                <th>Prioridade</th>
+                <th>Status</th>
+                <th>Duração</th>
+                <th>Próximo Agendamento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted);">Carregando tarefas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Detail / Log Modal -->
+  <div id="log-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-title">Detalhes da Tarefa</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label>Parâmetros Entrada (Payload)</label>
+        <pre id="modal-payload" class="json-block"></pre>
+      </div>
+
+      <div class="form-group">
+        <label>Resultado de Saída (Result)</label>
+        <pre id="modal-result" class="json-block"></pre>
+      </div>
+
+      <div class="form-group">
+        <label>Log de Erros / Traceback</label>
+        <pre id="modal-error" class="json-block" style="color: var(--accent-rose);"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
