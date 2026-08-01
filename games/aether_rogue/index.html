@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Rogue — Cyber Synthwave Dungeon Crawler</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app" class="synth-container">
+    <header class="hud-header glass-panel">
+      <div class="logo-title">🎮 AETHER ROGUE</div>
+      <div class="hud-stat"><span class="label">ANDAR:</span> <span id="hud-floor" class="neon-val">1</span></div>
+      <div class="hud-stat hp-box">
+        <span class="label">HP:</span>
+        <div class="bar-bg"><div id="hud-hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div></div>
+        <span id="hud-hp-text" class="bar-text">100/100</span>
+      </div>
+      <div class="hud-stat energy-box">
+        <span class="label">ENERGIA:</span>
+        <div class="bar-bg"><div id="hud-energy-bar" class="bar-fill energy-fill" style="width: 100%;"></div></div>
+        <span id="hud-energy-text" class="bar-text">50/50</span>
+      </div>
+      <div class="hud-stat"><span class="label">CYBER CHIPS:</span> <span id="hud-chips" class="neon-val">0</span></div>
+      <div class="header-right-controls" style="display: flex; gap: 8px; align-items: center;">
+        <button id="btn-audio" class="btn-glass">🔊 Som ON</button>
+        <a href="../../index.html?view=view-games" class="btn-glass btn-back-menu" style="text-decoration: none;">🏠 Menu</a>
+      </div>
+    </header>
+
+    <main class="main-stage">
+      <aside class="side-panel left-panel glass-panel">
+        <h3>CYBERWARE SKILLS</h3>
+        <div id="skills-list" class="skills-grid"></div>
+        <button id="btn-talents" class="btn-glass neon-purple-btn">⚡ Árvore de Talentos (T)</button>
+      </aside>
+
+      <div class="canvas-wrapper glass-panel">
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+      </div>
+
+      <aside class="side-panel right-panel glass-panel">
+        <h3>INVENTÁRIO</h3>
+        <div id="inventory-list" class="inventory-grid"></div>
+        <h3>RADAR MINIMAPA</h3>
+        <div class="minimap-box">
+          <canvas id="minimap-canvas" width="160" height="160"></canvas>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="hud-footer glass-panel">
+      <div class="log-title">CONSOLA DE EVENTOS</div>
+      <div id="log-container" class="log-scroll"></div>
+    </footer>
+  </div>
+
+  <!-- Talent Tree Modal -->
+  <div id="talent-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-panel">
+      <div class="modal-header">
+        <h2>⚡ CYBERWARE TALENT TREE</h2>
+        <button id="btn-close-talents" class="btn-close">&times;</button>
+      </div>
+      <p class="modal-desc">Gaste seus Cyber Chips acumulados para desbloquear melhorias cibernéticas permanentes.</p>
+      <div id="talent-tree" class="talent-grid"></div>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="gameover-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-panel gameover-panel">
+      <div class="modal-header">
+        <h2 class="neon-magenta-title">☠️ FALHA NO SISTEMA</h2>
+      </div>
+      <p class="modal-desc" id="gameover-desc">Seu Cyber Rogue foi destruído na masmorra Aether.</p>
+      <div class="gameover-stats">
+        <div><span class="label">ANDAR ALCANÇADO:</span> <span id="gameover-floor" class="neon-val">1</span></div>
+        <div><span class="label">CYBER CHIPS:</span> <span id="gameover-chips" class="neon-val">0</span></div>
+      </div>
+      <div class="modal-actions-row">
+        <button id="btn-restart" class="btn-glass neon-magenta-btn">
+          🔄 RECOMEÇAR
+        </button>
+        <a href="../../index.html?view=view-games" class="btn-glass btn-menu-link">
+          🏠 VOLTAR AO MENU
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

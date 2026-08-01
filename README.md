@@ -19,6 +19,7 @@ antigravity-labs/
 ├── backend/     # APIs, microsserviços e utilitários de servidor
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
+│   ├── aether_rogue/ # Aether Rogue - Roguelike 2D procedural
 │   ├── chess/   # Aether Chess - Xadrez Premium com IA local
 │   ├── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
 │   ├── poker/   # Aether Poker - Texas Hold'em com bots inteligentes e side pots
@@ -45,6 +46,7 @@ flowchart LR
     Launcher --> Tools["🛠️ Tools"]
     Launcher --> AI["🤖 AI"]
 
+    Games --> Rogue["🎮 Aether Rogue"]
     Games --> Chess["♟️ Aether Chess"]
     Games --> Sweeper["💣 Aether-Sweeper"]
     Games --> Poker["♦️ Aether Poker"]
@@ -65,6 +67,7 @@ flowchart LR
     style Backend fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
+    style Rogue fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style Chess fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Sweeper fill:#e60012,stroke:#fff,stroke-width:1px,color:#fff
     style Poker fill:#ffc533,stroke:#fff,stroke-width:1px,color:#fff
@@ -85,6 +88,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Rogue 🎮** | [games/aether_rogue](./games/aether_rogue) | `Concluído` | Roguelike dungeon crawler 2D em turnos com geração procedual híbrida (BSP + Cavernas), raycasting FOV 360° com névoa de guerra, IA A*, habilidades Cyberware e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Chess ♟️** | [games/chess](./games/chess) | `Concluído` | Xadrez premium contra IA minimax local, glassmorphism, áudio sintetizado offline e suporte a temas. | HTML5, CSS3, JS, Python |
 | **Aether-Sweeper 💣** | [games/minesweeper](./games/minesweeper) | `Concluído` | Campo Minado com estética 8-bit retro arcade, primeiro clique seguro, chording, rumbles de explosão, confetes e som sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Tetris 🌌** | [games/tetris](./games/tetris) | `Concluído` | Jogo de Tetris premium inspirado no design da Linear.app. Conta com 3 modos (Clássico, Contrarrelógio e Zen), seleção de níveis e áudio chiptune sintetizado offline. | HTML5, CSS3, JS, Python |
@@ -128,7 +132,7 @@ python server.py
 
 Acessee no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
-    *   **Jogos (Games)**: Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
+    *   **Jogos (Games)**: Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
     *   **Inteligência Artificial (AI)**: Aether Neural Canvas.
 *   **Aether Audio Synth**: [http://localhost:8000/tools/aether_synth/](http://localhost:8000/tools/aether_synth/) (Acesso direto)
