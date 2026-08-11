@@ -1,11 +1,13 @@
 /**
  * Aether Motion Lab — Main Entry Point
- * Orchestrates Canvas Viewport, Particle Loop, Vector Fields & UI Controls
+ * Orchestrates Canvas Viewport, Particle Loop, Vector Fields, Recorder & Presets
  */
 
 import { ParticleSystem } from './engine/particle-system.js';
 import { VectorFields, MouseBrush } from './engine/vector-fields.js';
+import { ExportRecorder } from './engine/recorder.js';
 import { ControlsManager } from './ui/controls.js';
+import { PresetManager } from './ui/preset-manager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('motion-canvas');
@@ -15,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const particleEngine = new ParticleSystem(50000);
   const vectorFields = new VectorFields();
   const mouseBrush = new MouseBrush(canvas);
+  const recorder = new ExportRecorder(canvas);
+  const presetManager = new PresetManager();
   const uiControls = new ControlsManager();
 
   uiControls.init();
@@ -77,6 +81,73 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // Preset Card Clicks
+  const presetCards = document.querySelectorAll('.preset-card');
+  presetCards.forEach((card) => {
+    card.addEventListener('click', () => {
+      presetCards.forEach((c) => c.classList.remove('active'));
+      card.classList.add('active');
+      const presetKey = card.getAttribute('data-preset');
+      presetManager.applyPreset(presetKey, uiControls, particleEngine, width, height);
+      syncMouseBrush();
+    });
+  });
+
+  // Export Buttons
+  const btnExportPng = document.getElementById('btn-export-png');
+  const btnRecordVideo = document.getElementById('btn-record-video');
+  const btnExportPreset = document.getElementById('btn-export-preset');
+  const btnImportPreset = document.getElementById('btn-import-preset');
+  const inputPresetFile = document.getElementById('input-preset-file');
+
+  if (btnExportPng) {
+    btnExportPng.addEventListener('click', () => {
+      recorder.exportSnapshot4K(width, height, uiControls.params.bgColor);
+    });
+  }
+
+  if (btnRecordVideo) {
+    btnRecordVideo.addEventListener('click', () => {
+      const originalText = btnRecordVideo.textContent;
+      btnRecordVideo.disabled = true;
+
+      recorder.recordWebM(
+        5,
+        () => {
+          btnRecordVideo.textContent = '🔴 Gravando... (5s)';
+        },
+        (elapsed, total) => {
+          btnRecordVideo.textContent = `🔴 Gravando... (${total - elapsed}s)`;
+        },
+        () => {
+          btnRecordVideo.textContent = originalText;
+          btnRecordVideo.disabled = false;
+        }
+      );
+    });
+  }
+
+  if (btnExportPreset) {
+    btnExportPreset.addEventListener('click', () => {
+      presetManager.exportPresetJSON(uiControls.params);
+    });
+  }
+
+  if (btnImportPreset && inputPresetFile) {
+    btnImportPreset.addEventListener('click', () => inputPresetFile.click());
+    inputPresetFile.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        presetManager.importPresetJSON(e.target.files[0], (importedParams) => {
+          Object.assign(uiControls.params, importedParams);
+          uiControls.syncDomFromParams();
+          particleEngine.setCount(uiControls.params.particleCount, width, height);
+          particleEngine.clear(width, height, uiControls.params.bgColor);
+          syncMouseBrush();
+        });
+      }
+    });
+  }
 
   // UI Deck Toggle & Action Buttons
   const btnToggleUi = document.getElementById('btn-toggle-ui');
