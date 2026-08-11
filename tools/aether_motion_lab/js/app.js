@@ -1,9 +1,10 @@
 /**
  * Aether Motion Lab — Main Entry Point
- * Orchestrates Canvas Viewport, Particle Loop & UI Controls
+ * Orchestrates Canvas Viewport, Particle Loop, Vector Fields & UI Controls
  */
 
 import { ParticleSystem } from './engine/particle-system.js';
+import { VectorFields, MouseBrush } from './engine/vector-fields.js';
 import { ControlsManager } from './ui/controls.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,8 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Engines
   const particleEngine = new ParticleSystem(50000);
+  const vectorFields = new VectorFields();
+  const mouseBrush = new MouseBrush(canvas);
   const uiControls = new ControlsManager();
+
   uiControls.init();
+
+  // Sync MouseBrush params from UI
+  function syncMouseBrush() {
+    mouseBrush.mode = uiControls.params.brushMode;
+    mouseBrush.radius = uiControls.params.brushRadius;
+    mouseBrush.force = uiControls.params.brushForce;
+  }
+  syncMouseBrush();
 
   // Viewport & DPI Scaling
   let width = 0;
@@ -44,9 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const countEl = document.getElementById('particle-counter');
       if (countEl) countEl.textContent = value.toLocaleString('pt-BR');
     }
+    syncMouseBrush();
   });
 
-  // Basic Tab Switching Logic
+  // Tab Switching Logic
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
@@ -65,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // UI Deck Toggle & Buttons
+  // UI Deck Toggle & Action Buttons
   const btnToggleUi = document.getElementById('btn-toggle-ui');
   const uiLayer = document.getElementById('ui-layer');
   const controlDeck = document.getElementById('control-deck');
@@ -100,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnRandomize) {
     btnRandomize.addEventListener('click', () => {
       uiControls.randomize();
+      syncMouseBrush();
     });
   }
 
@@ -116,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearCanvas();
     } else if (e.key === 'r' || e.key === 'R') {
       uiControls.randomize();
+      syncMouseBrush();
     }
   });
 
@@ -133,8 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     fpsCount++;
 
-    // Update & Render Particle System
-    particleEngine.update(width, height, uiControls.params);
+    // Update & Render Particle System with Vector Fields and Mouse Brush
+    particleEngine.update(width, height, uiControls.params, vectorFields, mouseBrush);
     particleEngine.render(ctx, width, height, uiControls.params);
 
     requestAnimationFrame(loop);
