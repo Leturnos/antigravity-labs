@@ -80,7 +80,7 @@ class SimplexNoise {
     if (t2 < 0) n2 = 0.0;
     else {
       t2 *= t2;
-      const gi2 = this.permMod12[ii+i2+this.perm[jj+j2+this.perm[kk+k2]]];
+      const gi2 = this.permMod12[ii+i2+this.perm[jj+i2+this.perm[kk+k2]]];
       const g2 = this.grad3[gi2];
       n2 = t2 * t2 * (g2[0]*x2 + g2[1]*y2 + g2[2]*z2);
     }
@@ -155,7 +155,6 @@ export class VectorFields {
     const cx = width * 0.5;
     const cy = height * 0.5;
 
-    // 2 Gravitational Well centers
     const wells = [
       { x: cx - width * 0.2, y: cy },
       { x: cx + width * 0.2, y: cy }
@@ -195,9 +194,9 @@ export class VectorFields {
 export class MouseBrush {
   constructor(canvas) {
     this.canvas = canvas;
-    this.x = 0;
-    this.y = 0;
-    this.active = false;
+    this.x = -1000;
+    this.y = -1000;
+    this.isDown = false;
     this.mode = 'attractor';
     this.radius = 150;
     this.force = 2.5;
@@ -212,37 +211,49 @@ export class MouseBrush {
       this.y = e.clientY - rect.top;
     };
 
-    this.canvas.addEventListener('pointerdown', (e) => {
-      this.active = true;
-      updatePos(e);
+    window.addEventListener('pointermove', (e) => {
+      if (this.isDown) updatePos(e);
     });
 
-    this.canvas.addEventListener('pointermove', (e) => {
-      if (this.active) updatePos(e);
+    window.addEventListener('pointerdown', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      if (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      ) {
+        this.isDown = true;
+        updatePos(e);
+      }
     });
 
-    this.canvas.addEventListener('pointerup', () => {
-      this.active = false;
+    window.addEventListener('pointerup', () => {
+      this.isDown = false;
     });
 
-    this.canvas.addEventListener('pointerleave', () => {
-      this.active = false;
+    window.addEventListener('pointercancel', () => {
+      this.isDown = false;
     });
   }
 
+  get active() {
+    return this.isDown && this.mode !== 'none';
+  }
+
   getForce(particleX, particleY) {
-    if (!this.active || this.mode === 'none') return { x: 0, y: 0 };
+    if (!this.active) return { x: 0, y: 0 };
 
     const dx = this.x - particleX;
     const dy = this.y - particleY;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist > this.radius || dist < 1) return { x: 0, y: 0 };
+    if (dist > this.radius || dist < 0.1) return { x: 0, y: 0 };
 
     const normDist = 1.0 - dist / this.radius;
     const mag = normDist * this.force;
 
-    if (this.mode === 'attractor') {
+    if (this.mode === 'attractor' || this.mode === 'emitter') {
       return { x: (dx / dist) * mag, y: (dy / dist) * mag };
     } else if (this.mode === 'repeller') {
       return { x: (-dx / dist) * mag, y: (-dy / dist) * mag };

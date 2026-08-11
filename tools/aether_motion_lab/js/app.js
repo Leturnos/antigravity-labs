@@ -55,10 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Parameter Change Listener
   uiControls.onChange((key, value, params) => {
-    if (key === 'particleCount') {
-      particleEngine.setCount(value, width, height);
+    if (key === 'particleCount' || key === 'reset') {
+      particleEngine.setCount(params.particleCount, width, height);
       const countEl = document.getElementById('particle-counter');
-      if (countEl) countEl.textContent = value.toLocaleString('pt-BR');
+      if (countEl) countEl.textContent = params.particleCount.toLocaleString('pt-BR');
     }
     syncMouseBrush();
   });
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
           Object.assign(uiControls.params, importedParams);
           uiControls.syncDomFromParams();
           particleEngine.setCount(uiControls.params.particleCount, width, height);
-          particleEngine.clear(width, height, uiControls.params.bgColor);
+          particleEngine.clear(width, height);
           syncMouseBrush();
         });
       }
@@ -154,16 +154,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const uiLayer = document.getElementById('ui-layer');
   const controlDeck = document.getElementById('control-deck');
   const btnCollapseDeck = document.getElementById('btn-collapse-deck');
+  const btnReopenDeck = document.getElementById('btn-reopen-deck');
   const btnPause = document.getElementById('btn-pause');
   const btnClear = document.getElementById('btn-clear');
   const btnRandomize = document.getElementById('btn-randomize');
+  const btnResetParams = document.getElementById('btn-reset-params');
 
   function toggleZenMode() {
     uiLayer.classList.toggle('hidden');
   }
 
-  function toggleDeck() {
-    controlDeck.classList.toggle('collapsed');
+  function collapseDeck() {
+    controlDeck.classList.add('collapsed');
+    if (btnReopenDeck) btnReopenDeck.classList.remove('hidden');
+  }
+
+  function expandDeck() {
+    controlDeck.classList.remove('collapsed');
+    if (btnReopenDeck) btnReopenDeck.classList.add('hidden');
   }
 
   function togglePause() {
@@ -174,11 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function clearCanvas() {
-    particleEngine.clear(width, height, uiControls.params.bgColor);
+    particleEngine.clear(width, height);
   }
 
   if (btnToggleUi) btnToggleUi.addEventListener('click', toggleZenMode);
-  if (btnCollapseDeck) btnCollapseDeck.addEventListener('click', toggleDeck);
+  if (btnCollapseDeck) btnCollapseDeck.addEventListener('click', collapseDeck);
+  if (btnReopenDeck) btnReopenDeck.addEventListener('click', expandDeck);
   if (btnPause) btnPause.addEventListener('click', togglePause);
   if (btnClear) btnClear.addEventListener('click', clearCanvas);
   if (btnRandomize) {
@@ -187,12 +196,23 @@ document.addEventListener('DOMContentLoaded', () => {
       syncMouseBrush();
     });
   }
+  if (btnResetParams) {
+    btnResetParams.addEventListener('click', () => {
+      uiControls.resetToDefaults();
+      particleEngine.clear(width, height);
+      syncMouseBrush();
+    });
+  }
 
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
-    if (e.key === 'h' || e.key === 'H') {
+    if (e.key === 'Escape') {
+      if (uiLayer.classList.contains('hidden')) {
+        toggleZenMode();
+      }
+    } else if (e.key === 'h' || e.key === 'H') {
       toggleZenMode();
     } else if (e.code === 'Space') {
       e.preventDefault();
@@ -221,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update & Render Particle System with Vector Fields and Mouse Brush
     particleEngine.update(width, height, uiControls.params, vectorFields, mouseBrush);
-    particleEngine.render(ctx, width, height, uiControls.params);
+    particleEngine.render(ctx, width, height, uiControls.params, mouseBrush);
 
     requestAnimationFrame(loop);
   }

@@ -5,7 +5,7 @@
 
 export class ControlsManager {
   constructor() {
-    this.params = {
+    this.defaultParams = {
       particleCount: 15000,
       maxSpeed: 3.0,
       friction: 0.02,
@@ -23,6 +23,7 @@ export class ControlsManager {
       brushForce: 2.5
     };
 
+    this.params = { ...this.defaultParams };
     this.onParamsChangeCallbacks = [];
   }
 
@@ -112,6 +113,12 @@ export class ControlsManager {
     this.notifyChange('randomize', null, this.params);
   }
 
+  resetToDefaults() {
+    this.params = { ...this.defaultParams };
+    this.syncDomFromParams();
+    this.notifyChange('reset', null, this.params);
+  }
+
   syncDomFromParams() {
     const setVal = (id, val) => {
       const el = document.getElementById(id);
@@ -138,6 +145,16 @@ export class ControlsManager {
 
     updateLabel('val-particle-count', this.params.particleCount.toLocaleString('pt-BR'));
     updateLabel('val-max-speed', this.params.maxSpeed.toFixed(1));
+    updateLabel('val-friction', this.params.friction.toFixed(3));
+    updateLabel('val-particle-size', `${this.params.particleSize.toFixed(1)}px`);
     updateLabel('val-trail-fade', `${this.params.trailFade}%`);
+    updateLabel('val-field-scale', this.params.fieldScale.toFixed(4));
+    updateLabel('val-time-speed', this.params.timeSpeed.toFixed(3));
+    updateLabel('val-field-strength', this.params.fieldStrength.toFixed(1));
+    updateLabel('val-brush-radius', `${this.params.brushRadius}px`);
+    updateLabel('val-brush-force', this.params.brushForce.toFixed(1));
+
+    const nameEl = document.getElementById('current-preset');
+    if (nameEl) nameEl.textContent = 'Quantum Nebula';
   }
 }

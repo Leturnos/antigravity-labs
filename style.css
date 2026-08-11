@@ -19,6 +19,8 @@
   --color-neural-canvas-glow: rgba(139, 92, 246, 0.3);
   --color-audio-synth: #8b5cf6;
   --color-audio-synth-glow: rgba(139, 92, 246, 0.3);
+  --color-motion-lab: #00f2fe;
+  --color-motion-lab-glow: rgba(0, 242, 254, 0.3);
   
   --font-sans: 'Outfit', sans-serif;
   --font-mono: 'JetBrains+Mono', monospace;
@@ -159,6 +161,11 @@ header p {
   border-color: var(--color-audio-synth);
   box-shadow: 0 12px 30px var(--color-audio-synth-glow);
 }
+.game-card.motion-lab:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-motion-lab);
+  box-shadow: 0 12px 30px var(--color-motion-lab-glow);
+}
 
 .game-card .top-section {
   position: relative;
@@ -232,6 +239,7 @@ header p {
 .game-card.world-gen h2 { color: #818cf8; }
 .game-card.neural-canvas h2 { color: #a78bfa; }
 .game-card.audio-synth h2 { color: #c084fc; }
+.game-card.motion-lab h2 { color: #00f2fe; }
 
 .game-card p.description {
   font-size: 0.975rem;
@@ -346,6 +354,25 @@ header p {
 .game-card.audio-synth .btn-launch:hover {
   background: linear-gradient(135deg, #a78bfa 0%, var(--color-audio-synth) 100%);
   box-shadow: 0 6px 16px rgba(139, 92, 246, 0.5);
+}
+.game-card.motion-lab:hover {
+  transform: translateY(-8px);
+  border-color: #00f2fe !important;
+  box-shadow: 0 12px 30px rgba(0, 242, 254, 0.35) !important;
+}
+.game-card.motion-lab h2 { color: #00f2fe !important; }
+.game-card.motion-lab .btn-launch {
+  background: linear-gradient(135deg, #00f2fe 0%, #00b4d8 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0, 242, 254, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-card.motion-lab .btn-launch:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #00f2fe 100%) !important;
+  box-shadow: 0 6px 16px rgba(0, 242, 254, 0.6) !important;
+  transform: translateY(-2px);
 }
 
 .global-stats-container {

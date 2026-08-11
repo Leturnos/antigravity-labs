@@ -14,6 +14,7 @@ export class ParticleSystem {
     this.attributes = new Float32Array(maxParticles * 3); // [life, maxLife, colorVal]
 
     this.isPaused = false;
+    this.pendingFullClear = false;
   }
 
   init(count, width, height) {
@@ -32,7 +33,6 @@ export class ParticleSystem {
       this.positions[i2] = Math.random() * width;
       this.positions[i2 + 1] = Math.random() * height;
     } else {
-      // Spawn near center or random border
       this.positions[i2] = width * 0.5 + (Math.random() - 0.5) * 100;
       this.positions[i2 + 1] = height * 0.5 + (Math.random() - 0.5) * 100;
     }
@@ -43,9 +43,9 @@ export class ParticleSystem {
     this.velocities[i2 + 1] = Math.sin(angle) * speed;
 
     const maxLife = Math.random() * 200 + 100;
-    this.attributes[i3] = maxLife; // Current life
-    this.attributes[i3 + 1] = maxLife; // Max life
-    this.attributes[i3 + 2] = Math.random(); // Color gradient factor
+    this.attributes[i3] = maxLife;
+    this.attributes[i3 + 1] = maxLife;
+    this.attributes[i3 + 2] = Math.random();
   }
 
   setCount(newCount, width, height) {
@@ -118,19 +118,26 @@ export class ParticleSystem {
     }
   }
 
-  render(ctx, width, height, params) {
-    // 1. Trail decay
-    const fadeOpacity = (100 - params.trailFade) / 100;
-    const bgColor = params.bgColor || '#050508';
-
+  render(ctx, width, height, params, mouseBrush = null) {
     ctx.save();
-    ctx.fillStyle = this.hexToRgba(bgColor, Math.max(fadeOpacity, 0.04));
-    ctx.fillRect(0, 0, width, height);
 
-    // 2. Blend Mode
+    // Full clear if pending
+    if (this.pendingFullClear) {
+      ctx.fillStyle = params.bgColor || '#050508';
+      ctx.fillRect(0, 0, width, height);
+      this.pendingFullClear = false;
+    } else {
+      // Trail decay
+      const fadeOpacity = (100 - params.trailFade) / 100;
+      const bgColor = params.bgColor || '#050508';
+      ctx.fillStyle = this.hexToRgba(bgColor, Math.max(fadeOpacity, 0.04));
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // Blend Mode
     ctx.globalCompositeOperation = params.blendMode || 'lighter';
 
-    // 3. Render Particles
+    // Render Particles
     const particleSize = params.particleSize || 1.5;
     const palette = this.getPaletteColors(params.palette);
 
@@ -147,6 +154,22 @@ export class ParticleSystem {
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Render Mouse Brush Guidance Ring
+    if (mouseBrush && mouseBrush.active) {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.beginPath();
+      ctx.arc(mouseBrush.x, mouseBrush.y, mouseBrush.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(mouseBrush.x, mouseBrush.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 242, 254, 0.8)';
       ctx.fill();
     }
 
@@ -177,7 +200,8 @@ export class ParticleSystem {
     return palette[Math.min(idx, palette.length - 1)];
   }
 
-  clear(width, height, bgColor = '#050508') {
+  clear(width, height) {
+    this.pendingFullClear = true;
     for (let i = 0; i < this.activeCount; i++) {
       this.resetParticle(i, width, height, true);
     }

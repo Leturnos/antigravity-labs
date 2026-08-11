@@ -111,9 +111,14 @@
               <div class="preset-desc">Vórtice Radiante 3D</div>
             </button>
           </div>
-          <button id="btn-randomize" class="btn-action full-width">
-            <span>🎲 Randomizar Parâmetros [R]</span>
-          </button>
+          <div class="btn-row mb">
+            <button id="btn-randomize" class="btn-action flex-1">
+              <span>🎲 Randomizar</span>
+            </button>
+            <button id="btn-reset-params" class="btn-secondary flex-1" title="Resetar todos os filtros para o padrão original">
+              <span>🔄 Resetar Filtros</span>
+            </button>
+          </div>
         </section>
 
         <!-- Tab 2: Particles & Physics -->
@@ -276,6 +281,11 @@
 
       </div>
     </aside>
+
+    <!-- Discrete Floating Button to Re-open Control Deck -->
+    <button id="btn-reopen-deck" class="glass-panel btn-reopen-deck hidden" title="Abrir Painel de Controle">
+      ⚙️ <span class="btn-text">Painel</span>
+    </button>
 
     <!-- Canvas Tooltip/Hint -->
     <div id="canvas-hint" class="glass-panel">
