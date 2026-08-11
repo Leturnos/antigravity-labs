@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Motion Lab — Laboratório de Arte Gerativa & Partículas</title>
+  
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fullscreen Particle Canvas -->
+  <canvas id="motion-canvas"></canvas>
+
+  <!-- UI Overlay Layer -->
+  <div id="ui-layer">
+
+    <!-- Header Navigation Bar -->
+    <header class="top-bar glass-panel">
+      <div class="left-section">
+        <a href="../../index.html" class="btn-back" title="Voltar ao Dashboard">
+          <span class="icon">←</span> Dashboard
+        </a>
+        <div class="brand">
+          <span class="brand-title">AETHER MOTION LAB</span>
+          <span class="badge">v1.0</span>
+        </div>
+      </div>
+
+      <div class="center-section">
+        <div class="stat-pill" title="Quadros por segundo">
+          <span class="label">FPS:</span>
+          <span id="fps-counter" class="value">60</span>
+        </div>
+        <div class="stat-pill" title="Partículas Ativas">
+          <span class="label">Partículas:</span>
+          <span id="particle-counter" class="value">15.000</span>
+        </div>
+        <div class="stat-pill" title="Preset Atual">
+          <span class="label">Preset:</span>
+          <span id="current-preset" class="value">Quantum Nebula</span>
+        </div>
+      </div>
+
+      <div class="right-section">
+        <button id="btn-toggle-ui" class="btn-icon" title="Ocultar/Exibir Interface (Tecla H)">
+          <span class="icon">👁️</span> <span class="btn-text">Zen Mode [H]</span>
+        </button>
+        <button id="btn-pause" class="btn-icon" title="Pausar/Retomar (Espaço)">
+          <span class="icon">⏸️</span>
+        </button>
+        <button id="btn-clear" class="btn-icon" title="Limpar Canvas (Tecla C)">
+          <span class="icon">🧹</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Floating Glassmorphic Control Deck -->
+    <aside id="control-deck" class="glass-panel">
+      <div class="deck-header">
+        <h2>Painel de Controle</h2>
+        <button id="btn-collapse-deck" class="btn-mini" title="Minimizar Painel">─</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="deck-tabs">
+        <button class="tab-btn active" data-tab="tab-presets">Presets</button>
+        <button class="tab-btn" data-tab="tab-particles">Partículas</button>
+        <button class="tab-btn" data-tab="tab-fields">Campos</button>
+        <button class="tab-btn" data-tab="tab-colors">Estilo</button>
+        <button class="tab-btn" data-tab="tab-brush">Pincel</button>
+        <button class="tab-btn" data-tab="tab-export">Exportar</button>
+      </nav>
+
+      <!-- Tab Contents -->
+      <div class="deck-body">
+        
+        <!-- Tab 1: Presets -->
+        <section id="tab-presets" class="tab-content active">
+          <h3>Presets Rápidos</h3>
+          <div class="presets-grid">
+            <button class="preset-card active" data-preset="quantum-nebula">
+              <div class="preset-icon">🌌</div>
+              <div class="preset-name">Quantum Nebula</div>
+              <div class="preset-desc">Flow Field + Additive Glow</div>
+            </button>
+            <button class="preset-card" data-preset="lorenz-attractor">
+              <div class="preset-icon">🌀</div>
+              <div class="preset-name">Lorenz Attractor</div>
+              <div class="preset-desc">Atrator Caótico Esmeralda</div>
+            </button>
+            <button class="preset-card" data-preset="solar-flare">
+              <div class="preset-icon">🔥</div>
+              <div class="preset-name">Solar Flare</div>
+              <div class="preset-desc">N-Bodies + Fogo Quântico</div>
+            </button>
+            <button class="preset-card" data-preset="cyber-silk">
+              <div class="preset-icon">🕸️</div>
+              <div class="preset-name">Cyber Silk</div>
+              <div class="preset-desc">Rastro Alto + Neon Flow</div>
+            </button>
+            <button class="preset-card" data-preset="vortex-portal">
+              <div class="preset-icon">🌪️</div>
+              <div class="preset-name">Vortex Portal</div>
+              <div class="preset-desc">Vórtice Radiante 3D</div>
+            </button>
+          </div>
+          <button id="btn-randomize" class="btn-action full-width">
+            <span>🎲 Randomizar Parâmetros [R]</span>
+          </button>
+        </section>
+
+        <!-- Tab 2: Particles & Physics -->
+        <section id="tab-particles" class="tab-content">
+          <h3>Física & Partículas</h3>
+          
+          <div class="control-group">
+            <label for="slider-particle-count">
+              Quantidade: <span id="val-particle-count">15.000</span>
+            </label>
+            <input type="range" id="slider-particle-count" min="1000" max="50000" step="1000" value="15000">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-max-speed">
+              Velocidade Máxima: <span id="val-max-speed">3.0</span>
+            </label>
+            <input type="range" id="slider-max-speed" min="0.5" max="10.0" step="0.5" value="3.0">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-friction">
+              Fricção / Drag: <span id="val-friction">0.02</span>
+            </label>
+            <input type="range" id="slider-friction" min="0.00" max="0.10" step="0.005" value="0.02">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-particle-size">
+              Tamanho do Ponto: <span id="val-particle-size">1.5px</span>
+            </label>
+            <input type="range" id="slider-particle-size" min="0.5" max="5.0" step="0.5" value="1.5">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-trail-fade">
+              Rastro / Fade Opacity: <span id="val-trail-fade">92%</span>
+            </label>
+            <input type="range" id="slider-trail-fade" min="0" max="100" step="1" value="92">
+          </div>
+        </section>
+
+        <!-- Tab 3: Vector Fields -->
+        <section id="tab-fields" class="tab-content">
+          <h3>Campos Matemáticos</h3>
+
+          <div class="control-group">
+            <label for="select-field-type">Modo do Campo:</label>
+            <select id="select-field-type" class="custom-select">
+              <option value="simplex">Simplex Noise Flow Field</option>
+              <option value="lorenz">Atrator Caótico de Lorenz</option>
+              <option value="nbodies">Gravidade de N-Corpos</option>
+              <option value="vortex">Vórtice Central</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="slider-field-scale">
+              Escala da Turbulência: <span id="val-field-scale">0.003</span>
+            </label>
+            <input type="range" id="slider-field-scale" min="0.0005" max="0.01" step="0.0005" value="0.003">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-time-speed">
+              Evolução Temporal (Z-Drift): <span id="val-time-speed">0.002</span>
+            </label>
+            <input type="range" id="slider-time-speed" min="0.000" max="0.010" step="0.001" value="0.002">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-field-strength">
+              Força do Campo: <span id="val-field-strength">1.0</span>
+            </label>
+            <input type="range" id="slider-field-strength" min="0.1" max="5.0" step="0.1" value="1.0">
+          </div>
+        </section>
+
+        <!-- Tab 4: Colors & Style -->
+        <section id="tab-colors" class="tab-content">
+          <h3>Paleta & Efeitos Visuais</h3>
+
+          <div class="control-group">
+            <label for="select-palette">Paleta de Cores:</label>
+            <select id="select-palette" class="custom-select">
+              <option value="cyberpunk">Neon Cyberpunk (Ciano/Púrpura/Rosa)</option>
+              <option value="aurora">Aurora Borealis (Verde/Azul/Teal)</option>
+              <option value="solar">Plasma Solar (Fogo/Ouro/Laranja)</option>
+              <option value="emerald">Emerald Matrix (Verde Neon/Branco)</option>
+              <option value="monochrome">Monocromático High-Contrast</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="select-blend-mode">Modo de Mesclagem:</label>
+            <select id="select-blend-mode" class="custom-select">
+              <option value="lighter">Additive Glow (Lighter)</option>
+              <option value="source-over">Normal Crisp (Source-Over)</option>
+              <option value="screen">Screen Soft</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="color-background">Cor de Fundo:</label>
+            <input type="color" id="color-background" value="#050508">
+          </div>
+        </section>
+
+        <!-- Tab 5: Interactive Brush -->
+        <section id="tab-brush" class="tab-content">
+          <h3>Pincel de Interação</h3>
+
+          <div class="control-group">
+            <label for="select-brush-mode">Ação do Mouse/Touch:</label>
+            <select id="select-brush-mode" class="custom-select">
+              <option value="attractor">Attractor (Atrair Partículas)</option>
+              <option value="repeller">Repeller (Empurrar Partículas)</option>
+              <option value="vortex">Vortex Spin (Girar Partículas)</option>
+              <option value="emitter">Particle Emitter (Criar Partículas)</option>
+              <option value="none">Desativado (Apenas Observar)</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="slider-brush-radius">
+              Raio de Influência: <span id="val-brush-radius">150px</span>
+            </label>
+            <input type="range" id="slider-brush-radius" min="50" max="400" step="10" value="150">
+          </div>
+
+          <div class="control-group">
+            <label for="slider-brush-force">
+              Intensidade da Força: <span id="val-brush-force">2.5</span>
+            </label>
+            <input type="range" id="slider-brush-force" min="0.5" max="10.0" step="0.5" value="2.5">
+          </div>
+        </section>
+
+        <!-- Tab 6: Export & Save -->
+        <section id="tab-export" class="tab-content">
+          <h3>Exportação & Mídia</h3>
+
+          <button id="btn-export-png" class="btn-action full-width mb">
+            📷 Capturar Snapshot 4K (PNG)
+          </button>
+
+          <button id="btn-record-video" class="btn-action full-width mb accent">
+            📹 Gravar Vídeo Loop WebM (5s)
+          </button>
+
+          <div class="divider"></div>
+
+          <h3>Gerenciar Presets</h3>
+          <div class="btn-row">
+            <button id="btn-export-preset" class="btn-secondary">Exportar JSON</button>
+            <button id="btn-import-preset" class="btn-secondary">Importar JSON</button>
+          </div>
+          <input type="file" id="input-preset-file" accept=".json" style="display: none;">
+        </section>
+
+      </div>
+    </aside>
+
+    <!-- Canvas Tooltip/Hint -->
+    <div id="canvas-hint" class="glass-panel">
+      <span>💡 Clique e arraste no canvas para interagir com as partículas!</span>
+    </div>
+
+  </div>
+
+  <!-- Main Application Script -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
