@@ -228,6 +228,34 @@ header p {
   transform: translateY(-2px);
 }
 
+.game-card.tactics {
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 243, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-card.tactics:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #00f3ff;
+  box-shadow: 0 14px 35px rgba(0, 243, 255, 0.4);
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.08) 0%, rgba(16, 16, 28, 0.8) 100%);
+}
+
+.game-card.tactics .btn-launch {
+  background: linear-gradient(135deg, #00b4d8 0%, #00f3ff 100%);
+  color: #040408;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(0, 243, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-card.tactics .btn-launch:hover {
+  background: linear-gradient(135deg, #00f3ff 0%, #38bdf8 100%);
+  box-shadow: 0 6px 20px rgba(0, 243, 255, 0.6);
+  transform: translateY(-2px);
+}
+
 .game-card.snake:hover h2 { color: #34d399; } /* keep original color active on hover if desired, or let's see how it was: */
 .game-card.chess h2 { color: #c084fc; }
 .game-card.sweeper h2 { color: #f87171; }
@@ -236,6 +264,7 @@ header p {
 .game-card.tictactoe h2 { color: #fb7185; }
 .game-card.poker h2 { color: #34d399; }
 .game-card.rogue h2 { color: #00f3ff; }
+.game-card.tactics h2 { color: #00f3ff; }
 .game-card.world-gen h2 { color: #818cf8; }
 .game-card.neural-canvas h2 { color: #a78bfa; }
 .game-card.audio-synth h2 { color: #c084fc; }

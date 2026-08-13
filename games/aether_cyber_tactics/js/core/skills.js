@@ -8,45 +8,45 @@
 export const SKILLS_REGISTRY = {
   KINETIC_STRIKE: {
     id: 'KINETIC_STRIKE',
-    name: 'Kinetic Strike',
+    name: 'Impacto Cinético',
     apCost: 1,
     range: 1,
-    description: 'Deals 2 damage + pushes target 2 tiles back.'
+    description: 'Causa 2 de dano + empurra o alvo 2 tiles para trás.'
   },
   SEISMIC_SLAM: {
     id: 'SEISMIC_SLAM',
-    name: 'Seismic Slam',
+    name: 'Golpe Sísmico',
     apCost: 1,
     range: 1,
-    description: 'Deals 1 AoE damage and lowers target/adjacent tile Z elevations by 1.'
+    description: 'Causa 1 de dano em área e reduz a elevação dos tiles em 1 nível.'
   },
   CYBER_OVERRIDE: {
     id: 'CYBER_OVERRIDE',
-    name: 'Cyber Override',
+    name: 'Sobrecarga Cyber',
     apCost: 1,
     range: 3,
-    description: 'Applies HACKED status to enemy, canceling its intent.'
+    description: 'Aplica status HACKED ao inimigo, desativando seu ataque por 1 turno.'
   },
   POSITION_SWAP: {
     id: 'POSITION_SWAP',
-    name: 'Position Swap',
+    name: 'Troca de Posição',
     apCost: 1,
     range: 4,
-    description: 'Swaps grid coordinates (x, y) between caster and target unit.'
+    description: 'Troca de coordenadas no grid entre o conjurador e a unidade-alvo.'
   },
   MORTAR_STRIKE: {
     id: 'MORTAR_STRIKE',
-    name: 'Mortar Strike',
+    name: 'Disparo de Morteiro',
     apCost: 1,
     range: 5,
-    description: '3x3 AoE lob shell (2 damage epicenter, 1 cross/AoE, pushes away from epicenter).'
+    description: 'Disparo em área 3x3 (2 de dano no centro, 1 ao redor e empurra alvos).'
   },
   GRAPPLE_BEAM: {
     id: 'GRAPPLE_BEAM',
-    name: 'Grapple Beam',
+    name: 'Feixe de Gancho',
     apCost: 1,
     range: 4,
-    description: 'Pulls target 2 tiles toward caster.'
+    description: 'Puxa o alvo 2 tiles na direção da Artilharia.'
   }
 };
 

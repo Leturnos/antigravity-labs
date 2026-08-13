@@ -364,32 +364,32 @@ export class SectorGraph {
     return [
       {
         id: UPGRADE_TYPES.HP,
-        name: 'Nanite Hull Reinforcement (HP Boost)',
-        description: 'Increases Max HP and Current HP by +2.',
+        name: 'Reforço de Nanites (Bônus de HP)',
+        description: 'Aumenta o HP Máximo e o HP Atual do operativo em +2.',
         costCredits: 50,
         costTechCores: 0,
         type: UPGRADE_TYPES.HP
       },
       {
         id: UPGRADE_TYPES.AP,
-        name: 'Overclocked Neural Processor (AP Boost)',
-        description: 'Increases Max Action Points (AP) by +1.',
+        name: 'Processador Neural Acelerado (+1 AP)',
+        description: 'Aumenta os Pontos de Ação (AP) Máximos em +1.',
         costCredits: 100,
         costTechCores: 1,
         type: UPGRADE_TYPES.AP
       },
       {
         id: UPGRADE_TYPES.MOVE,
-        name: 'Servomotor Leg Actuators (Move Boost)',
-        description: 'Increases Movement Range by +1 cell.',
+        name: 'Servomotores de Locomoção (+1 Alcance)',
+        description: 'Aumenta o alcance de Movimento em +1 tile.',
         costCredits: 60,
         costTechCores: 0,
         type: UPGRADE_TYPES.MOVE
       },
       {
         id: UPGRADE_TYPES.PUSH_RANGE,
-        name: 'Kinetic Impulse Emitter (Push Range Boost)',
-        description: 'Increases Push / Knockback Range by +1 cell.',
+        name: 'Emissor de Impulso Cinético (+1 Empurrão)',
+        description: 'Aumenta a distância de empurrão das habilidades em +1 tile.',
         costCredits: 70,
         costTechCores: 0,
         type: UPGRADE_TYPES.PUSH_RANGE

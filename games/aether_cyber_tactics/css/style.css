@@ -244,55 +244,90 @@ canvas#game-canvas {
   box-shadow: 0 0 12px rgba(0, 243, 255, 0.15);
 }
 
-.unit-card-header {
+.unit-name-box {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 10px;
 }
 
-.unit-name {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: #ffffff;
-}
-
-.unit-class {
-  font-size: 0.8rem;
-  color: var(--purple-neon);
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.stat-bar-container {
-  margin-top: 6px;
-}
-
-.stat-label {
+.unit-avatar-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 243, 255, 0.1);
+  border: 1px solid var(--cyan-cyber);
   display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 3px;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--cyan-cyber);
+  font-size: 1.1rem;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
 }
 
-.progress-bar {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-  overflow: hidden;
+.ap-dots-container {
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
-.progress-fill.hp {
-  background: var(--emerald-cyber);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-  width: 100%;
+.ap-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
 }
 
-.progress-fill.ap {
+.ap-dot.active {
   background: var(--cyan-cyber);
-  box-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
-  width: 75%;
+  border-color: var(--cyan-cyber);
+  box-shadow: 0 0 8px var(--cyan-cyber);
+}
+
+.unit-skills-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-skill-mini {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #e9d5ff;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-skill-mini:hover {
+  background: var(--purple-neon);
+  color: #090d16;
+  border-color: var(--purple-neon);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-skill-mini.selected {
+  background: var(--cyan-cyber);
+  color: #090d16;
+  border-color: var(--cyan-cyber);
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.6);
+  font-weight: 700;
+}
+
+.unit-card.incapacitated {
+  opacity: 0.5;
+  filter: grayscale(80%);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Turn Controls Overlay */
