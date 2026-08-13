@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Collab Board — Infinite Architecture Canvas</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Mermaid CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <!-- Floating Glassmorphism Top Bar -->
+        <header class="top-bar glass-panel">
+            <div class="brand">
+                <a href="../../index.html" class="back-link" title="Voltar ao Hub Central">← Hub</a>
+                <div class="brand-badge">⚡</div>
+                <h1 class="app-title">Aether Collab Board</h1>
+            </div>
+            
+            <div class="tools-group" role="toolbar" aria-label="Ferramentas do Canvas">
+                <button id="btn-select" class="tool-btn active" data-tool="select" title="Seleção (Atalho: V)">
+                    <span class="icon">🖱️</span> Selecionar
+                </button>
+                <button id="btn-sticky" class="tool-btn" data-tool="sticky" title="Nota Adesiva (Atalho: S)">
+                    <span class="icon">📝</span> Sticky Note
+                </button>
+                <button id="btn-mermaid" class="tool-btn" data-tool="mermaid" title="Diagrama Mermaid (Atalho: M)">
+                    <span class="icon">📊</span> Mermaid.js
+                </button>
+                <button id="btn-frame" class="tool-btn" data-tool="frame" title="Frame de Apresentação (Atalho: F)">
+                    <span class="icon">🖼️</span> Frame / Slide
+                </button>
+                <button id="btn-connector" class="tool-btn" data-tool="connector" title="Conector Inteligente (Atalho: C)">
+                    <span class="icon">🔗</span> Conectar
+                </button>
+            </div>
+
+            <div class="action-group">
+                <button id="btn-present" class="action-btn present-btn" title="Iniciar Apresentação Interativa">
+                    <span>▶️</span> Apresentar
+                </button>
+                <button id="btn-export" class="action-btn" title="Exportar Canvas (PNG / JSON)">
+                    <span>💾</span> Exportar
+                </button>
+                <div id="room-status" class="status-pill offline" title="Status da Conexão WebSocket">
+                    <span class="status-dot"></span> <span class="status-text">Desconectado</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Infinite Canvas Viewport -->
+        <main id="canvas-container" class="canvas-viewport">
+            <div id="canvas-viewport" class="canvas-layer">
+                <!-- SVG Connector Lines Layer -->
+                <svg id="svg-connectors" class="svg-layer"></svg>
+                <!-- Interactive DOM Nodes Layer -->
+                <div id="nodes-layer" class="nodes-layer"></div>
+                <!-- Laser Pointer Canvas Layer -->
+                <canvas id="laser-canvas" class="laser-layer"></canvas>
+                <!-- Multi-user Cursors Container -->
+                <div id="cursors-container" class="cursors-layer"></div>
+            </div>
+        </main>
+
+        <!-- HUD Navigation Controls -->
+        <aside class="hud-panel glass-panel">
+            <button id="btn-zoom-out" class="hud-btn" title="Reduzir Zoom (-)">-</button>
+            <span id="zoom-indicator">100%</span>
+            <button id="btn-zoom-in" class="hud-btn" title="Aumentar Zoom (+)">+</button>
+            <button id="btn-reset-view" class="hud-btn" title="Centralizar Visão (Fit to Screen)">🎯</button>
+        </aside>
+
+        <!-- Presentation HUD (Toggled on presentation mode) -->
+        <div id="presentation-hud" class="presentation-controls glass-panel hidden">
+            <button id="btn-prev-slide" class="present-ctrl" title="Slide Anterior">◄ Anterior</button>
+            <div id="slide-indicator" class="slide-badge">Slide 1 de 1</div>
+            <button id="btn-next-slide" class="present-ctrl" title="Próximo Slide">Próximo ►</button>
+            <button id="btn-laser-toggle" class="present-ctrl laser-btn" title="Alternar Feixe de Laser">🔴 Laser Pointer</button>
+            <button id="btn-exit-present" class="present-ctrl exit-btn" title="Sair da Apresentação">✖ Sair</button>
+        </div>
+
+        <!-- Mermaid Editor Modal Dialog -->
+        <div id="mermaid-modal" class="modal-overlay hidden">
+            <div class="modal-card glass-panel">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <span>📊</span> Editor de Diagrama Mermaid.js
+                    </div>
+                    <button id="btn-close-mermaid" class="close-btn" aria-label="Fechar Modal">✖</button>
+                </div>
+                <div class="modal-body">
+                    <div class="template-selector">
+                        <span class="tpl-label">Templates Rápidos:</span>
+                        <button class="tpl-btn" data-template="microservices">⚙️ Microserviços</button>
+                        <button class="tpl-btn" data-template="sequence">🔐 Sequência Auth</button>
+                        <button class="tpl-btn" data-template="c4">🏗️ Arquitetura C4</button>
+                        <button class="tpl-btn" data-template="erd">🗄️ Schema ERD</button>
+                    </div>
+                    <div class="editor-tabs">
+                        <textarea id="mermaid-code" rows="10" spellcheck="false" placeholder="Digite seu código Mermaid aqui..."></textarea>
+                    </div>
+                    <div class="preview-header">Pré-visualização do Diagrama:</div>
+                    <div id="mermaid-modal-preview" class="mermaid-preview-container"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-mermaid" class="action-btn present-btn">Renderizar e Inserir no Canvas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script Entrypoint -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
