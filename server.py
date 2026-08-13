@@ -1,10 +1,17 @@
-"""Entrypoint for the unified Aether Suite server.
-
-Launches the FastAPI application via uvicorn. Falls back to a basic
-static file server when the FastAPI stack is unavailable.
-"""
+"""Entrypoint and central FastAPI server for the unified Aether Suite."""
 
 import os
+from backend.aether_event_hub.main import app
+from tools.aether_collab_board.backend.router import router as collab_board_router
+
+# Register sub-project routers directly into the central server app
+app.include_router(collab_board_router)
+
+# Ensure catch-all static mount is evaluated last so API routes take priority
+static_routes = [r for r in app.routes if getattr(r, "name", "") == "root_static"]
+for sr in static_routes:
+    app.routes.remove(sr)
+    app.routes.append(sr)
 
 PORT = int(os.getenv("PORT", 8000))
 
@@ -24,7 +31,7 @@ if __name__ == '__main__':
     try:
         import uvicorn
         print(f"Central Aether Suite Server running at: http://localhost:{PORT}")
-        uvicorn.run("backend.aether_event_hub.main:app", host="0.0.0.0", port=PORT)
+        uvicorn.run("server:app", host="0.0.0.0", port=PORT)
     except Exception:
         import http.server
         import socketserver
