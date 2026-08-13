@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Cyber Tactics - 2.5D Tactical Engine</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header Navbar -->
+  <header class="app-header glass-panel">
+    <div class="brand-title">
+      ⚡ AETHER <span class="accent">CYBER TACTICS</span>
+    </div>
+    <div class="game-status-badge">
+      SYSTEM ONLINE // TURN 1
+    </div>
+  </header>
+
+  <!-- Main Tactical Viewport & UI Layout -->
+  <main class="game-container">
+    <!-- Left Sidebar: Squad Status -->
+    <aside class="sidebar-panel">
+      <div class="squad-panel glass-panel">
+        <div class="panel-header">
+          <span>Squad Status</span>
+          <small style="color: var(--cyan-cyber)">2/2 OPERATIVES</small>
+        </div>
+
+        <!-- Operative 1 -->
+        <div class="unit-card active">
+          <div class="unit-card-header">
+            <span class="unit-name">VEX-09</span>
+            <span class="unit-class">Cyber-Infiltrator</span>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-label">
+              <span>HP</span>
+              <span>100 / 100</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill hp" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-label">
+              <span>ACTION POINTS</span>
+              <span>3 / 4 AP</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill ap" style="width: 75%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Operative 2 -->
+        <div class="unit-card">
+          <div class="unit-card-header">
+            <span class="unit-name">NYX-77</span>
+            <span class="unit-class">Tech-Netrunner</span>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-label">
+              <span>HP</span>
+              <span>80 / 80</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill hp" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-label">
+              <span>ACTION POINTS</span>
+              <span>4 / 4 AP</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill ap" style="width: 100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Turn Controls -->
+      <div class="control-panel glass-panel">
+        <div class="panel-header">
+          <span>Tactical Controls</span>
+        </div>
+        <div class="action-buttons-grid">
+          <button class="btn-cyber action-btn active" data-mode="SELECT">SELECT</button>
+          <button class="btn-cyber action-btn" data-mode="MOVE">MOVE</button>
+          <button class="btn-cyber action-btn" data-mode="ATTACK">ATTACK</button>
+          <button class="btn-cyber action-btn" data-mode="CYBERWARE">TERRAFORM</button>
+          <button class="btn-cyber action-btn" data-mode="DAMAGE_TILE" style="grid-column: span 2; color: var(--carmine-hazard);">DESTROY TILE</button>
+        </div>
+        <button id="btn-end-turn" class="btn-end-turn">END TURN ⯈</button>
+      </div>
+    </aside>
+
+    <!-- Center Viewport: 2.5D Isometric Canvas -->
+    <section class="canvas-wrapper glass-panel">
+      <div id="tile-info" class="tile-info-tooltip" style="display: none;">GRID (0,0)</div>
+      <canvas id="game-canvas"></canvas>
+    </section>
+
+    <!-- Right Sidebar: Combat & Event Logs -->
+    <aside class="sidebar-panel">
+      <div class="log-panel glass-panel">
+        <div class="panel-header">
+          <span>Combat Feed</span>
+          <small style="color: var(--text-muted)">LIVE LOG</small>
+        </div>
+        <div id="combat-log" class="combat-log-list">
+          <!-- Log entries injected dynamically -->
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ES6 Engine Module Initialization -->
+  <script type="module">
+    import { GridManager } from './js/engine/grid_manager.js';
+    import { IsometricRenderer } from './js/engine/isometric_renderer.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('game-canvas');
+      if (!canvas) return;
+
+      canvas.width = 640;
+      canvas.height = 520;
+
+      // 1. Initialize Grid Manager & Sample Map
+      const gridManager = new GridManager(8, 8);
+      gridManager.populateSampleMap();
+
+      // 2. Initialize 2.5D Renderer
+      const renderer = new IsometricRenderer(canvas, gridManager);
+      renderer.start();
+
+      // 3. UI Elements & Logging
+      const tooltip = document.getElementById('tile-info');
+      const logContainer = document.getElementById('combat-log');
+      const btnEndTurn = document.getElementById('btn-end-turn');
+      const actionButtons = document.querySelectorAll('.action-btn');
+
+      let currentActionMode = 'SELECT';
+      let turnNumber = 1;
+
+      function addLogEntry(text, category = 'system') {
+        if (!logContainer) return;
+        const now = new Date();
+        const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${category}`;
+        entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${text}`;
+
+        logContainer.appendChild(entry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      addLogEntry('Aether Cyber Tactics Engine v1.0 online.', 'system');
+      addLogEntry('Grid 8x8 loaded with 2.5D Isometric Renderer.', 'system');
+
+      // 4. Mouse Hover & Click Handlers
+      canvas.addEventListener('mousemove', () => {
+        const tile = renderer.hoveredTile ? gridManager.getTile(renderer.hoveredTile.x, renderer.hoveredTile.y) : null;
+        if (tile && tooltip) {
+          tooltip.style.display = 'block';
+          tooltip.innerHTML = `GRID (${tile.x}, ${tile.y}) | ELEVATION: ${tile.elevation} | TYPE: ${tile.type} | HP: ${tile.health}/2`;
+        } else if (tooltip) {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      canvas.addEventListener('click', () => {
+        if (!renderer.hoveredTile) return;
+        const { x, y } = renderer.hoveredTile;
+        const tile = gridManager.getTile(x, y);
+        if (!tile) return;
+
+        if (currentActionMode === 'DAMAGE_TILE' || currentActionMode === 'ATTACK') {
+          const destroyed = gridManager.damageTile(x, y, 1);
+          renderer.spawnDebris(x, y, destroyed ? '#f43f5e' : '#00f3ff', 18);
+          if (destroyed) {
+            addLogEntry(`Tile (${x}, ${y}) destroyed into VOID abyss!`, 'combat');
+          } else {
+            addLogEntry(`Tile (${x}, ${y}) damaged! Remaining HP: ${tile.health}`, 'combat');
+          }
+        } else if (currentActionMode === 'CYBERWARE') {
+          const nextElev = (tile.elevation + 1) % 4;
+          gridManager.setElevation(x, y, nextElev);
+          renderer.spawnDebris(x, y, '#a855f7', 12);
+          addLogEntry(`Terraformed Tile (${x}, ${y}) to Lvl ${nextElev}`, 'tactical');
+        } else {
+          addLogEntry(`Selected Tile (${x}, ${y}) [Type: ${tile.type}, Elev: ${tile.elevation}]`, 'tactical');
+        }
+      });
+
+      // 5. Action Buttons & Turn Control
+      actionButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          actionButtons.forEach(b => b.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          currentActionMode = e.currentTarget.dataset.mode || 'SELECT';
+          addLogEntry(`Action mode switched to: ${currentActionMode}`, 'system');
+        });
+      });
+
+      if (btnEndTurn) {
+        btnEndTurn.addEventListener('click', () => {
+          turnNumber++;
+          document.querySelector('.game-status-badge').textContent = `SYSTEM ONLINE // TURN ${turnNumber}`;
+          addLogEntry(`Turn ${turnNumber} Started - AP Refreshed for Operatives.`, 'system');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
