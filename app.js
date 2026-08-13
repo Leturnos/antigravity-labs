@@ -76,9 +76,19 @@ async function loadStats() {
         Torneio - V: ${poker.torneio.vitorias} | Maior Stack: $${poker.maior_stack.toLocaleString('pt-BR')}
       `;
 
+      // Render Cyber Tactics stats
+      const tactics = db.aether_cyber_tactics || { vitorias: 0, derrotas: 0, pontuacao_maxima: 0, maior_setor: 0 };
+      const tacticsEl = document.getElementById('stats-tactics-txt');
+      if (tacticsEl) {
+        tacticsEl.innerHTML = `
+          Vitórias: ${tactics.vitorias || 0} | Maior Setor: ${tactics.maior_setor || 1}<br>
+          Pontuação Máxima: ${(tactics.pontuacao_maxima || 0).toLocaleString('pt-BR')} pts
+        `;
+      }
+
       // Global dashboard stats calculation
-      const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias + poker.cash.vitorias + poker.torneio.vitorias;
-      const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas + poker.cash.derrotas + poker.torneio.derrotas;
+      const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias + poker.cash.vitorias + poker.torneio.vitorias + (tactics.vitorias || 0);
+      const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas + poker.cash.derrotas + poker.torneio.derrotas + (tactics.derrotas || 0);
       const totalGames = totalWins + totalLosses + chess.empates + tictactoe.empates + (snake.partidas_jogadas || 0);
       
       document.getElementById('dashboard-total-wins').textContent = totalWins;
@@ -107,6 +117,7 @@ document.getElementById('btn-reset-all').addEventListener('click', async () => {
     await fetch('/api/score?game=snake', { method: 'DELETE' });
     await fetch('/api/score?game=tictactoe', { method: 'DELETE' });
     await fetch('/api/score?game=poker', { method: 'DELETE' });
+    await fetch('/api/score?game=aether_cyber_tactics', { method: 'DELETE' });
     loadStats();
   } catch (err) {
     console.error('Erro ao resetar scores.', err);

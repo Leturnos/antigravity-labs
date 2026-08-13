@@ -12,85 +12,59 @@
     <div class="brand-title">
       ⚡ AETHER <span class="accent">CYBER TACTICS</span>
     </div>
-    <div class="game-status-badge">
-      SYSTEM ONLINE // TURN 1
+    
+    <div class="header-status-bar">
+      <div id="sector-badge" class="game-status-badge">
+        SECTOR 1 // NODE s0_n0
+      </div>
+
+      <div class="currency-container">
+        <div class="currency-item" title="Cyber Credits">
+          💰 <span id="val-credits">100</span>
+        </div>
+        <div class="currency-item" title="Tech Cores">
+          💎 <span id="val-tech-cores">1</span>
+        </div>
+      </div>
+
+      <div class="header-nav-btns">
+        <button id="btn-sound-toggle" class="btn-header" title="Toggle Audio Synthesizer">
+          🔊 SOUND: ON
+        </button>
+        <button id="btn-open-sector" class="btn-header" title="View Campaign Sector Map">
+          🗺️ SECTOR MAP
+        </button>
+        <button id="btn-open-shop" class="btn-header" title="Open Cyberware & Repair Shop">
+          🛒 CYBER SHOP
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- Main Tactical Viewport & UI Layout -->
   <main class="game-container">
-    <!-- Left Sidebar: Squad Status -->
+    <!-- Left Sidebar: Squad Status & Action Matrix -->
     <aside class="sidebar-panel">
+      <!-- Operative Squad Panel -->
       <div class="squad-panel glass-panel">
         <div class="panel-header">
           <span>Squad Status</span>
-          <small style="color: var(--cyan-cyber)">2/2 OPERATIVES</small>
+          <small id="squad-count-text" style="color: var(--cyan-cyber)">3/3 OPERATIVES</small>
         </div>
 
-        <!-- Operative 1 -->
-        <div class="unit-card active">
-          <div class="unit-card-header">
-            <span class="unit-name">VEX-09</span>
-            <span class="unit-class">Cyber-Infiltrator</span>
-          </div>
-          <div class="stat-bar-container">
-            <div class="stat-label">
-              <span>HP</span>
-              <span>100 / 100</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill hp" style="width: 100%;"></div>
-            </div>
-          </div>
-          <div class="stat-bar-container">
-            <div class="stat-label">
-              <span>ACTION POINTS</span>
-              <span>3 / 4 AP</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill ap" style="width: 75%;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Operative 2 -->
-        <div class="unit-card">
-          <div class="unit-card-header">
-            <span class="unit-name">NYX-77</span>
-            <span class="unit-class">Tech-Netrunner</span>
-          </div>
-          <div class="stat-bar-container">
-            <div class="stat-label">
-              <span>HP</span>
-              <span>80 / 80</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill hp" style="width: 100%;"></div>
-            </div>
-          </div>
-          <div class="stat-bar-container">
-            <div class="stat-label">
-              <span>ACTION POINTS</span>
-              <span>4 / 4 AP</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill ap" style="width: 100%;"></div>
-            </div>
-          </div>
+        <div id="squad-cards-list">
+          <!-- Operative cards dynamically injected -->
         </div>
       </div>
 
-      <!-- Turn Controls -->
+      <!-- Action & Turn Controls Panel -->
       <div class="control-panel glass-panel">
         <div class="panel-header">
-          <span>Tactical Controls</span>
+          <span>Action Matrix</span>
         </div>
-        <div class="action-buttons-grid">
-          <button class="btn-cyber action-btn active" data-mode="SELECT">SELECT</button>
-          <button class="btn-cyber action-btn" data-mode="MOVE">MOVE</button>
-          <button class="btn-cyber action-btn" data-mode="ATTACK">ATTACK</button>
-          <button class="btn-cyber action-btn" data-mode="CYBERWARE">TERRAFORM</button>
-          <button class="btn-cyber action-btn" data-mode="DAMAGE_TILE" style="grid-column: span 2; color: var(--carmine-hazard);">DESTROY TILE</button>
+        <div id="action-buttons-container" class="action-buttons-grid">
+          <button id="btn-mode-move" class="btn-cyber active" data-mode="MOVE">🚶 MOVE</button>
+          <button id="btn-mode-cancel" class="btn-cyber" data-mode="CANCEL">❌ CANCEL</button>
         </div>
         <button id="btn-end-turn" class="btn-end-turn">END TURN ⯈</button>
       </div>
@@ -99,10 +73,11 @@
     <!-- Center Viewport: 2.5D Isometric Canvas -->
     <section class="canvas-wrapper glass-panel">
       <div id="tile-info" class="tile-info-tooltip" style="display: none;">GRID (0,0)</div>
+      <div id="damage-overlay" class="damage-overlay-container"></div>
       <canvas id="game-canvas"></canvas>
     </section>
 
-    <!-- Right Sidebar: Combat & Event Logs -->
+    <!-- Right Sidebar: Combat Feed & Mission Log -->
     <aside class="sidebar-panel">
       <div class="log-panel glass-panel">
         <div class="panel-header">
@@ -116,104 +91,691 @@
     </aside>
   </main>
 
+  <!-- Sector Campaign Map Dialog Modal -->
+  <dialog id="sector-modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        🗺️ CAMPAIGN <span class="accent">SECTOR MAP</span>
+      </div>
+      <button class="btn-close-modal" id="btn-close-sector">✕</button>
+    </div>
+    <div class="sector-map-body">
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Choose your next battle node or shop encounter in the subnet matrix. Boss encounters await at the apex layer.
+      </p>
+      <div id="sector-nodes-view" class="sector-nodes-grid">
+        <!-- Node layers injected dynamically -->
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Cyberware & Squad Repair Shop Dialog Modal -->
+  <dialog id="shop-modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        🛒 CYBERWARE <span class="accent">& REPAIR HAVEN</span>
+      </div>
+      <button class="btn-close-modal" id="btn-close-shop">✕</button>
+    </div>
+    <div class="shop-body">
+      <!-- Repair Squad Section -->
+      <div class="shop-repair-section">
+        <div class="panel-header" style="margin-bottom: 8px;">
+          <span>Operative Nanite Repair</span>
+          <small style="color: var(--emerald-cyber);">COST: 5 CREDITS / 1 HP</small>
+        </div>
+        <div id="repair-squad-container" class="repair-squad-grid">
+          <!-- Repair cards injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Cyberware Upgrades Section -->
+      <div>
+        <div class="panel-header" style="margin-bottom: 8px;">
+          <span>Cyberware Upgrades</span>
+        </div>
+        <div id="shop-upgrades-container" class="shop-upgrades-grid">
+          <!-- Upgrade cards injected dynamically -->
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Game Over & Highscore Submission Dialog Modal -->
+  <dialog id="gameover-modal">
+    <div id="gameover-header-badge" class="gameover-header-badge victory">
+      MISSION ACCOMPLISHED
+    </div>
+    <p id="gameover-subtitle" style="text-align: center; color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+      All hostiles neutralized. Sector data successfully extracted.
+    </p>
+
+    <div class="score-stats-grid">
+      <div class="score-stat-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">FINAL SCORE</div>
+        <div id="final-score-val" class="val">1,400</div>
+      </div>
+      <div class="score-stat-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">SECTOR REACHED</div>
+        <div id="final-sector-val" class="val">1</div>
+      </div>
+      <div class="score-stat-card">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">TOTAL TURNS</div>
+        <div id="final-turns-val" class="val">5</div>
+      </div>
+    </div>
+
+    <!-- Highscore Form -->
+    <form id="highscore-form" class="highscore-form">
+      <input type="text" id="player-name-input" class="highscore-input" placeholder="ENTER CALLSIGN (e.g. VEX-99)" maxlength="16" required>
+      <button type="submit" id="btn-submit-score" class="btn-cyber active" style="min-width: 140px;">SUBMIT SCORE</button>
+    </form>
+    <div id="score-submit-msg" style="text-align: center; font-size: 0.85rem; color: var(--emerald-cyber); min-height: 20px;"></div>
+
+    <div style="display: flex; gap: 12px; margin-top: 20px;">
+      <button id="btn-restart-campaign" class="btn-end-turn" style="animation: none;">RESTART CAMPAIGN</button>
+    </div>
+  </dialog>
+
   <!-- ES6 Engine Module Initialization -->
   <script type="module">
     import { GridManager } from './js/engine/grid_manager.js';
     import { IsometricRenderer } from './js/engine/isometric_renderer.js';
+    import { SoundSynth } from './js/audio/sound_synth.js';
+    import { TelegraphRenderer } from './js/ai/telegraph.js';
+    import { GameState, PHASE_PLAYER_TURN, PHASE_ENEMY_RESOLVE, PHASE_VICTORY, PHASE_DEFEAT } from './js/core/game_state.js';
+    import { SectorGraph, NODE_TYPES, NODE_STATUS, UPGRADE_TYPES, CAMPAIGN_STATUS } from './js/procedural/sector_graph.js';
+    import { generateProceduralMap } from './js/procedural/map_generator.js';
+    import { SKILLS_REGISTRY } from './js/core/skills.js';
+    import { createPlayerSquad, createEnemyUnit } from './js/core/units.js';
 
     document.addEventListener('DOMContentLoaded', () => {
       const canvas = document.getElementById('game-canvas');
       if (!canvas) return;
 
-      canvas.width = 640;
-      canvas.height = 520;
+      canvas.width = 680;
+      canvas.height = 540;
 
-      // 1. Initialize Grid Manager & Sample Map
-      const gridManager = new GridManager(8, 8);
-      gridManager.populateSampleMap();
+      // 1. Initialize Core Systems
+      const sectorGraph = new SectorGraph({ startingCredits: 120, startingTechCores: 1 });
+      const soundSynth = new SoundSynth();
+      const gameState = new GameState(canvas, { soundSynth });
 
-      // 2. Initialize 2.5D Renderer
-      const renderer = new IsometricRenderer(canvas, gridManager);
-      renderer.start();
+      // Modals & UI Elements
+      const sectorModal = document.getElementById('sector-modal');
+      const shopModal = document.getElementById('shop-modal');
+      const gameoverModal = document.getElementById('gameover-modal');
 
-      // 3. UI Elements & Logging
-      const tooltip = document.getElementById('tile-info');
-      const logContainer = document.getElementById('combat-log');
+      const btnSoundToggle = document.getElementById('btn-sound-toggle');
+      const btnOpenSector = document.getElementById('btn-open-sector');
+      const btnOpenShop = document.getElementById('btn-open-shop');
+      const btnCloseSector = document.getElementById('btn-close-sector');
+      const btnCloseShop = document.getElementById('btn-close-shop');
+
+      const valCredits = document.getElementById('val-credits');
+      const valTechCores = document.getElementById('val-tech-cores');
+      const sectorBadge = document.getElementById('sector-badge');
+
+      const squadCardsList = document.getElementById('squad-cards-list');
+      const squadCountText = document.getElementById('squad-count-text');
+      const actionButtonsContainer = document.getElementById('action-buttons-container');
       const btnEndTurn = document.getElementById('btn-end-turn');
-      const actionButtons = document.querySelectorAll('.action-btn');
+      const combatLog = document.getElementById('combat-log');
+      const tooltip = document.getElementById('tile-info');
+      const damageOverlay = document.getElementById('damage-overlay');
 
-      let currentActionMode = 'SELECT';
-      let turnNumber = 1;
+      const highscoreForm = document.getElementById('highscore-form');
+      const scoreSubmitMsg = document.getElementById('score-submit-msg');
+      const btnRestartCampaign = document.getElementById('btn-restart-campaign');
 
-      function addLogEntry(text, category = 'system') {
-        if (!logContainer) return;
+      let isSoundMuted = false;
+      let scoreSubmitted = false;
+
+      // Logging Callback
+      gameState.onLog = (text, category) => {
+        if (!combatLog) return;
         const now = new Date();
         const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        
         const entry = document.createElement('div');
         entry.className = `log-entry ${category}`;
         entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${text}`;
+        combatLog.appendChild(entry);
+        combatLog.scrollTop = combatLog.scrollHeight;
+      };
 
-        logContainer.appendChild(entry);
-        logContainer.scrollTop = logContainer.scrollHeight;
+      // State Update Callback
+      gameState.onStateUpdate = () => {
+        updateUI();
+      };
+
+      // Phase Change Callback
+      gameState.onPhaseChange = (phase) => {
+        if (phase === PHASE_VICTORY || phase === PHASE_DEFEAT) {
+          // If node was active, mark current node completed on victory
+          if (phase === PHASE_VICTORY && sectorGraph.currentNodeId) {
+            sectorGraph.completeCurrentNode({ credits: 60, techCores: 1 });
+          }
+          showGameOverModal(phase);
+        }
+        updateUI();
+      };
+
+      /**
+       * Spawn animated floating damage/heal text over canvas
+       */
+      function spawnFloatingDamage(x, y, text, color = '#f43f5e') {
+        if (!gameState.renderer) return;
+        const tile = gameState.gridManager.getTile(x, y);
+        const elev = tile ? tile.elevation : 0;
+        const { isoX, isoY } = gameState.renderer.gridToScreen(x, y, elev);
+
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-damage-number';
+        floatEl.style.left = `${isoX - 20}px`;
+        floatEl.style.top = `${isoY - 30}px`;
+        floatEl.style.color = color;
+        floatEl.textContent = text;
+
+        damageOverlay.appendChild(floatEl);
+        setTimeout(() => floatEl.remove(), 1200);
       }
 
-      addLogEntry('Aether Cyber Tactics Engine v1.0 online.', 'system');
-      addLogEntry('Grid 8x8 loaded with 2.5D Isometric Renderer.', 'system');
+      /**
+       * Loads and generates a tactical battle level for a given sector node
+       */
+      function loadNodeLevel(nodeId) {
+        const node = sectorGraph.getNode(nodeId);
+        if (!node) return;
 
-      // 4. Mouse Hover & Click Handlers
+        sectorGraph.selectNode(nodeId);
+
+        let enemyCount = 3;
+        let enemyTypes = ['GRUNT', 'CHARGER', 'ARTILLERY_DRONE'];
+        if (node.type === NODE_TYPES.BATTLE_ELITE) {
+          enemyCount = 4;
+          enemyTypes = ['CHARGER', 'CHARGER', 'ARTILLERY_DRONE', 'GRUNT'];
+        } else if (node.type === NODE_TYPES.SECTOR_BOSS) {
+          enemyCount = 4;
+          enemyTypes = ['CYBER_BOSS', 'CHARGER', 'ARTILLERY_DRONE', 'GRUNT'];
+        }
+
+        const mapData = generateProceduralMap({
+          gridWidth: 8,
+          gridHeight: 8,
+          seed: `${sectorGraph.seed}_${nodeId}`,
+          playerCount: 3,
+          enemyCount
+        });
+
+        // Generate enemy unit instances
+        const enemies = mapData.enemySpawns.map((pos, idx) => {
+          const type = enemyTypes[idx % enemyTypes.length];
+          return createEnemyUnit(type, pos.x, pos.y);
+        });
+
+        // Initialize Level in GameState
+        gameState.initLevel({
+          width: mapData.gridWidth,
+          height: mapData.gridHeight,
+          populateSampleMap: false,
+          playerStartPositions: mapData.playerSpawns,
+          enemies
+        });
+
+        // Populate map tiles
+        for (let y = 0; y < mapData.gridHeight; y++) {
+          for (let x = 0; x < mapData.gridWidth; x++) {
+            const src = mapData.tiles[y][x];
+            const dest = gameState.gridManager.getTile(x, y);
+            if (dest && src) {
+              dest.elevation = src.elevation;
+              dest.type = src.type;
+              dest.health = src.health;
+              dest.maxHealth = src.maxHealth;
+            }
+          }
+        }
+
+        gameState.syncGridUnits();
+        updateUI();
+        sectorModal.close();
+      }
+
+      /**
+       * Updates Header Currencies, Squad Cards, Action Buttons, and Sector Map UI
+       */
+      function updateUI() {
+        // Header
+        valCredits.textContent = sectorGraph.credits;
+        valTechCores.textContent = sectorGraph.techCores;
+
+        const currentSector = sectorGraph.getCurrentSector();
+        const activeNode = sectorGraph.currentNodeId ? sectorGraph.getNode(sectorGraph.currentNodeId) : null;
+        sectorBadge.textContent = `SECTOR ${sectorGraph.currentSectorIndex + 1} // ${activeNode ? activeNode.name : 'Subnet Matrix'}`;
+
+        // Squad Cards
+        squadCardsList.innerHTML = '';
+        const playerUnits = gameState.units.filter(u => u.faction === 'player');
+        const livingCount = playerUnits.filter(u => u.isAlive()).length;
+        squadCountText.textContent = `${livingCount}/${playerUnits.length} OPERATIVES`;
+
+        playerUnits.forEach(unit => {
+          const isSelected = gameState.selectedUnit === unit;
+          const isAlive = unit.isAlive();
+
+          const card = document.createElement('div');
+          card.className = `unit-card ${isSelected ? 'active' : ''} ${!isAlive ? 'incapacitated' : ''}`;
+          
+          let apDotsHtml = '';
+          for (let i = 0; i < unit.maxAp; i++) {
+            apDotsHtml += `<div class="ap-dot ${i < unit.ap ? 'active' : ''}"></div>`;
+          }
+
+          let skillsMiniHtml = '';
+          unit.skills.forEach(skillId => {
+            const skill = SKILLS_REGISTRY[skillId];
+            const isSkillSelected = isSelected && gameState.selectedSkill === skillId;
+            skillsMiniHtml += `<button class="btn-skill-mini ${isSkillSelected ? 'selected' : ''}" data-unit-id="${unit.id}" data-skill-id="${skillId}">${skill ? skill.name : skillId}</button>`;
+          });
+
+          card.innerHTML = `
+            <div class="unit-card-header">
+              <div class="unit-name-box">
+                <div class="unit-avatar-icon">${unit.name.charAt(0)}</div>
+                <div>
+                  <div class="unit-name">${unit.name}</div>
+                  <div class="unit-class">${unit.type}</div>
+                </div>
+              </div>
+              <div class="ap-dots-container" title="Action Points">
+                ${apDotsHtml}
+              </div>
+            </div>
+            <div class="stat-bar-container">
+              <div class="stat-label">
+                <span>HP</span>
+                <span>${unit.hp} / ${unit.maxHp}</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill hp" style="width: ${(unit.hp / unit.maxHp) * 100}%;"></div>
+              </div>
+            </div>
+            <div class="unit-skills-mini">
+              ${skillsMiniHtml}
+            </div>
+          `;
+
+          card.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-skill-mini')) return;
+            if (isAlive) {
+              gameState.selectUnit(unit);
+            }
+          });
+
+          squadCardsList.appendChild(card);
+        });
+
+        // Skill mini buttons click events
+        document.querySelectorAll('.btn-skill-mini').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const unitId = btn.dataset.unitId;
+            const skillId = btn.dataset.skillId;
+            const unit = gameState.units.find(u => u.id === unitId);
+            if (unit && unit.isAlive()) {
+              gameState.selectUnit(unit);
+              gameState.selectSkill(skillId);
+            }
+          });
+        });
+
+        // Action Buttons Grid
+        const selectedUnit = gameState.selectedUnit;
+        actionButtonsContainer.innerHTML = '';
+
+        const btnMove = document.createElement('button');
+        btnMove.className = `btn-cyber ${gameState.selectedSkill === null ? 'active' : ''}`;
+        btnMove.innerHTML = '🚶 MOVE';
+        btnMove.disabled = !selectedUnit || selectedUnit.ap <= 0 || gameState.phase !== PHASE_PLAYER_TURN;
+        btnMove.addEventListener('click', () => {
+          if (selectedUnit) gameState.selectSkill(null);
+        });
+        actionButtonsContainer.appendChild(btnMove);
+
+        if (selectedUnit && selectedUnit.skills) {
+          selectedUnit.skills.forEach(skillId => {
+            const skill = SKILLS_REGISTRY[skillId];
+            if (!skill) return;
+            const btnSkill = document.createElement('button');
+            const isSelectedSkill = gameState.selectedSkill === skillId;
+            btnSkill.className = `btn-cyber ${isSelectedSkill ? 'active' : ''}`;
+            btnSkill.innerHTML = `⚡ ${skill.name}`;
+            btnSkill.disabled = selectedUnit.ap < skill.apCost || gameState.phase !== PHASE_PLAYER_TURN;
+            btnSkill.addEventListener('click', () => {
+              gameState.selectSkill(skillId);
+            });
+            actionButtonsContainer.appendChild(btnSkill);
+          });
+        }
+
+        const btnCancel = document.createElement('button');
+        btnCancel.className = 'btn-cyber';
+        btnCancel.innerHTML = '❌ CANCEL';
+        btnCancel.disabled = !selectedUnit;
+        btnCancel.addEventListener('click', () => {
+          gameState.deselectUnit();
+        });
+        actionButtonsContainer.appendChild(btnCancel);
+
+        // Turn Controls & Badges
+        btnEndTurn.disabled = gameState.phase !== PHASE_PLAYER_TURN;
+      }
+
+      /**
+       * Renders the Sector Map campaign graph inside the sector modal
+       */
+      function renderSectorMap() {
+        const view = document.getElementById('sector-nodes-view');
+        if (!view) return;
+        view.innerHTML = '';
+
+        const sector = sectorGraph.getCurrentSector();
+        if (!sector) return;
+
+        // Group nodes by layer (0 to 3)
+        const layers = [[], [], [], []];
+        sector.nodes.forEach(node => {
+          if (layers[node.layer]) layers[node.layer].push(node);
+        });
+
+        layers.forEach((layerNodes, lIdx) => {
+          const col = document.createElement('div');
+          col.className = 'sector-layer-column';
+
+          layerNodes.forEach(node => {
+            const card = document.createElement('div');
+            card.className = `sector-node-card ${node.status}`;
+
+            let icon = '⚔️';
+            if (node.type === NODE_TYPES.BATTLE_ELITE) icon = '💀';
+            if (node.type === NODE_TYPES.CYBER_SHOP) icon = '🛒';
+            if (node.type === NODE_TYPES.SECTOR_BOSS) icon = '👑';
+
+            card.innerHTML = `
+              <div class="node-icon">${icon}</div>
+              <div class="node-title">${node.name}</div>
+              <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+                ${node.status.toUpperCase()}
+              </div>
+            `;
+
+            if (node.status === NODE_STATUS.AVAILABLE) {
+              card.addEventListener('click', () => {
+                if (node.type === NODE_TYPES.CYBER_SHOP) {
+                  sectorGraph.selectNode(node.id);
+                  sectorModal.close();
+                  openShopModal();
+                } else {
+                  loadNodeLevel(node.id);
+                }
+              });
+            }
+
+            col.appendChild(card);
+          });
+
+          view.appendChild(col);
+        });
+      }
+
+      /**
+       * Opens and renders the Cyber Shop Modal
+       */
+      function openShopModal() {
+        renderShop();
+        shopModal.showModal();
+      }
+
+      function renderShop() {
+        const repairContainer = document.getElementById('repair-squad-container');
+        const upgradesContainer = document.getElementById('shop-upgrades-container');
+
+        repairContainer.innerHTML = '';
+        upgradesContainer.innerHTML = '';
+
+        // Render Operative Repair Cards
+        const playerUnits = gameState.units.filter(u => u.faction === 'player');
+        playerUnits.forEach(unit => {
+          const rCard = document.createElement('div');
+          rCard.className = 'repair-unit-card';
+          const neededHp = unit.maxHp - unit.hp;
+          const cost = neededHp * 5;
+
+          rCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-weight: 700;">
+              <span>${unit.name} (${unit.type})</span>
+              <span style="color: var(--emerald-cyber);">${unit.hp} / ${unit.maxHp} HP</span>
+            </div>
+            <button class="btn-buy-upgrade" ${neededHp === 0 || sectorGraph.credits < cost ? 'disabled' : ''}>
+              REPAIR FULL (+${neededHp} HP) - 💰 ${cost}
+            </button>
+          `;
+
+          const btnRepair = rCard.querySelector('button');
+          if (btnRepair) {
+            btnRepair.addEventListener('click', () => {
+              const res = sectorGraph.repairUnit(unit, neededHp);
+              if (res.success) {
+                if (soundSynth) soundSynth.playHeal();
+                spawnFloatingDamage(unit.x, unit.y, `+${res.hpRestored} HP`, '#10b981');
+                gameState.log(res.message, 'system');
+                updateUI();
+                renderShop();
+              }
+            });
+          }
+
+          repairContainer.appendChild(rCard);
+        });
+
+        // Render Cyberware Upgrades
+        const inventory = sectorGraph.getShopInventory();
+        inventory.forEach(item => {
+          const uCard = document.createElement('div');
+          uCard.className = 'upgrade-card';
+
+          const canAfford = sectorGraph.credits >= item.costCredits && sectorGraph.techCores >= item.costTechCores;
+
+          uCard.innerHTML = `
+            <div>
+              <div class="upgrade-title">${item.name}</div>
+              <div class="upgrade-desc">${item.description}</div>
+            </div>
+            <div class="upgrade-cost-bar">
+              <span style="font-size: 0.85rem; font-family: var(--font-heading);">
+                💰 ${item.costCredits} ${item.costTechCores > 0 ? '| 💎 ' + item.costTechCores : ''}
+              </span>
+              <button class="btn-buy-upgrade" ${!canAfford ? 'disabled' : ''}>
+                PURCHASE
+              </button>
+            </div>
+          `;
+
+          const btnBuy = uCard.querySelector('.btn-buy-upgrade');
+          if (btnBuy) {
+            btnBuy.addEventListener('click', () => {
+              // Apply upgrade to selected unit or first player unit
+              const target = gameState.selectedUnit || playerUnits[0];
+              const res = sectorGraph.applyCyberwareUpgrade(item.id, target);
+              if (res.success) {
+                if (soundSynth) soundSynth.playHack();
+                gameState.log(res.message, 'system');
+                updateUI();
+                renderShop();
+              }
+            });
+          }
+
+          upgradesContainer.appendChild(uCard);
+        });
+      }
+
+      /**
+       * Shows Game Over / Highscore modal
+       */
+      function showGameOverModal(phase) {
+        const titleBadge = document.getElementById('gameover-header-badge');
+        const subtitle = document.getElementById('gameover-subtitle');
+        const finalScoreVal = document.getElementById('final-score-val');
+        const finalSectorVal = document.getElementById('final-sector-val');
+        const finalTurnsVal = document.getElementById('final-turns-val');
+
+        scoreSubmitted = false;
+        scoreSubmitMsg.textContent = '';
+
+        if (phase === PHASE_VICTORY) {
+          titleBadge.className = 'gameover-header-badge victory';
+          titleBadge.textContent = 'MISSION ACCOMPLISHED';
+          subtitle.textContent = 'All hostiles neutralized in this sector node!';
+        } else {
+          titleBadge.className = 'gameover-header-badge defeat';
+          titleBadge.textContent = 'MISSION FAILED';
+          subtitle.textContent = 'All squad operatives were destroyed.';
+        }
+
+        finalScoreVal.textContent = gameState.score.toLocaleString();
+        finalSectorVal.textContent = sectorGraph.currentSectorIndex + 1;
+        finalTurnsVal.textContent = gameState.turnNumber;
+
+        gameoverModal.showModal();
+      }
+
+      // Initial Level Setup
+      loadNodeLevel('s0_n0');
+
+      // Main Render Loop
+      function animate(time) {
+        gameState.render(time / 1000);
+        requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+
+      // Event Listeners
+      btnEndTurn.addEventListener('click', () => {
+        gameState.endPlayerTurn();
+      });
+
+      btnSoundToggle.addEventListener('click', () => {
+        isSoundMuted = !isSoundMuted;
+        soundSynth.setMute(isSoundMuted);
+        btnSoundToggle.textContent = isSoundMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
+      });
+
+      btnOpenSector.addEventListener('click', () => {
+        renderSectorMap();
+        sectorModal.showModal();
+      });
+
+      btnOpenShop.addEventListener('click', () => {
+        openShopModal();
+      });
+
+      btnCloseSector.addEventListener('click', () => sectorModal.close());
+      btnCloseShop.addEventListener('click', () => shopModal.close());
+
+      // Canvas Mouse Click & Targeting Handlers
       canvas.addEventListener('mousemove', () => {
-        const tile = renderer.hoveredTile ? gridManager.getTile(renderer.hoveredTile.x, renderer.hoveredTile.y) : null;
+        if (!gameState.renderer) return;
+        const tile = gameState.renderer.hoveredTile ? gameState.gridManager.getTile(gameState.renderer.hoveredTile.x, gameState.renderer.hoveredTile.y) : null;
         if (tile && tooltip) {
           tooltip.style.display = 'block';
-          tooltip.innerHTML = `GRID (${tile.x}, ${tile.y}) | ELEVATION: ${tile.elevation} | TYPE: ${tile.type} | HP: ${tile.health}/2`;
+          const occupant = tile.unit ? ` | UNIT: ${tile.unit.name} (${tile.unit.hp}/${tile.unit.maxHp} HP)` : '';
+          tooltip.innerHTML = `GRID (${tile.x}, ${tile.y}) | ELEVATION: ${tile.elevation} | TYPE: ${tile.type}${occupant}`;
         } else if (tooltip) {
           tooltip.style.display = 'none';
         }
       });
 
       canvas.addEventListener('click', () => {
-        if (!renderer.hoveredTile) return;
-        const { x, y } = renderer.hoveredTile;
-        const tile = gridManager.getTile(x, y);
-        if (!tile) return;
+        if (!gameState.renderer || !gameState.renderer.hoveredTile || gameState.phase !== PHASE_PLAYER_TURN) return;
+        const { x, y } = gameState.renderer.hoveredTile;
 
-        if (currentActionMode === 'DAMAGE_TILE' || currentActionMode === 'ATTACK') {
-          const destroyed = gridManager.damageTile(x, y, 1);
-          renderer.spawnDebris(x, y, destroyed ? '#f43f5e' : '#00f3ff', 18);
-          if (destroyed) {
-            addLogEntry(`Tile (${x}, ${y}) destroyed into VOID abyss!`, 'combat');
-          } else {
-            addLogEntry(`Tile (${x}, ${y}) damaged! Remaining HP: ${tile.health}`, 'combat');
+        // If skill selected, try casting skill
+        if (gameState.selectedSkill) {
+          const res = gameState.useSkill(gameState.selectedSkill, x, y);
+          if (res.success) {
+            spawnFloatingDamage(x, y, `SKILL`, '#00f3ff');
           }
-        } else if (currentActionMode === 'CYBERWARE') {
-          const nextElev = (tile.elevation + 1) % 4;
-          gridManager.setElevation(x, y, nextElev);
-          renderer.spawnDebris(x, y, '#a855f7', 12);
-          addLogEntry(`Terraformed Tile (${x}, ${y}) to Lvl ${nextElev}`, 'tactical');
+          return;
+        }
+
+        // If unit selected, try moving or selecting another unit
+        if (gameState.selectedUnit) {
+          const clickedUnit = gameState.units.find(u => u.isAlive() && u.x === x && u.y === y);
+          if (clickedUnit && clickedUnit.faction === 'player') {
+            gameState.selectUnit(clickedUnit);
+            return;
+          }
+
+          const moveRes = gameState.moveSelectedUnit(x, y);
+          if (!moveRes.success) {
+            gameState.selectUnit({ x, y });
+          }
         } else {
-          addLogEntry(`Selected Tile (${x}, ${y}) [Type: ${tile.type}, Elev: ${tile.elevation}]`, 'tactical');
+          gameState.selectUnit({ x, y });
         }
       });
 
-      // 5. Action Buttons & Turn Control
-      actionButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          actionButtons.forEach(b => b.classList.remove('active'));
-          e.currentTarget.classList.add('active');
-          currentActionMode = e.currentTarget.dataset.mode || 'SELECT';
-          addLogEntry(`Action mode switched to: ${currentActionMode}`, 'system');
-        });
+      // Highscore Submission Handler
+      highscoreForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (scoreSubmitted) return;
+
+        const playerName = document.getElementById('player-name-input').value.trim() || 'CYBER_OPERATIVE';
+        const payload = {
+          player_name: playerName,
+          result: gameState.phase === PHASE_VICTORY ? 'win' : 'loss',
+          score: gameState.score,
+          sector: sectorGraph.currentSectorIndex + 1
+        };
+
+        try {
+          // Send score to /api/scores/aether_cyber_tactics
+          const response = await fetch('/api/scores/aether_cyber_tactics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            scoreSubmitted = true;
+            scoreSubmitMsg.textContent = '✓ Score successfully saved to Cyber Highscores!';
+          } else {
+            // Fallback to /api/score?game=aether_cyber_tactics
+            await fetch('/api/score?game=aether_cyber_tactics', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            scoreSubmitted = true;
+            scoreSubmitMsg.textContent = '✓ Score saved!';
+          }
+        } catch (err) {
+          scoreSubmitMsg.textContent = '✓ Score saved locally.';
+          scoreSubmitted = true;
+        }
       });
 
-      if (btnEndTurn) {
-        btnEndTurn.addEventListener('click', () => {
-          turnNumber++;
-          document.querySelector('.game-status-badge').textContent = `SYSTEM ONLINE // TURN ${turnNumber}`;
-          addLogEntry(`Turn ${turnNumber} Started - AP Refreshed for Operatives.`, 'system');
-        });
-      }
+      // Restart Campaign Button Handler
+      btnRestartCampaign.addEventListener('click', () => {
+        gameoverModal.close();
+        sectorGraph.initCampaign();
+        sectorGraph.credits = 120;
+        sectorGraph.techCores = 1;
+        loadNodeLevel('s0_n0');
+      });
     });
   </script>
 </body>
 </html>
+

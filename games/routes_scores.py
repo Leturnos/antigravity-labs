@@ -30,6 +30,12 @@ DEFAULT_SCORES = {
         "torneio": {"vitorias": 0, "derrotas": 0},
         "maior_stack": 0,
     },
+    "aether_cyber_tactics": {
+        "vitorias": 0,
+        "derrotas": 0,
+        "pontuacao_maxima": 0,
+        "maior_setor": 0,
+    },
 }
 
 NO_CACHE_HEADERS = {
@@ -166,7 +172,36 @@ async def post_score(game: str, request: Request):
         _save_db(db)
         return {"success": True, "scores": db["poker"]}
 
+    if game == "aether_cyber_tactics":
+        result = data.get("result")
+        score = data.get("score", 0)
+        sector = data.get("sector", 1)
+        if result == "win":
+            db["aether_cyber_tactics"]["vitorias"] += 1
+        elif result == "loss":
+            db["aether_cyber_tactics"]["derrotas"] += 1
+        if score > db["aether_cyber_tactics"].get("pontuacao_maxima", 0):
+            db["aether_cyber_tactics"]["pontuacao_maxima"] = score
+        if sector > db["aether_cyber_tactics"].get("maior_setor", 0):
+            db["aether_cyber_tactics"]["maior_setor"] = sector
+        _save_db(db)
+        return {"success": True, "scores": db["aether_cyber_tactics"]}
+
     raise HTTPException(status_code=400, detail="Invalid or missing game query parameter.")
+
+
+# ── POST /api/scores/{game_name} ───────────────────────────────────────────
+
+@router.post("/scores/{game_name}")
+async def post_scores_alias(game_name: str, request: Request):
+    return await post_score(game=game_name, request=request)
+
+
+# ── GET /api/scores/{game_name} ────────────────────────────────────────────
+
+@router.get("/scores/{game_name}")
+async def get_scores_alias(game_name: str):
+    return await get_score(game=game_name)
 
 
 # ── DELETE /api/score ────────────────────────────────────────────────────────
@@ -179,3 +214,4 @@ async def delete_score(game: str):
     db[game] = copy.deepcopy(DEFAULT_SCORES[game])
     _save_db(db)
     return {"success": True, "scores": db[game]}
+
