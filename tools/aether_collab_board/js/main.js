@@ -33,21 +33,86 @@ document.addEventListener('DOMContentLoaded', async () => {
     const connectorManager = new ConnectorManager('svg-connectors', wsClient);
     const presentationManager = new PresentationManager(canvasEngine, wsClient);
 
-    // Active tool state
+    // Re-render connector paths whenever nodes move
+    window.addEventListener('mousemove', () => {
+        connectorManager.renderAll(nodeManager);
+    });
+
+    // Active Tool State
     let activeTool = 'select';
+    let pendingPlacementPos = null;
+    let connectorStartNodeId = null;
+
     const toolButtons = document.querySelectorAll('.tool-btn');
 
     function setActiveTool(toolName) {
         activeTool = toolName;
+        connectorStartNodeId = null;
         toolButtons.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-tool') === toolName);
         });
     }
 
     toolButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            setActiveTool(btn.getAttribute('data-tool'));
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const tool = btn.getAttribute('data-tool');
+            setActiveTool(tool);
+
+            if (tool === 'sticky') {
+                addStickyNoteAt();
+            } else if (tool === 'frame') {
+                addFrameNodeAt();
+            } else if (tool === 'mermaid') {
+                openMermaidModal();
+            }
         });
+    });
+
+    // Canvas click event for dropping elements or connecting nodes
+    const container = document.getElementById('canvas-container');
+    container.addEventListener('click', (e) => {
+        // Only trigger if clicking directly on canvas container/viewport/svg
+        if (e.target.id === 'canvas-container' || e.target.id === 'canvas-viewport' || e.target.tagName === 'svg') {
+            const pos = canvasEngine.screenToCanvas(e.clientX, e.clientY);
+            
+            if (activeTool === 'sticky') {
+                addStickyNoteAt(pos.x, pos.y);
+            } else if (activeTool === 'frame') {
+                addFrameNodeAt(pos.x, pos.y);
+            } else if (activeTool === 'mermaid') {
+                pendingPlacementPos = pos;
+                openMermaidModal();
+            }
+        }
+    });
+
+    // Node click handler for Connector tool
+    nodeManager.layer.addEventListener('click', (e) => {
+        const nodeEl = e.target.closest('.canvas-node');
+        if (!nodeEl) return;
+        const nodeId = nodeEl.id.replace('node-', '');
+
+        if (activeTool === 'connector') {
+            e.stopPropagation();
+            if (!connectorStartNodeId) {
+                connectorStartNodeId = nodeId;
+                nodeEl.classList.add('selected');
+            } else if (connectorStartNodeId !== nodeId) {
+                connectorManager.addConnector({
+                    id: `conn-${Date.now()}`,
+                    board_id: roomId,
+                    from_node_id: connectorStartNodeId,
+                    to_node_id: nodeId,
+                    label: '',
+                    style: 'orthogonal',
+                    color: '#94a3b8'
+                });
+                connectorManager.renderAll(nodeManager);
+                connectorStartNodeId = null;
+                nodeManager.deselectAll();
+            }
+        }
     });
 
     // Keyboard Shortcuts (V, S, M, F, C)
@@ -57,53 +122,80 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (key === 'v') setActiveTool('select');
         else if (key === 's') {
             setActiveTool('sticky');
-            addStickyNote();
+            addStickyNoteAt();
         } else if (key === 'm') {
             setActiveTool('mermaid');
             openMermaidModal();
         } else if (key === 'f') {
             setActiveTool('frame');
-            addFrameNode();
+            addFrameNodeAt();
         } else if (key === 'c') setActiveTool('connector');
     });
 
-    function addStickyNote() {
-        const center = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+    function addStickyNoteAt(x, y) {
+        if (x === undefined || y === undefined) {
+            const center = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+            x = center.x - 90;
+            y = center.y - 90;
+        } else {
+            x = x - 90;
+            y = y - 90;
+        }
+
         nodeManager.createNode({
             id: `sticky-${Date.now()}`,
             board_id: roomId,
             type: 'sticky',
-            x: center.x - 90,
-            y: center.y - 90,
+            x,
+            y,
             width: 180,
             height: 180,
             content: 'Nova Nota Adesiva',
             color: '#fef08a'
         });
+        connectorManager.renderAll(nodeManager);
     }
 
-    function addFrameNode() {
-        const center = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+    function addFrameNodeAt(x, y) {
+        if (x === undefined || y === undefined) {
+            const center = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+            x = center.x - 300;
+            y = center.y - 200;
+        } else {
+            x = x - 300;
+            y = y - 200;
+        }
+
         const count = Array.from(nodeManager.nodes.values()).filter(n => n.data.type === 'frame').length + 1;
         nodeManager.createNode({
             id: `frame-${Date.now()}`,
             board_id: roomId,
             type: 'frame',
-            x: center.x - 300,
-            y: center.y - 200,
+            x,
+            y,
             width: 600,
             height: 400,
             content: `Slide ${count}: Arquitetura`
         });
+        connectorManager.renderAll(nodeManager);
     }
 
     // Mermaid Modal Handling
     const mermaidModal = document.getElementById('mermaid-modal');
     const btnCloseMermaid = document.getElementById('btn-close-mermaid');
     const btnSaveMermaid = document.getElementById('btn-save-mermaid');
+    const codeTextarea = document.getElementById('mermaid-code');
+    const previewContainer = document.getElementById('mermaid-modal-preview');
 
     function openMermaidModal() {
-        if (mermaidModal) mermaidModal.classList.remove('hidden');
+        if (!mermaidModal) return;
+        if (codeTextarea && !codeTextarea.value.trim()) {
+            codeTextarea.value = mermaidModule.getTemplate('microservices');
+        }
+        if (codeTextarea && previewContainer) {
+            mermaidModule.renderDiagram(codeTextarea.value, previewContainer);
+        }
+        mermaidModal.classList.remove('hidden');
     }
 
     if (btnCloseMermaid) {
@@ -112,21 +204,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (btnSaveMermaid) {
         btnSaveMermaid.addEventListener('click', () => {
-            const code = document.getElementById('mermaid-code').value;
+            const code = codeTextarea ? codeTextarea.value : '';
             if (!code.trim()) return;
 
-            const center = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+            let pos = pendingPlacementPos;
+            if (!pos) {
+                pos = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+                pos.x -= 200;
+                pos.y -= 150;
+            } else {
+                pos.x -= 200;
+                pos.y -= 150;
+            }
+
             nodeManager.createNode({
                 id: `mermaid-${Date.now()}`,
                 board_id: roomId,
                 type: 'mermaid',
-                x: center.x - 200,
-                y: center.y - 150,
+                x: pos.x,
+                y: pos.y,
                 width: 400,
                 height: 300,
                 content: code
             });
 
+            connectorManager.renderAll(nodeManager);
+            pendingPlacementPos = null;
             mermaidModal.classList.add('hidden');
         });
     }

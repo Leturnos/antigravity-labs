@@ -21,6 +21,8 @@
   --color-audio-synth-glow: rgba(139, 92, 246, 0.3);
   --color-motion-lab: #00f2fe;
   --color-motion-lab-glow: rgba(0, 242, 254, 0.3);
+  --color-collab-board: #00f3ff;
+  --color-collab-board-glow: rgba(0, 243, 255, 0.3);
   
   --font-sans: 'Outfit', sans-serif;
   --font-mono: 'JetBrains+Mono', monospace;
@@ -165,6 +167,11 @@ header p {
   transform: translateY(-8px);
   border-color: var(--color-motion-lab);
   box-shadow: 0 12px 30px var(--color-motion-lab-glow);
+}
+.game-card.collab-board:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-collab-board);
+  box-shadow: 0 12px 30px var(--color-collab-board-glow);
 }
 
 .game-card .top-section {

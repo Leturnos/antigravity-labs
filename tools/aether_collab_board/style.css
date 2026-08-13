@@ -60,9 +60,35 @@ body, html {
     z-index: 100;
     display: flex;
     align-items: center;
-    gap: 20px;
+    justify-content: center;
+    gap: 16px;
     padding: 8px 18px;
+    max-width: 95vw;
+    width: max-content;
+    flex-wrap: wrap;
     transition: all 0.3s ease;
+}
+
+@media (max-width: 920px) {
+    .top-bar {
+        top: 10px;
+        gap: 10px;
+        padding: 6px 12px;
+        width: 96vw;
+        border-radius: 12px;
+    }
+    .tools-group, .action-group {
+        gap: 4px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .tool-btn, .action-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+    .app-title {
+        font-size: 0.9rem;
+    }
 }
 
 .brand {

@@ -11,6 +11,7 @@ export class CanvasEngine {
         this.maxScale = 4.0;
         
         this.isPanning = false;
+        this.isSpacePressed = false;
         this.startX = 0;
         this.startY = 0;
         
@@ -26,26 +27,34 @@ export class CanvasEngine {
             this.zoomAtPoint(e.clientX, e.clientY, zoomFactor);
         }, { passive: false });
         
-        // Keyboard spacebar pan tracking
+        // Track Spacebar modifier key
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !this.isPanning && e.target.tagName !== 'TEXTAREA' && !e.target.isContentEditable) {
+            if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT' && !e.target.isContentEditable) {
+                this.isSpacePressed = true;
                 this.container.style.cursor = 'grabbing';
             }
         });
 
         window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space' && !this.isPanning) {
-                this.container.style.cursor = 'grab';
+            if (e.code === 'Space') {
+                this.isSpacePressed = false;
+                if (!this.isPanning) {
+                    this.container.style.cursor = 'grab';
+                }
             }
         });
         
-        // Mouse Panning (Spacebar or Middle Click or Dragging Container)
+        // Mouse Panning ONLY when Spacebar is held OR Middle Click (button 1) OR Shift key is pressed
         this.container.addEventListener('mousedown', (e) => {
-            if (e.button === 1 || e.buttons === 4 || e.shiftKey || (e.target === this.container || e.target === this.viewport)) {
+            const isMiddleClick = e.button === 1 || e.buttons === 4;
+            const isShiftKey = e.shiftKey;
+
+            if (this.isSpacePressed || isMiddleClick || isShiftKey) {
                 this.isPanning = true;
                 this.startX = e.clientX - this.panX;
                 this.startY = e.clientY - this.panY;
                 this.container.style.cursor = 'grabbing';
+                e.preventDefault();
             }
         });
         
@@ -59,10 +68,12 @@ export class CanvasEngine {
         
         window.addEventListener('mouseup', () => {
             this.isPanning = false;
-            this.container.style.cursor = 'grab';
+            if (!this.isSpacePressed) {
+                this.container.style.cursor = 'grab';
+            }
         });
 
-        // HUD Buttons
+        // HUD Control Buttons
         const btnZoomIn = document.getElementById('btn-zoom-in');
         const btnZoomOut = document.getElementById('btn-zoom-out');
         const btnResetView = document.getElementById('btn-reset-view');
