@@ -40,7 +40,7 @@
           <div class="top-section">
             <div class="icon-box">🛠️</div>
             <h2>Ferramentas</h2>
-            <p class="description">Explore ferramentas interativas e de simulação, incluindo o nosso Gerador de Mundos procedurais em tempo real com mapas de elevação e biomas dinâmicos.</p>
+            <p class="description">Explore ferramentas interativas e de simulação, incluindo o Gerador de Mundos procedurais, Sintetizador de Áudio e a suíte Aether API Workbench &amp; Mock Server.</p>
           </div>
           <div class="btn-launch">
             Explorar Ferramentas
@@ -64,7 +64,7 @@
           <div class="top-section">
             <div class="icon-box">⚙️</div>
             <h2>Backend</h2>
-            <p class="description">Explore sistemas de processamento assíncrono em background, agendamento resiliente de tarefas e filas de eventos com monitoramento visual em tempo real via WebSockets.</p>
+            <p class="description">Explore sistemas de processamento assíncrono em background, o Aether Event Hub, e a suíte completa Aether API Workbench com Mock Server dinâmico.</p>
           </div>
           <div class="btn-launch">
             Explorar Backend
@@ -393,6 +393,22 @@
           </div>
           <a href="backend/aether_event_hub/static/" class="btn-launch" onclick="event.stopPropagation()">
             Abrir Aether Event Hub
+          </a>
+        </div>
+
+        <!-- Aether API Workbench & Mock Server -->
+        <div class="game-card api-workbench" onclick="location.href='backend/aether_api_workbench/static/index.html'" style="--color-api-workbench: #6366f1; --color-api-workbench-glow: rgba(99, 102, 241, 0.3);">
+          <div class="top-section">
+            <div class="icon-box">🛠️</div>
+            <h2>Aether API Workbench</h2>
+            <p class="description">Suíte completa de testes HTTP/REST, SSE e WebSocket em tempo real, gerador dinâmico de Mock Server com JSON Schema e análise gráfica de latência RTT.</p>
+          </div>
+          <div class="game-stats">
+            REST • SSE • WebSockets • Mocks<br>
+            FastAPI • SQLite WAL • Gráficos RTT
+          </div>
+          <a href="backend/aether_api_workbench/static/index.html" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir API Workbench
           </a>
         </div>
       </div>

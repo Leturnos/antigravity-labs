@@ -3,9 +3,11 @@
 import os
 from backend.aether_event_hub.main import app
 from tools.aether_collab_board.backend.router import router as collab_board_router
+from backend.aether_api_workbench.main import app as workbench_app
 
 # Register sub-project routers directly into the central server app
 app.include_router(collab_board_router)
+app.include_router(workbench_app.router)
 
 # Ensure catch-all static mount is evaluated last so API routes take priority
 static_routes = [r for r in app.routes if getattr(r, "name", "") == "root_static"]

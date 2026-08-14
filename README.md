@@ -17,6 +17,7 @@ antigravity-labs/
 ├── ai/          # Projetos e modelos envolvendo Inteligência Artificial
 │   └── neural_canvas/ # Aether Neural Canvas - Reconhecimento de desenhos em tempo real (TensorFlow.js)
 ├── backend/     # APIs, microsserviços e utilitários de servidor
+│   ├── aether_api_workbench/ # Aether API Workbench & Mock Server (FastAPI, SQLite, REST/WS Proxy, JSON Schema Mocks & Latency Analytics)
 │   ├── aether_event_hub/ # Aether Event Hub & Task Queue - Fila de eventos e agendamento async (FastAPI, SQLite WAL, WebSockets)
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais

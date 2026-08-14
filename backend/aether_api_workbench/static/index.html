@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Aether API Workbench - Suíte completa de testes HTTP/WebSocket/SSE, gerador de Mocks dinâmicos e análise de latência.">
+  <title>Aether API Workbench &amp; Mock Server</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="/" class="back-button" title="Voltar ao Menu Principal" id="btn-back-menu">
+        <span class="icon">←</span> Voltar ao Menu
+      </a>
+      <div class="brand">
+        <span class="brand-icon">🛠️</span>
+        <h1>Aether <span>API Workbench</span></h1>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" aria-label="Navegação principal">
+      <button class="nav-tab active" data-tab="rest" id="tab-btn-rest">
+        <span class="tab-icon">📡</span> Client REST &amp; SSE
+      </button>
+      <button class="nav-tab" data-tab="ws" id="tab-btn-ws">
+        <span class="tab-icon">🔌</span> WebSocket Live
+      </button>
+      <button class="nav-tab" data-tab="mock" id="tab-btn-mock">
+        <span class="tab-icon">🎭</span> Mock Studio
+      </button>
+      <button class="nav-tab" data-tab="latency" id="tab-btn-latency">
+        <span class="tab-icon">📊</span> Latência &amp; Métricas
+      </button>
+    </nav>
+
+    <div class="header-right">
+      <span class="status-pill online" id="server-status-pill">
+        <span class="dot"></span> <span class="status-text">Server Active</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar-container">
+      <!-- Injected via sidebar.js in Task 5 -->
+      <div class="sidebar-placeholder">
+        <div class="sidebar-header-skeleton">
+          <span class="sidebar-title">Coleções &amp; Histórico</span>
+        </div>
+        <p class="sidebar-hint">Carregando coleções e histórico de requisições...</p>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="workspace" id="main-workspace">
+      <!-- REST & SSE Tab -->
+      <section class="tab-pane active" id="pane-rest" role="tabpanel">
+        <!-- Injected via rest_tester.js in Task 5 -->
+      </section>
+
+      <!-- WebSocket Tab -->
+      <section class="tab-pane" id="pane-ws" role="tabpanel">
+        <!-- Injected via ws_tester.js in Task 5 -->
+      </section>
+
+      <!-- Mock Studio Tab -->
+      <section class="tab-pane" id="pane-mock" role="tabpanel">
+        <!-- Injected via mock_studio.js in Task 5 -->
+      </section>
+
+      <!-- Latency & Analytics Tab -->
+      <section class="tab-pane" id="pane-latency" role="tabpanel">
+        <!-- Injected via latency_chart.js in Task 5 -->
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Modal Dialog Container -->
+  <div id="modal-container" class="modal-overlay hidden" role="dialog" aria-modal="true"></div>
+
+  <!-- App Entry Point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
