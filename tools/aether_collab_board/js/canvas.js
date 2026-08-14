@@ -14,24 +14,37 @@ export class CanvasEngine {
         this.isSpacePressed = false;
         this.startX = 0;
         this.startY = 0;
+        this.hasMovedDuringRightClick = false;
         
         this.initEvents();
         this.updateTransform();
     }
     
     initEvents() {
-        // Wheel Zoom
+        // Wheel & Trackpad Pinch/Pan Zoom
         this.container.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-            this.zoomAtPoint(e.clientX, e.clientY, zoomFactor);
+            if (e.ctrlKey) {
+                // Pinch zoom on trackpads
+                const zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
+                this.zoomAtPoint(e.clientX, e.clientY, zoomFactor);
+            } else {
+                // Standard scroll wheel zoom or trackpad pan
+                if (e.shiftKey) {
+                    this.panX -= e.deltaY;
+                    this.updateTransform();
+                } else {
+                    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                    this.zoomAtPoint(e.clientX, e.clientY, zoomFactor);
+                }
+            }
         }, { passive: false });
         
-        // Track Spacebar modifier key
+        // Track Spacebar modifier key globally
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT' && !e.target.isContentEditable) {
                 this.isSpacePressed = true;
-                this.container.style.cursor = 'grabbing';
+                document.body.style.cursor = 'grabbing';
             }
         });
 
@@ -39,27 +52,37 @@ export class CanvasEngine {
             if (e.code === 'Space') {
                 this.isSpacePressed = false;
                 if (!this.isPanning) {
-                    this.container.style.cursor = 'grab';
+                    document.body.style.cursor = 'default';
                 }
             }
         });
-        
-        // Mouse Panning ONLY when Spacebar is held OR Middle Click (button 1) OR Shift key is pressed
-        this.container.addEventListener('mousedown', (e) => {
-            const isMiddleClick = e.button === 1 || e.buttons === 4;
-            const isShiftKey = e.shiftKey;
 
-            if (this.isSpacePressed || isMiddleClick || isShiftKey) {
-                this.isPanning = true;
-                this.startX = e.clientX - this.panX;
-                this.startY = e.clientY - this.panY;
-                this.container.style.cursor = 'grabbing';
+        // Right click context menu suppression if panning occurred
+        this.container.addEventListener('contextmenu', (e) => {
+            if (this.hasMovedDuringRightClick) {
                 e.preventDefault();
+                this.hasMovedDuringRightClick = false;
             }
         });
+
+        // Global Mouse Down for camera panning (Spacebar, Middle Click, Right Click, or Shift)
+        window.addEventListener('mousedown', (e) => {
+            const isMiddleClick = e.button === 1 || e.buttons === 4;
+            const isRightClick = e.button === 2;
+            const isShiftKey = e.shiftKey;
+
+            if (this.isSpacePressed || isMiddleClick || isRightClick || isShiftKey) {
+                this.isPanning = true;
+                this.hasMovedDuringRightClick = false;
+                this.startX = e.clientX - this.panX;
+                this.startY = e.clientY - this.panY;
+                document.body.style.cursor = 'grabbing';
+            }
+        }, true);
         
         window.addEventListener('mousemove', (e) => {
             if (this.isPanning) {
+                this.hasMovedDuringRightClick = true;
                 this.panX = e.clientX - this.startX;
                 this.panY = e.clientY - this.startY;
                 this.updateTransform();
@@ -67,13 +90,15 @@ export class CanvasEngine {
         });
         
         window.addEventListener('mouseup', () => {
-            this.isPanning = false;
-            if (!this.isSpacePressed) {
-                this.container.style.cursor = 'grab';
+            if (this.isPanning) {
+                this.isPanning = false;
+                if (!this.isSpacePressed) {
+                    document.body.style.cursor = 'default';
+                }
             }
         });
 
-        // HUD Control Buttons
+        // HUD Controls
         const btnZoomIn = document.getElementById('btn-zoom-in');
         const btnZoomOut = document.getElementById('btn-zoom-out');
         const btnResetView = document.getElementById('btn-reset-view');

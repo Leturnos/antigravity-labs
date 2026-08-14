@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    const nodeManager = new NodeManager('nodes-layer', wsClient, mermaidModule);
+    const nodeManager = new NodeManager('nodes-layer', wsClient, mermaidModule, canvasEngine);
     const connectorManager = new ConnectorManager('svg-connectors', wsClient);
     const presentationManager = new PresentationManager(canvasEngine, wsClient);
 
@@ -38,10 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         connectorManager.renderAll(nodeManager);
     });
 
-    // Active Tool State
+    // Active Tool State (Default: select 🖱️)
     let activeTool = 'select';
     let pendingPlacementPos = null;
     let connectorStartNodeId = null;
+    let clipboardNodeData = null;
 
     const toolButtons = document.querySelectorAll('.tool-btn');
 
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // HTML5 Drag & Drop from top toolbar onto Canvas
     toolButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -61,25 +63,57 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (tool === 'sticky') {
                 addStickyNoteAt();
+                setActiveTool('select');
             } else if (tool === 'frame') {
                 addFrameNodeAt();
+                setActiveTool('select');
             } else if (tool === 'mermaid') {
                 openMermaidModal();
             }
         });
+
+        btn.addEventListener('dragstart', (e) => {
+            const tool = btn.getAttribute('data-tool');
+            e.dataTransfer.setData('text/plain', tool);
+            setActiveTool(tool);
+        });
+    });
+
+    const container = document.getElementById('canvas-container');
+    
+    container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    });
+
+    container.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const tool = e.dataTransfer.getData('text/plain') || activeTool;
+        const pos = canvasEngine.screenToCanvas(e.clientX, e.clientY);
+
+        if (tool === 'sticky') {
+            addStickyNoteAt(pos.x, pos.y);
+        } else if (tool === 'frame') {
+            addFrameNodeAt(pos.x, pos.y);
+        } else if (tool === 'mermaid') {
+            pendingPlacementPos = pos;
+            openMermaidModal();
+        }
+        setActiveTool('select');
     });
 
     // Canvas click event for dropping elements or connecting nodes
-    const container = document.getElementById('canvas-container');
     container.addEventListener('click', (e) => {
-        // Only trigger if clicking directly on canvas container/viewport/svg
+        if (canvasEngine.isSpacePressed || canvasEngine.isPanning || canvasEngine.hasMovedDuringRightClick) return;
         if (e.target.id === 'canvas-container' || e.target.id === 'canvas-viewport' || e.target.tagName === 'svg') {
             const pos = canvasEngine.screenToCanvas(e.clientX, e.clientY);
             
             if (activeTool === 'sticky') {
                 addStickyNoteAt(pos.x, pos.y);
+                setActiveTool('select');
             } else if (activeTool === 'frame') {
                 addFrameNodeAt(pos.x, pos.y);
+                setActiveTool('select');
             } else if (activeTool === 'mermaid') {
                 pendingPlacementPos = pos;
                 openMermaidModal();
@@ -111,25 +145,58 @@ document.addEventListener('DOMContentLoaded', async () => {
                 connectorManager.renderAll(nodeManager);
                 connectorStartNodeId = null;
                 nodeManager.deselectAll();
+                setActiveTool('select');
             }
         }
     });
 
-    // Keyboard Shortcuts (V, S, M, F, C)
+    // Keyboard Shortcuts (V, S, M, F, C, 0, Copy/Paste)
     window.addEventListener('keydown', (e) => {
         if (e.target.isContentEditable || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        
         const key = e.key.toLowerCase();
+        
+        // Copy Node (Ctrl+C / Cmd+C)
+        if ((e.ctrlKey || e.metaKey) && key === 'c') {
+            if (nodeManager.selectedNodeId) {
+                const item = nodeManager.nodes.get(nodeManager.selectedNodeId);
+                if (item) {
+                    clipboardNodeData = { ...item.data };
+                }
+            }
+            return;
+        }
+
+        // Paste Node (Ctrl+V / Cmd+V)
+        if ((e.ctrlKey || e.metaKey) && key === 'v') {
+            if (clipboardNodeData) {
+                const center = canvasEngine.screenToCanvas(window.innerWidth / 2, window.innerHeight / 2);
+                const newNode = {
+                    ...clipboardNodeData,
+                    id: `${clipboardNodeData.type}-${Date.now()}`,
+                    x: center.x,
+                    y: center.y
+                };
+                nodeManager.createNode(newNode);
+                connectorManager.renderAll(nodeManager);
+            }
+            return;
+        }
+
         if (key === 'v') setActiveTool('select');
         else if (key === 's') {
             setActiveTool('sticky');
             addStickyNoteAt();
+            setActiveTool('select');
         } else if (key === 'm') {
             setActiveTool('mermaid');
             openMermaidModal();
         } else if (key === 'f') {
             setActiveTool('frame');
             addFrameNodeAt();
+            setActiveTool('select');
         } else if (key === 'c') setActiveTool('connector');
+        else if (key === '0') canvasEngine.resetView();
     });
 
     function addStickyNoteAt(x, y) {
@@ -199,7 +266,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (btnCloseMermaid) {
-        btnCloseMermaid.addEventListener('click', () => mermaidModal.classList.add('hidden'));
+        btnCloseMermaid.addEventListener('click', () => {
+            mermaidModal.classList.add('hidden');
+            setActiveTool('select');
+        });
     }
 
     if (btnSaveMermaid) {
@@ -231,6 +301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             connectorManager.renderAll(nodeManager);
             pendingPlacementPos = null;
             mermaidModal.classList.add('hidden');
+            setActiveTool('select');
         });
     }
 

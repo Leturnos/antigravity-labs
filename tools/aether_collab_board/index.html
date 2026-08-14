@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aether Collab Board — Infinite Architecture Canvas</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +19,7 @@
         <header class="top-bar glass-panel">
             <div class="brand">
                 <a href="../../index.html" class="back-link" title="Voltar ao Hub Central">← Hub</a>
-                <div class="brand-badge">⚡</div>
+                <div class="brand-badge">📐</div>
                 <h1 class="app-title">Aether Collab Board</h1>
             </div>
             
@@ -26,13 +27,13 @@
                 <button id="btn-select" class="tool-btn active" data-tool="select" title="Seleção (Atalho: V)">
                     <span class="icon">🖱️</span> Selecionar
                 </button>
-                <button id="btn-sticky" class="tool-btn" data-tool="sticky" title="Nota Adesiva (Atalho: S)">
+                <button id="btn-sticky" class="tool-btn" data-tool="sticky" draggable="true" title="Nota Adesiva (Arraste para o Canvas ou Atalho: S)">
                     <span class="icon">📝</span> Sticky Note
                 </button>
-                <button id="btn-mermaid" class="tool-btn" data-tool="mermaid" title="Diagrama Mermaid (Atalho: M)">
+                <button id="btn-mermaid" class="tool-btn" data-tool="mermaid" draggable="true" title="Diagrama Mermaid (Arraste para o Canvas ou Atalho: M)">
                     <span class="icon">📊</span> Mermaid.js
                 </button>
-                <button id="btn-frame" class="tool-btn" data-tool="frame" title="Frame de Apresentação (Atalho: F)">
+                <button id="btn-frame" class="tool-btn" data-tool="frame" draggable="true" title="Frame de Apresentação (Arraste para o Canvas ou Atalho: F)">
                     <span class="icon">🖼️</span> Frame / Slide
                 </button>
                 <button id="btn-connector" class="tool-btn" data-tool="connector" title="Conector Inteligente (Atalho: C)">

@@ -411,6 +411,26 @@ header p {
   transform: translateY(-2px);
 }
 
+.game-card.collab-board:hover {
+  transform: translateY(-8px);
+  border-color: #00f3ff !important;
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.35) !important;
+}
+.game-card.collab-board h2 { color: #00f3ff !important; }
+.game-card.collab-board .btn-launch {
+  background: linear-gradient(135deg, #00f3ff 0%, #00b4d8 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0, 243, 255, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-card.collab-board .btn-launch:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #00f3ff 100%) !important;
+  box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
+  transform: translateY(-2px);
+}
+
 .global-stats-container {
   width: 100%;
   max-width: 800px;

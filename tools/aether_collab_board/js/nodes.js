@@ -1,8 +1,9 @@
 export class NodeManager {
-    constructor(nodesLayerId, wsClient, mermaidModule) {
+    constructor(nodesLayerId, wsClient, mermaidModule, canvasEngine) {
         this.layer = document.getElementById(nodesLayerId);
         this.wsClient = wsClient;
         this.mermaidModule = mermaidModule;
+        this.canvasEngine = canvasEngine;
         this.nodes = new Map(); // id -> { el, data }
         this.selectedNodeId = null;
 
@@ -20,7 +21,7 @@ export class NodeManager {
         // Delete selected node on Delete / Backspace key
         window.addEventListener('keydown', (e) => {
             if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedNodeId) {
-                if (document.activeElement.isContentEditable || document.activeElement.tagName === 'TEXTAREA') {
+                if (document.activeElement.isContentEditable || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
                     return;
                 }
                 this.deleteNode(this.selectedNodeId);
@@ -93,9 +94,16 @@ export class NodeManager {
             }
         }
 
+        // Add Resize Handle to all node types
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle';
+        el.appendChild(resizeHandle);
+        this.makeResizable(el, resizeHandle, data);
+
         this.makeDraggable(el, data);
 
         el.addEventListener('mousedown', (e) => {
+            if (this.canvasEngine && this.canvasEngine.isSpacePressed) return;
             e.stopPropagation();
             this.selectNode(data.id);
         });
@@ -113,7 +121,9 @@ export class NodeManager {
         let startX, startY;
 
         el.addEventListener('mousedown', (e) => {
-            if (e.target.isContentEditable) return;
+            if (e.target.isContentEditable || e.target.classList.contains('resize-handle')) return;
+            if (this.canvasEngine && (this.canvasEngine.isSpacePressed || this.canvasEngine.isPanning)) return;
+            
             isDragging = true;
             startX = e.clientX;
             startY = e.clientY;
@@ -141,6 +151,46 @@ export class NodeManager {
 
         window.addEventListener('mouseup', () => {
             isDragging = false;
+        });
+    }
+
+    makeResizable(el, handle, data) {
+        let isResizing = false;
+        let startX, startY, startW, startH;
+
+        handle.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startW = data.width;
+            startH = data.height;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const zoomText = document.getElementById('zoom-indicator');
+            const scale = zoomText ? parseFloat(zoomText.textContent) / 100 : 1.0;
+
+            const dw = (e.clientX - startX) / scale;
+            const dh = (e.clientY - startY) / scale;
+
+            const minWidth = data.type === 'frame' ? 200 : 120;
+            const minHeight = data.type === 'frame' ? 150 : 120;
+
+            data.width = Math.max(minWidth, startW + dw);
+            data.height = Math.max(minHeight, startH + dh);
+
+            el.style.width = `${data.width}px`;
+            el.style.height = `${data.height}px`;
+
+            if (this.wsClient) {
+                this.wsClient.send('node_update', data);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isResizing = false;
         });
     }
 
