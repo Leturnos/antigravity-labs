@@ -124,8 +124,8 @@ document.getElementById('btn-reset-all').addEventListener('click', async () => {
   }
 });
 
-// Accessibility keydown event listener for category cards
-document.querySelectorAll('.category-card').forEach(card => {
+// Accessibility keydown event listener for category and game cards
+document.querySelectorAll('.category-card, .game-card').forEach(card => {
   card.addEventListener('keydown', event => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
