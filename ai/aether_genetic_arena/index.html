@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Genetic Arena — Laboratório de Neuroevolução & NEAT</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header Navbar -->
+    <header class="app-header">
+        <div class="brand-section">
+            <h1 class="brand-title">
+                🧬 Aether <span class="accent">Genetic Arena</span>
+            </h1>
+            <span class="brand-badge">NEAT / Neuroevolução</span>
+        </div>
+
+        <div class="header-controls">
+            <!-- Scenario Selector -->
+            <select id="scenarioSelect" class="custom-select" title="Selecione o cenário de simulação">
+                <option value="foraging">Coleta & Sobrevivência</option>
+                <option value="maze">Labirinto Procedural</option>
+                <option value="predator_prey">Predador vs Presa (Coevolução)</option>
+            </select>
+
+            <!-- Neural Model Selector -->
+            <select id="modelSelect" class="custom-select" title="Selecione a arquitetura da rede neural">
+                <option value="NEAT">NEAT (Topologia Dinâmica)</option>
+                <option value="MLP">MLP (Topologia Fixa)</option>
+            </select>
+
+            <!-- Audio Toggle -->
+            <button id="btnSound" class="btn-action" title="Alternar áudio procedural">
+                🔊 Áudio
+            </button>
+
+            <!-- Import / Export Snapshot -->
+            <button id="btnExport" class="btn-action" title="Exportar snapshot da simulação em JSON">
+                💾 Exportar
+            </button>
+            <button id="btnImport" class="btn-action" title="Importar snapshot salvo em JSON">
+                📂 Importar
+            </button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+            <!-- Back to Central Launcher Hub -->
+            <a href="../../index.html?view=view-ai" class="btn-action btn-back-hub" title="Voltar ao Painel Central">
+                ← Início
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+        <!-- Simulation Arena Panel -->
+        <section class="arena-panel">
+            <div class="canvas-container">
+                <canvas id="simCanvas" width="800" height="560"></canvas>
+            </div>
+        </section>
+
+        <!-- Right Dashboard Sidebar -->
+        <aside class="sidebar">
+            <!-- 1. Simulation Speed Controls -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚡ Velocidade da Simulação</div>
+                </div>
+                <div class="btn-grid" id="speedControls">
+                    <button class="ctrl-btn active" data-speed="1">1x</button>
+                    <button class="ctrl-btn" data-speed="2">2x</button>
+                    <button class="ctrl-btn" data-speed="5">5x</button>
+                    <button class="ctrl-btn" data-speed="20">20x</button>
+                    <button id="btnInstantGen" class="ctrl-btn btn-instant">⚡ Geração Instantânea</button>
+                </div>
+            </div>
+
+            <!-- 2. God Mode Interactive Tools -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🛠️ Modo Deus (Interativo)</div>
+                </div>
+                <div class="btn-tool-grid" id="godTools">
+                    <button class="ctrl-btn active" data-tool="inspect">🔍 Inspecionar</button>
+                    <button class="ctrl-btn" data-tool="food">🍏 Alimento (+E)</button>
+                    <button class="ctrl-btn" data-tool="poison">☠️ Veneno (-E)</button>
+                    <button class="ctrl-btn" data-tool="wall">🧱 Barreira</button>
+                    <button class="ctrl-btn btn-span-2" data-tool="kill">⚡ Desintegrar</button>
+                </div>
+            </div>
+
+            <!-- 3. Live Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📊 Estatísticas & Linhagens</div>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Geração</span>
+                    <span class="stat-value highlight" id="statGen">#1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Recorde Histórico</span>
+                    <span class="stat-value highlight" id="statAllTime" style="color: #fbbf24;">0.0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Campeão Anterior (👑)</span>
+                    <span class="stat-value" id="statLastGen">0.0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Organismos Vivos</span>
+                    <span class="stat-value" id="statLiving">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Fitness Atual da Época</span>
+                    <span class="stat-value highlight" id="statFitness">0.0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Progresso da Época</span>
+                    <span class="stat-value" id="statTicks">0%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar-fill" id="epochProgressBar"></div>
+                </div>
+            </div>
+
+            <!-- 4. Synapse Brain HUD -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🧠 HUD Neural em Tempo Real</div>
+                </div>
+                <canvas id="brainCanvas" width="340" height="170"></canvas>
+            </div>
+
+            <!-- 5. Fitness History Evolution Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📈 Curva de Aptidão (Fitness)</div>
+                </div>
+                <canvas id="chartCanvas" width="340" height="140"></canvas>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Toast Notification Element -->
+    <div id="arenaToast" class="arena-toast">
+        <span id="toastIcon">✨</span>
+        <span id="toastMessage">Estado da simulação salvo com sucesso!</span>
+    </div>
+
+    <!-- ES6 Application Entrypoint -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
