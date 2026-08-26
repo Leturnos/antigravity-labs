@@ -23,6 +23,8 @@
   --color-motion-lab-glow: rgba(0, 242, 254, 0.3);
   --color-collab-board: #00f3ff;
   --color-collab-board-glow: rgba(0, 243, 255, 0.3);
+  --color-genetic-arena: #00f3ff;
+  --color-genetic-arena-glow: rgba(0, 243, 255, 0.3);
   
   --font-sans: 'Outfit', sans-serif;
   --font-mono: 'JetBrains+Mono', monospace;
@@ -448,6 +450,26 @@ header p {
 .game-card.api-workbench .btn-launch:hover {
   background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%) !important;
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.6) !important;
+  transform: translateY(-2px);
+}
+
+.game-card.genetic-arena:hover {
+  transform: translateY(-8px);
+  border-color: #00f3ff !important;
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.35) !important;
+}
+.game-card.genetic-arena h2 { color: #00f3ff !important; }
+.game-card.genetic-arena .btn-launch {
+  background: linear-gradient(135deg, #00b4d8 0%, #00f3ff 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0, 243, 255, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-card.genetic-arena .btn-launch:hover {
+  background: linear-gradient(135deg, #00f3ff 0%, #38bdf8 100%) !important;
+  box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
   transform: translateY(-2px);
 }
 

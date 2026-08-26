@@ -15,6 +15,7 @@ antigravity-labs/
 ├── index.html   # Painel Dashboard Launcher (Central)
 ├── server.py    # Servidor Central Unificado em Python
 ├── ai/          # Projetos e modelos envolvendo Inteligência Artificial
+│   ├── aether_genetic_arena/ # Aether Genetic Arena - Laboratório de Neuroevolução & NEAT (Canvas 2D, Spatial Grid)
 │   └── neural_canvas/ # Aether Neural Canvas - Reconhecimento de desenhos em tempo real (TensorFlow.js)
 ├── backend/     # APIs, microsserviços e utilitários de servidor
 │   ├── aether_api_workbench/ # Aether API Workbench & Mock Server (FastAPI, SQLite, REST/WS Proxy, JSON Schema Mocks & Latency Analytics)
@@ -70,6 +71,7 @@ flowchart LR
     Tools --> MotionLab["🌌 Aether Motion Lab"]
     Tools --> CollabBoard["📐 Aether Collab Board"]
 
+    AI --> GeneticArena["🧬 Aether Genetic Arena"]
     AI --> NeuralCanvas["🎨 Aether Neural Canvas"]
 
     style Root fill:#4f46e5,stroke:#fff,stroke-width:2px,color:#fff
@@ -93,6 +95,7 @@ flowchart LR
     style AudioSynth fill:#ec4899,stroke:#fff,stroke-width:1px,color:#fff
     style MotionLab fill:#00f2fe,stroke:#fff,stroke-width:1px,color:#000
     style CollabBoard fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
+    style GeneticArena fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style NeuralCanvas fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
 ```
 
@@ -119,6 +122,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Genetic Arena 🧬** | [ai/aether_genetic_arena](./ai/aether_genetic_arena) | `Concluído` | Laboratório 2D de Neuroevolução e NEAT com topologia dinâmica, física determinística, visão por raycasting, 3 cenários (Coleta, Labirinto, Predador-Presa), HUD neural em tempo real e Modo Deus interativo. | HTML5, CSS3, JS, Web Audio API, Canvas 2D |
 | **Aether Neural Canvas 🎨** | [ai/neural_canvas](./ai/neural_canvas) | `Concluído` | Tela de desenho com IA local que classifica traços em tempo real via rede neural (DoodleNet), com modos Sandbox e Time Attack e sons sintetizados. | HTML5, CSS3, JS, TensorFlow.js, Python |
 
 ### Backend (APIs, Fila de Eventos e Microsserviços)
@@ -160,7 +164,7 @@ Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
-    *   **Inteligência Artificial (AI)**: Aether Neural Canvas.
+    *   **Inteligência Artificial (AI)**: Aether Genetic Arena e Aether Neural Canvas.
     *   **Backend**: Aether Event Hub & Task Queue.
 
 ---
