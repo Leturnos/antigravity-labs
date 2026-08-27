@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Raycaster 3D // Motor Pseudo-3D Cyberpunk</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="header-title">⚡ AETHER RAYCASTER 3D // CYBERPUNK 3D ⚡</div>
+
+  <div id="gameContainer" class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="control-bar">
+    <button id="btnPause" class="cyber-btn">⏸️ PAUSAR (ESC/P)</button>
+    <button id="btnRestart" class="cyber-btn cyber-btn-yellow">🔄 REINICIAR (R)</button>
+    <button id="btnFullscreen" class="cyber-btn cyber-btn-green">⛶ TELA CHEIA (F)</button>
+    <button id="muteBtn" class="cyber-btn">🔊 SOM ATIVO (M)</button>
+    <button id="btnHelp" class="cyber-btn">❓ GUIA & ITENS (H)</button>
+    <a href="../../index.html" class="cyber-btn cyber-btn-magenta">🏠 HUB PRINCIPAL</a>
+  </div>
+
+  <div class="instructions-panel">
+    <div><span>[W, A, S, D / SETAS]</span> MOVER & GIRAR</div>
+    <div><span>[MOUSE / ESPAÇO]</span> MIRAR & ATIRAR</div>
+    <div><span>[E]</span> ACESSAR PORTA CYBER</div>
+    <div><span>[ESC / P]</span> PAUSAR</div>
+    <div><span>[F]</span> TELA CHEIA</div>
+  </div>
+
+  <!-- Modal de Game Over -->
+  <div id="gameOverModal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>SINAL PERDIDO // MISSÃO ENCERRADA</h2>
+      <p>A integridade do seu avatar cibernético foi comprometida.</p>
+      
+      <div class="modal-stats-grid">
+        <div class="modal-stat-box">
+          <span>PONTUAÇÃO FINAL</span>
+          <strong id="finalScore">0</strong>
+        </div>
+        <div class="modal-stat-box">
+          <span>SETOR ALCANÇADO</span>
+          <strong id="finalSector">Setor 01</strong>
+        </div>
+      </div>
+
+      <div id="scoreFeedbackBox" class="modal-feedback-msg"></div>
+
+      <input type="text" id="playerName" placeholder="SEU CALLSIGN (3-10 CARACTERES)" maxlength="10">
+      <button id="submitScoreBtn" class="cyber-btn cyber-btn-green" style="width: 100%; margin-bottom: 10px;">🏆 ENVIAR AO PLACAR GLOBAL</button>
+      <button id="btnRestartFromOver" class="cyber-btn cyber-btn-yellow" style="width: 100%; margin-bottom: 10px;">🔄 JOGAR NOVAMENTE</button>
+      <a href="../../index.html" class="cyber-btn cyber-btn-magenta" style="width: 100%;">🏠 VOLTAR AO HUB</a>
+    </div>
+  </div>
+
+  <!-- Modal de Pausa -->
+  <div id="pauseModal" class="modal-overlay">
+    <div class="modal-card modal-cyan">
+      <h2>PAUSA TÁTICA // SISTEMA EM ESPERA</h2>
+      <p>Operação temporariamente suspensa.</p>
+
+      <div class="modal-stats-grid">
+        <div class="modal-stat-box">
+          <span>SETOR ATUAL</span>
+          <strong id="pauseSector">Setor 01</strong>
+        </div>
+        <div class="modal-stat-box">
+          <span>PONTOS ATUAIS</span>
+          <strong id="pauseScore">0</strong>
+        </div>
+        <div class="modal-stat-box">
+          <span>VIDA / ESCUDO</span>
+          <strong id="pauseHealth">100 / 50</strong>
+        </div>
+        <div class="modal-stat-box">
+          <span>MUNIÇÃO</span>
+          <strong id="pauseAmmo">50</strong>
+        </div>
+      </div>
+
+      <button id="btnResumeGame" class="cyber-btn cyber-btn-green" style="width: 100%; margin-bottom: 10px;">▶️ CONTINUAR MISSÃO (ESC)</button>
+      <button id="btnRestartFromPause" class="cyber-btn cyber-btn-yellow" style="width: 100%; margin-bottom: 10px;">🔄 REINICIAR SETOR (R)</button>
+      <button id="btnToggleSoundPause" class="cyber-btn" style="width: 100%; margin-bottom: 10px;">🔊 ALTERNAR SOM</button>
+      <button id="btnOpenHelpFromPause" class="cyber-btn" style="width: 100%; margin-bottom: 10px;">❓ GUIA DE ENTIDADES</button>
+      <a href="../../index.html" class="cyber-btn cyber-btn-magenta" style="width: 100%;">🏠 SAIR PARA O HUB</a>
+    </div>
+  </div>
+
+  <!-- Modal de Guia de Entidades e Itens -->
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-card modal-cyan" style="width: 520px;">
+      <h2>GUIA TÁTICO & IDENTIFICAÇÃO</h2>
+      <p>Identifique os alvos e recursos no labirinto:</p>
+
+      <div class="entity-guide-grid">
+        <div class="entity-card" style="border-color: #00e5ff;">
+          <div class="entity-card-title" style="color: #00e5ff;">🤖 DRONE SENTINELA</div>
+          <p>Unidade voadora ágil com disparos de plasma. Vida baixa (30 HP). Dropa pontos.</p>
+        </div>
+        <div class="entity-card" style="border-color: #ff1744;">
+          <div class="entity-card-title" style="color: #ff1744;">🦾 SENTINELA PESADO</div>
+          <p>Mecha blindado de combate com canhões duplos de laser. Alto dano e 80 HP.</p>
+        </div>
+        <div class="entity-card" style="border-color: #ffd600;">
+          <div class="entity-card-title" style="color: #ffd600;">⚡ CÉLULA DE MUNIÇÃO</div>
+          <p>Bateria energética amarela. Recupera +25 cargas para seu Blaster Laser.</p>
+        </div>
+        <div class="entity-card" style="border-color: #00e676;">
+          <div class="entity-card-title" style="color: #00e676;">✚ KIT NANO-MÉDICO</div>
+          <p>Recipiente verde com cruz médica. Regenera +30 pontos de integridade (HP).</p>
+        </div>
+        <div class="entity-card" style="border-color: #00e5ff;">
+          <div class="entity-card-title" style="color: #00e5ff;">🔑 CHAVE CYBER</div>
+          <p>Cartão de acesso holográfico. Permite desbloquear a porta trancada (tecla E).</p>
+        </div>
+        <div class="entity-card" style="border-color: #e040fb;">
+          <div class="entity-card-title" style="color: #e040fb;">⚡ NÚCLEO SOBRECARGA</div>
+          <p>Núcleo de plasma. Concede dano duplo e munição infinita durante 10 segundos!</p>
+        </div>
+      </div>
+
+      <div class="entity-card" style="border-color: #00e676; margin-bottom: 14px; text-align: left;">
+        <div class="entity-card-title" style="color: #00e676;">🌀 PORTAL DO ELEVADOR (BLOCO VERDE)</div>
+        <p>Alcance a sala final para avançar de setor (+1000 Pontos e +40 de Cura)!</p>
+      </div>
+
+      <button id="btnCloseHelp" class="cyber-btn cyber-btn-green" style="width: 100%;">ENTENDIDO // FECHAR GUIA</button>
+    </div>
+  </div>
+
+  <!-- Modal de Mensagem / Feedback -->
+  <div id="feedbackModal" class="modal-overlay">
+    <div class="modal-card modal-cyan">
+      <h2 id="feedbackModalTitle">AVISO DO SISTEMA</h2>
+      <p id="feedbackModalMsg">Mensagem do sistema.</p>
+      <button id="btnCloseFeedback" class="cyber-btn cyber-btn-green" style="width: 100%;">OK</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
