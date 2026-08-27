@@ -22,6 +22,7 @@ antigravity-labs/
 │   ├── aether_event_hub/ # Aether Event Hub & Task Queue - Fila de eventos e agendamento async (FastAPI, SQLite WAL, WebSockets)
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
+│   ├── aether_raycaster/ # Aether Raycaster 3D - Cyberpunk FPS pseudo-3D com raycasting DDA e áudio procedural synthwave
 │   ├── aether_cyber_slay/ # Aether Cyber Slay - Roguelike deckbuilder cyberpunk em turnos
 │   ├── aether_cyber_tactics/ # Aether Cyber Tactics - Jogo tático 2.5D isométrico cyberpunk
 │   ├── aether_rogue/ # Aether Rogue - Roguelike 2D procedural
@@ -54,6 +55,7 @@ flowchart LR
     Launcher --> AI["🤖 AI"]
     Launcher --> Backend["⚙️ Backend"]
 
+    Games --> Raycaster["🕶️ Aether Raycaster 3D"]
     Games --> CyberSlay["🃏 Aether Cyber Slay"]
     Games --> Rogue["🎮 Aether Rogue"]
     Games --> Tactics["🕹️ Aether Cyber Tactics"]
@@ -82,6 +84,7 @@ flowchart LR
     style Backend fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
+    style Raycaster fill:#00ffff,stroke:#fff,stroke-width:1px,color:#000
     style CyberSlay fill:#a855f7,stroke:#fff,stroke-width:1px,color:#fff
     style Rogue fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style Tactics fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
@@ -110,6 +113,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Raycaster 3D 🕶️** | [games/aether_raycaster](./games/aether_raycaster) | `Concluído` | Dungeon crawler pseudo-3D cyberpunk em primeira pessoa com raycasting DDA em Canvas 2D puro, mapas procedurais, portas deslizantes, drones com IA de linha de visão, áudio synthwave procedural e placar. | HTML5, CSS3, JS, Web Audio API, Python |
 | **Aether Cyber Slay 🃏** | [games/aether_cyber_slay](./games/aether_cyber_slay) | `Concluído` | Roguelike deckbuilder cyberpunk em turnos com gestão de RAM e Superaquecimento, mercado negro e combate contra Apex Neural Core. | HTML5, CSS3, JS, Web Audio API, Python |
 | **Aether Rogue 🎮** | [games/aether_rogue](./games/aether_rogue) | `Concluído` | Roguelike dungeon crawler 2D em turnos com geração procedual híbrida (BSP + Cavernas), raycasting FOV 360° com névoa de guerra, IA A*, habilidades Cyberware e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Cyber Tactics 🕹️** | [games/aether_cyber_tactics](./games/aether_cyber_tactics) | `Concluído` | Jogo tático 2.5D isométrico cyberpunk em turnos com esquadrão, elevação de terreno, ataques telegrafados e campanhas procedurais. | HTML5, CSS3, JS |
@@ -166,7 +170,7 @@ uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
 
 Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
-    *   **Jogos (Games)**: Aether Cyber Slay, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
+    *   **Jogos (Games)**: Aether Raycaster 3D, Aether Cyber Slay, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
     *   **Inteligência Artificial (AI)**: Aether Genetic Arena e Aether Neural Canvas.
     *   **Backend**: Aether Event Hub & Task Queue.
