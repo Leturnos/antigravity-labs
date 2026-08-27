@@ -36,6 +36,12 @@ DEFAULT_SCORES = {
         "pontuacao_maxima": 0,
         "maior_setor": 0,
     },
+    "aether_cyber_slay": {
+        "vitorias": 0,
+        "derrotas": 0,
+        "pontuacao_maxima": 0,
+        "maior_setor": 0,
+    },
 }
 
 NO_CACHE_HEADERS = {
@@ -186,6 +192,21 @@ async def post_score(game: str, request: Request):
             db["aether_cyber_tactics"]["maior_setor"] = sector
         _save_db(db)
         return {"success": True, "scores": db["aether_cyber_tactics"]}
+
+    if game == "aether_cyber_slay":
+        result = data.get("result")
+        score = data.get("score", 0)
+        sector = data.get("sector", 1)
+        if result == "win":
+            db["aether_cyber_slay"]["vitorias"] += 1
+        elif result == "loss":
+            db["aether_cyber_slay"]["derrotas"] += 1
+        if score > db["aether_cyber_slay"].get("pontuacao_maxima", 0):
+            db["aether_cyber_slay"]["pontuacao_maxima"] = score
+        if sector > db["aether_cyber_slay"].get("maior_setor", 0):
+            db["aether_cyber_slay"]["maior_setor"] = sector
+        _save_db(db)
+        return {"success": True, "scores": db["aether_cyber_slay"]}
 
     raise HTTPException(status_code=400, detail="Invalid or missing game query parameter.")
 

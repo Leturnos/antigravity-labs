@@ -86,9 +86,19 @@ async function loadStats() {
         `;
       }
 
+      // Render Cyber Slay stats
+      const cyberSlay = db.aether_cyber_slay || { vitorias: 0, derrotas: 0, pontuacao_maxima: 0, maior_setor: 0 };
+      const cyberSlayEl = document.getElementById('stats-cyber-slay-txt');
+      if (cyberSlayEl) {
+        cyberSlayEl.innerHTML = `
+          Vitórias: ${cyberSlay.vitorias || 0} | Maior Setor: ${cyberSlay.maior_setor || 1}<br>
+          Pontuação Máxima: ${(cyberSlay.pontuacao_maxima || 0).toLocaleString('pt-BR')} pts
+        `;
+      }
+
       // Global dashboard stats calculation
-      const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias + poker.cash.vitorias + poker.torneio.vitorias + (tactics.vitorias || 0);
-      const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas + poker.cash.derrotas + poker.torneio.derrotas + (tactics.derrotas || 0);
+      const totalWins = chess.vitorias + sweeper.vitorias + (tetrisClassico.vitorias || 0) + tictactoe.vitorias + poker.cash.vitorias + poker.torneio.vitorias + (tactics.vitorias || 0) + (cyberSlay.vitorias || 0);
+      const totalLosses = chess.derrotas + sweeper.derrotas + (tetrisClassico.derrotas || 0) + tictactoe.derrotas + poker.cash.derrotas + poker.torneio.derrotas + (tactics.derrotas || 0) + (cyberSlay.derrotas || 0);
       const totalGames = totalWins + totalLosses + chess.empates + tictactoe.empates + (snake.partidas_jogadas || 0);
       
       document.getElementById('dashboard-total-wins').textContent = totalWins;
@@ -118,6 +128,7 @@ document.getElementById('btn-reset-all').addEventListener('click', async () => {
     await fetch('/api/score?game=tictactoe', { method: 'DELETE' });
     await fetch('/api/score?game=poker', { method: 'DELETE' });
     await fetch('/api/score?game=aether_cyber_tactics', { method: 'DELETE' });
+    await fetch('/api/score?game=aether_cyber_slay', { method: 'DELETE' });
     loadStats();
   } catch (err) {
     console.error('Erro ao resetar scores.', err);

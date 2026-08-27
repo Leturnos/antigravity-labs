@@ -265,6 +265,36 @@ header p {
   transform: translateY(-2px);
 }
 
+.game-card.cyber-slay {
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-card.cyber-slay:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #a855f7;
+  box-shadow: 0 14px 35px rgba(168, 85, 247, 0.4);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(16, 16, 28, 0.8) 100%);
+}
+
+.game-card.cyber-slay .btn-launch {
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  color: #040408;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-card.cyber-slay .btn-launch:hover {
+  background: linear-gradient(135deg, #a855f7 0%, #e879f9 100%);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+  transform: translateY(-2px);
+}
+
+.game-card.cyber-slay h2 { color: #c084fc; }
+
 .game-card.snake:hover h2 { color: #34d399; } /* keep original color active on hover if desired, or let's see how it was: */
 .game-card.chess h2 { color: #c084fc; }
 .game-card.sweeper h2 { color: #f87171; }
