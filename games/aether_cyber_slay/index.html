@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Cyber Slay - Roguelike Deckbuilder Cyberpunk</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- FX Canvas Overlay for Lasers, Particles & Floating Text -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Top HUD Navigation & Player Status Bar -->
+    <header class="hud-top">
+        <div class="hud-left">
+            <div class="brand">⚡ AETHER <span class="accent">CYBER SLAY</span></div>
+            <div id="hud-sector-node" class="badge">SETOR 1 // ENTRADA</div>
+        </div>
+
+        <div class="hud-center">
+            <!-- Player HP Bar -->
+            <div class="stat-item" title="Integridade do Rig Neural">
+                <span>HP</span>
+                <span id="player-hp-text">60/60</span>
+                <div class="bar-track">
+                    <div id="player-hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div>
+                </div>
+                <span id="player-buffer-badge" class="buffer-badge" style="display: none;">🛡️ 0</span>
+            </div>
+
+            <!-- RAM Energy Display -->
+            <div class="stat-item" title="RAM Disponível (Energia por turno)">
+                <div class="ram-display">RAM <span id="player-ram-text">3/3</span></div>
+            </div>
+
+            <!-- Heat & Overclock Bar -->
+            <div class="stat-item" title="Calor de CPU (>50% Overclock, 100% Meltdown)">
+                <span>CALOR</span>
+                <span id="player-heat-text">0%</span>
+                <div class="bar-track">
+                    <div id="player-heat-bar" class="bar-fill heat-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Credits -->
+            <div class="stat-item" title="Créditos Cibernéticos">
+                <span id="player-credits-badge">💰 <span id="player-credits">50</span></span>
+            </div>
+
+            <!-- Active Relics -->
+            <div id="player-relics" class="relics-bar"></div>
+        </div>
+
+        <div class="hud-right">
+            <button id="btn-view-deck" class="pile-btn" title="Ver Baralho Principal">🎴 <span id="deck-count">10</span></button>
+            <button id="btn-view-discard" class="pile-btn" title="Ver Pilha de Descarte">🗑️ <span id="discard-count">0</span></button>
+            <button id="btn-sound-toggle" class="btn-hud" title="Alternar Efeitos Sonoros e Trilha">🔊 SOM (SFX)</button>
+            <button id="btn-map-toggle" class="btn-hud" title="Alternar Visualização do Mapa de Rede">🗺️ MAPA</button>
+            <button id="btn-help-toggle" class="btn-hud" title="Regras e Guia do Jogo">❓ REGRAS</button>
+            <button id="btn-restart-hud" class="btn-hud btn-danger" title="Reiniciar Invasão do Zero">🔄 NOVO JOGO</button>
+            <a href="../../index.html" id="btn-back-hub" class="btn-hud" title="Voltar ao Launcher Principal">🏠 INÍCIO</a>
+        </div>
+    </header>
+
+    <!-- Main Views Container -->
+    <main id="app-container">
+        <!-- 1. Combat View -->
+        <section id="combat-view" class="view-panel active">
+            <div class="arena" id="arena-container">
+                <!-- Player Rig Terminal -->
+                <div class="player-rig" id="player-rig">
+                    <div class="player-avatar">💻</div>
+                    <div class="rig-title">RIG NEURAL v2.4</div>
+                    <div id="player-statuses" class="status-container"></div>
+                </div>
+
+                <!-- Active Enemy Nodes -->
+                <div class="enemies-container" id="enemies-container"></div>
+            </div>
+
+            <!-- Hand of 3D Cards -->
+            <div class="hand-container" id="hand-container"></div>
+
+            <!-- End Turn Button -->
+            <button id="btn-end-turn" class="end-turn-btn">EXECUTAR CICLO ⯈</button>
+        </section>
+
+        <!-- 2. Network Map View -->
+        <section id="map-view" class="view-panel">
+            <div class="map-view-header">
+                <h2>MATRIZ DE ROTEAMENTO DE REDE</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Selecione um nó acessível para penetrar na sub-rotina do setor</p>
+                <div class="map-legend">
+                    <span class="legend-item"><span class="legend-icon">⚔️</span> Sub-rotina</span>
+                    <span class="legend-item"><span class="legend-icon">💀</span> Firewall Elite</span>
+                    <span class="legend-item"><span class="legend-icon">🛒</span> Mercado Negro</span>
+                    <span class="legend-item"><span class="legend-icon">⚡</span> Patch / Reparo</span>
+                    <span class="legend-item"><span class="legend-icon">❓</span> Evento</span>
+                    <span class="legend-item"><span class="legend-icon">👑</span> Núcleo IA Chefe</span>
+                </div>
+            </div>
+            <div id="network-map-container" class="network-map">
+                <!-- Dynamic SVG Bezier Connections Overlay -->
+                <svg id="network-map-svg" class="network-map-svg"></svg>
+                <div id="network-layers-wrapper" class="network-layers-wrapper"></div>
+            </div>
+        </section>
+
+        <!-- 3. Shop View -->
+        <section id="shop-view" class="view-panel">
+            <div class="shop-container">
+                <h2 style="color: var(--amber); text-shadow: 0 0 12px rgba(251, 191, 36, 0.4);">MERCADO NEGRO DE DADOS</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Compre softwares experimentais, módulos passivos e manutenção de hardware</p>
+                <div id="shop-cards" class="shop-grid"></div>
+                <div id="shop-services" class="shop-grid"></div>
+                <button id="btn-leave-shop" class="btn-primary">CONTINUAR ROTA ⯈</button>
+            </div>
+        </section>
+
+        <!-- 4. Rest / Patch Station View -->
+        <section id="rest-view" class="view-panel">
+            <div class="rest-container">
+                <h2 style="color: var(--cyan); text-shadow: 0 0 12px rgba(0, 240, 255, 0.4);">ESTAÇÃO DE REPARO & PATCH DE SISTEMA</h2>
+                <p style="color: var(--text-muted);">Escolha um protocolo de manutenção antes de avançar na rede</p>
+                <div class="rest-options-grid">
+                    <div class="rest-card" id="btn-rest-heal">
+                        <div class="rest-icon">⚡</div>
+                        <h3 style="color: var(--emerald); margin-bottom: 8px;">RESFRIAR & REPARAR</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Recupera 30% do HP Máximo (18 HP) e purga calor acumulado</p>
+                    </div>
+                    <div class="rest-card" id="btn-rest-upgrade">
+                        <div class="rest-icon">⚙️</div>
+                        <h3 style="color: var(--cyan); margin-bottom: 8px;">OTIMIZAR CÓDIGO</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Aprimora 1 carta permanentemente no seu baralho (Carta+)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Mystery Event View -->
+        <section id="event-view" class="view-panel">
+            <div class="event-container">
+                <div class="event-terminal">
+                    <h2 id="event-title" class="event-title">CACHE CRIPTOGRAFADO DETECTADO</h2>
+                    <div id="event-story" class="event-story">Você encontra um fragmento de memória de IA dormente no buffer do setor...</div>
+                    <div id="event-choices" class="event-choices"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Dialogs -->
+    <!-- Custom Cyber Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 480px;">
+            <h2 id="confirm-modal-title" class="modal-title" style="color: var(--amber);">CONFIRMAÇÃO DE PROTOCOLO</h2>
+            <p id="confirm-modal-message" style="color: var(--text-main); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.5;"></p>
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <button id="btn-confirm-yes" class="btn-primary">CONFIRMAR</button>
+                <button id="btn-confirm-no" class="btn-hud">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combat Reward Modal -->
+    <div id="reward-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="modal-title" style="color: var(--emerald);">SUB-ROTINA EXPURGADA // RECOMPENSAS</h2>
+            <p id="reward-credits-text" style="color: var(--amber); font-weight: bold; margin-bottom: 16px;">💰 +25 Créditos Cibernéticos Adquiridos</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Selecione 1 módulo de software para compilar no seu baralho:</p>
+            <div id="draft-cards-container" class="draft-grid"></div>
+            <button id="btn-skip-draft" class="btn-hud" style="margin-top: 16px;">PULAR ESCOLHA DE CARTA</button>
+        </div>
+    </div>
+
+    <!-- Upgrade Card Picker Modal -->
+    <div id="upgrade-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <h2 class="modal-title" style="color: var(--cyan);">ESCOLHA UMA CARTA PARA APRIMORAR</h2>
+            <div id="upgrade-cards-container" class="draft-grid"></div>
+            <button id="btn-close-upgrade-modal" class="btn-hud" style="margin-top: 16px;">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- Deck Inspector Modal -->
+    <div id="deck-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 840px;">
+            <h2 id="deck-modal-title" class="modal-title">BARALHO PRINCIPAL</h2>
+            <div id="master-deck-container" class="draft-grid"></div>
+            <button id="btn-close-deck-modal" class="btn-primary">FECHAR</button>
+        </div>
+    </div>
+
+    <!-- Help & Rules Modal -->
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: left; line-height: 1.6; max-width: 680px;">
+            <h2 class="modal-title" style="text-align: center; color: var(--cyan);">PROTOCOLOS DO CYBER SLAY</h2>
+            <div style="font-size: 0.88rem; color: var(--text-main); display: flex; flex-direction: column; gap: 14px;">
+                <p><strong style="color: var(--purple);">RAM & Cartas:</strong> Gaste RAM para executar softwares de combate. A RAM não utilizada reseta a cada início de turno.</p>
+                <p><strong style="color: var(--magenta);">Calor (Overheat) & Meltdown:</strong> Cartas de alto impacto geram Calor. Acima de <strong>50% de Calor</strong>, seu Rig entra em <em>Overclock</em> (ativando bônus em cartas como Supercondutor). Atingir <strong>100% de Calor</strong> causa um <em>Meltdown</em> catastrófico: sofre 6 de dano térmico direto, resfria para 40% e perde 1 RAM no turno seguinte!</p>
+                <p><strong style="color: var(--cyan);">Buffer (Escudo):</strong> Absorve dano recebido ponto a ponto antes do HP. Reseta no início do seu turno.</p>
+                <p><strong style="color: var(--magenta);">Malware (Vírus DoT):</strong> Dispara no início do turno do inimigo causando dano direto e reduzindo 1 carga por rodada.</p>
+                <p><strong style="color: var(--purple);">Exploit (Vulnerável):</strong> Ataques causam +50% de dano bônus contra alvos com Exploit ativo.</p>
+                <p><strong style="color: var(--amber);">Corrosão (Enfraquecido):</strong> Reduz o poder de ataque do inimigo em 25%.</p>
+                <p><strong style="color: var(--emerald);">Roteamento do Mapa:</strong> Escolha seu caminho pelo grafo de nós até o Núcleo IA Central Apex para vencer o setor!</p>
+            </div>
+            <div style="text-align: center; margin-top: 24px;">
+                <button id="btn-close-help" class="btn-primary">ENTENDIDO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="modal-title" style="color: var(--magenta);">FALHA NO SISTEMA // DERROTA</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Seu rig neural foi corrompido pelas sub-rotinas de segurança.</p>
+            <div id="game-over-stats" style="font-size: 0.95rem; margin-bottom: 20px; line-height: 1.8;"></div>
+            <button id="btn-restart-game" class="btn-primary">REINICIALIZAR RIG DO ZERO</button>
+        </div>
+    </div>
+
+    <!-- Sector Boss Victory Modal -->
+    <div id="victory-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="modal-title" style="color: var(--cyan);">SETOR CONQUISTADO // NÚCLEO APEX NEUTRALIZADO</h2>
+            <p style="color: #ffffff; margin-bottom: 20px;">Você quebrou o firewall do mainframe e extraiu o fluxo de dados central!</p>
+            <div id="victory-stats" style="font-size: 0.95rem; margin-bottom: 20px; line-height: 1.8;"></div>
+            <button id="btn-victory-next" class="btn-primary">AVANÇAR PARA O PRÓXIMO SETOR</button>
+        </div>
+    </div>
+
+    <!-- Main Game State Controller -->
+    <script type="module" src="js/core/game_state.js"></script>
+</body>
+</html>
