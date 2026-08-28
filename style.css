@@ -25,6 +25,8 @@
   --color-collab-board-glow: rgba(0, 243, 255, 0.3);
   --color-genetic-arena: #00f3ff;
   --color-genetic-arena-glow: rgba(0, 243, 255, 0.3);
+  --color-vision-sandbox: #00f3ff;
+  --color-vision-sandbox-glow: rgba(0, 243, 255, 0.3);
   --color-raycaster: #00ffff;
   --color-raycaster-glow: rgba(0, 255, 255, 0.3);
   
@@ -183,6 +185,7 @@ header p {
   box-shadow: 0 12px 30px var(--color-raycaster-glow);
 }
 
+
 .game-card .top-section {
   position: relative;
   z-index: 2;
@@ -328,9 +331,7 @@ header p {
   transform: translateY(-2px);
 }
 
-.game-card.cyber-slay h2 { color: #c084fc; }
-
-.game-card.snake:hover h2 { color: #34d399; } /* keep original color active on hover if desired, or let's see how it was: */
+.game-card.snake:hover h2 { color: #34d399; } /* keep original color active on hover if desired */
 .game-card.chess h2 { color: #c084fc; }
 .game-card.sweeper h2 { color: #f87171; }
 .game-card.tetris h2 { color: #38bdf8; }
@@ -339,6 +340,7 @@ header p {
 .game-card.poker h2 { color: #34d399; }
 .game-card.rogue h2 { color: #00f3ff; }
 .game-card.tactics h2 { color: #00f3ff; }
+.game-card.cyber-slay h2 { color: #c084fc; }
 .game-card.raycaster h2 { color: #00ffff; }
 .game-card.world-gen h2 { color: #818cf8; }
 .game-card.neural-canvas h2 { color: #a78bfa; }
@@ -534,6 +536,26 @@ header p {
   letter-spacing: 0.5px;
 }
 .game-card.genetic-arena .btn-launch:hover {
+  background: linear-gradient(135deg, #00f3ff 0%, #38bdf8 100%) !important;
+  box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
+  transform: translateY(-2px);
+}
+
+.game-card.vision-sandbox:hover {
+  transform: translateY(-8px);
+  border-color: #00f3ff !important;
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.35) !important;
+}
+.game-card.vision-sandbox h2 { color: #00f3ff !important; }
+.game-card.vision-sandbox .btn-launch {
+  background: linear-gradient(135deg, #00b4d8 0%, #00f3ff 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0, 243, 255, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-card.vision-sandbox .btn-launch:hover {
   background: linear-gradient(135deg, #00f3ff 0%, #38bdf8 100%) !important;
   box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
   transform: translateY(-2px);

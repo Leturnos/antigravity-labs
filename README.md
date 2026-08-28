@@ -15,16 +15,18 @@ antigravity-labs/
 ├── index.html   # Painel Dashboard Launcher (Central)
 ├── server.py    # Servidor Central Unificado em Python
 ├── ai/          # Projetos e modelos envolvendo Inteligência Artificial
+│   ├── aether_agent_matrix/ # Aether Agent Matrix - Arena de debates multi-agente com LLMs locais via WebGPU e CPU Worker (WebLLM, Transformers.js)
 │   ├── aether_genetic_arena/ # Aether Genetic Arena - Laboratório de Neuroevolução & NEAT (Canvas 2D, Spatial Grid)
+│   ├── aether_vision/ # Aether Vision Sandbox - Laboratório de Visão Computacional & Gestos em Tempo Real (MediaPipe, Web Audio API)
 │   └── neural_canvas/ # Aether Neural Canvas - Reconhecimento de desenhos em tempo real (TensorFlow.js)
 ├── backend/     # APIs, microsserviços e utilitários de servidor
 │   ├── aether_api_workbench/ # Aether API Workbench & Mock Server (FastAPI, SQLite, REST/WS Proxy, JSON Schema Mocks & Latency Analytics)
 │   ├── aether_event_hub/ # Aether Event Hub & Task Queue - Fila de eventos e agendamento async (FastAPI, SQLite WAL, WebSockets)
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
-│   ├── aether_raycaster/ # Aether Raycaster 3D - Cyberpunk FPS pseudo-3D com raycasting DDA e áudio procedural synthwave
 │   ├── aether_cyber_slay/ # Aether Cyber Slay - Roguelike deckbuilder cyberpunk em turnos
 │   ├── aether_cyber_tactics/ # Aether Cyber Tactics - Jogo tático 2.5D isométrico cyberpunk
+│   ├── aether_raycaster/ # Aether Raycaster 3D - Cyberpunk FPS pseudo-3D com raycasting DDA e áudio procedural synthwave
 │   ├── aether_rogue/ # Aether Rogue - Roguelike 2D procedural
 │   ├── chess/   # Aether Chess - Xadrez Premium com IA local
 │   ├── minesweeper/ # Aether-Sweeper - Campo Minado 8-Bit Retro Arcade
@@ -75,6 +77,7 @@ flowchart LR
     Tools --> MotionLab["🌌 Aether Motion Lab"]
     Tools --> CollabBoard["📐 Aether Collab Board"]
 
+    AI --> VisionSandbox["👁️ Aether Vision Sandbox"]
     AI --> GeneticArena["🧬 Aether Genetic Arena"]
     AI --> NeuralCanvas["🎨 Aether Neural Canvas"]
 
@@ -101,6 +104,7 @@ flowchart LR
     style AudioSynth fill:#ec4899,stroke:#fff,stroke-width:1px,color:#fff
     style MotionLab fill:#00f2fe,stroke:#fff,stroke-width:1px,color:#000
     style CollabBoard fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
+    style VisionSandbox fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style GeneticArena fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style NeuralCanvas fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
 ```
@@ -130,6 +134,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Vision Sandbox 👁️** | [ai/aether_vision](./ai/aether_vision) | `Concluído` | Laboratório de visão computacional e gestos em tempo real com MediaPipe Hands, sintetizador de áudio espacial Theremin, modo Arcade Fruit Cutter e depurador de landmarks. | HTML5, CSS3, JS, MediaPipe, Web Audio API, Canvas 2D |
 | **Aether Genetic Arena 🧬** | [ai/aether_genetic_arena](./ai/aether_genetic_arena) | `Concluído` | Laboratório 2D de Neuroevolução e NEAT com topologia dinâmica, física determinística, visão por raycasting, 3 cenários (Coleta, Labirinto, Predador-Presa), HUD neural em tempo real e Modo Deus interativo. | HTML5, CSS3, JS, Web Audio API, Canvas 2D |
 | **Aether Neural Canvas 🎨** | [ai/neural_canvas](./ai/neural_canvas) | `Concluído` | Tela de desenho com IA local que classifica traços em tempo real via rede neural (DoodleNet), com modos Sandbox e Time Attack e sons sintetizados. | HTML5, CSS3, JS, TensorFlow.js, Python |
 
@@ -170,9 +175,9 @@ uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
 
 Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
-    *   **Jogos (Games)**: Aether Raycaster 3D, Aether Cyber Slay, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
+    *   **Jogos (Games)**: Aether Raycaster 3D, Aether Cyber Slay, Aether Cyber Tactics, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
-    *   **Inteligência Artificial (AI)**: Aether Genetic Arena e Aether Neural Canvas.
+    *   **Inteligência Artificial (AI)**: Aether Vision Sandbox, Aether Genetic Arena e Aether Neural Canvas.
     *   **Backend**: Aether Event Hub & Task Queue.
 
 ---
