@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Agent Matrix — WebGPU Multi-Agent Debate Arena</title>
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260828">
+</head>
+<body>
+  <div class="matrix-app">
+    <!-- Top Navigation / Header -->
+    <header class="header-nav">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <img src="favicon.svg" alt="Aether Agent Matrix Icon">
+        </div>
+        <div class="brand-text">
+          <h1>AETHER AGENT MATRIX</h1>
+          <p>Multi-Agent Local LLM Debate Arena • WebGPU &amp; Wasm Worker</p>
+        </div>
+      </div>
+
+      <nav class="nav-actions">
+        <button id="btn-toggle-voice" class="btn-nav btn-voice" title="Ativar/Mutar Voz das IAs">
+          <span id="voice-icon">🔊</span> <span id="voice-label">Voz Ativa</span>
+        </button>
+        <button id="btn-model-select" class="btn-nav" title="Selecionar Modelo de IA">
+          <span>🧠</span> Modelo
+        </button>
+        <button id="btn-personas" class="btn-nav" title="Editor e Catálogo de Personas">
+          <span>🎭</span> Personas
+        </button>
+        <button id="btn-export" class="btn-nav" title="Exportar Transcrição e Relatório">
+          <span>💾</span> Exportar
+        </button>
+        <button id="btn-fullscreen" class="btn-nav" title="Modo Tela Cheia">
+          <span>⛶</span>
+        </button>
+        <a href="../../index.html" class="btn-nav btn-back" title="Voltar ao Dashboard">
+          <span>←</span> Dashboard
+        </a>
+      </nav>
+    </header>
+
+    <!-- Telemetry Performance HUD -->
+    <aside class="telemetry-hud" aria-label="Telemetria ao Vivo">
+      <div class="hud-item">
+        <span class="hud-label">Backend:</span>
+        <span id="hud-backend" class="badge-backend badge-webgpu" data-telemetry="backend">WebGPU</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Modelo:</span>
+        <span id="hud-model" class="hud-value highlight-cyan" data-telemetry="model">SmolLM2-360M-Instruct</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Velocidade:</span>
+        <span id="hud-tps" class="hud-value" data-telemetry="tokensPerSec">0.0 tok/s</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Latência Turno:</span>
+        <span id="hud-turn-time" class="hud-value" data-telemetry="turnTime">0 ms</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">VRAM / RAM:</span>
+        <span id="hud-vram" class="hud-value" data-telemetry="vram">-- MB</span>
+      </div>
+      <div class="hud-item">
+        <span id="hud-state" class="badge-state" data-telemetry="state">IDLE</span>
+      </div>
+      <div class="hud-item">
+        <span id="hud-round" class="badge-round" data-telemetry="round">Rodada 1 / 3</span>
+      </div>
+    </aside>
+
+    <!-- Main Arena Stage -->
+    <main class="arena-container">
+      <!-- Judge Stage Pod (Top Centered) -->
+      <section id="pod-judge" class="judge-stage-card" data-pod="judge">
+        <div class="judge-profile">
+          <div id="avatar-judge" class="judge-avatar" data-avatar="judge">⚖️</div>
+          <div class="judge-meta">
+            <h3 id="name-judge" data-name="judge">Lexis-9</h3>
+            <p id="role-judge" data-role="judge">O Juiz Analítico &amp; Árbitro</p>
+          </div>
+        </div>
+
+        <div id="bubble-judge" class="judge-speech-preview" data-bubble="judge">
+          Aguardando início do debate para iniciar a mediação e detecção de falácias.
+        </div>
+
+        <div id="status-judge" class="judge-status" data-status="judge">
+          Aguardando
+        </div>
+      </section>
+
+      <!-- 3-Column Arena Stage: Debater A | Timeline Feed | Debater B -->
+      <div class="arena-main-stage">
+        <!-- Debater A Pod (Left - Tese) -->
+        <article id="pod-debater-a" class="debater-pod pod-a" data-pod="debaterA">
+          <div class="debater-header">
+            <div id="avatar-debater-a" class="debater-avatar" data-avatar="debaterA">🤖</div>
+            <div class="debater-info">
+              <h2 id="name-debater-a" data-name="debaterA">Dr. Marcus Vance</h2>
+              <p id="role-debater-a" class="debater-role" data-role="debaterA">O Tecnocrata Utilitarista</p>
+            </div>
+          </div>
+
+          <div class="debater-status-bar">
+            <span id="status-debater-a" data-status="debaterA">Aguardando</span>
+            <span>Tese (A Favor)</span>
+          </div>
+
+          <div id="bubble-debater-a" class="debater-speech-bubble" data-bubble="debaterA">
+            Pronto para defender a tese com dados empíricos e eficiência pragmática.
+          </div>
+        </article>
+
+        <!-- Chronological Timeline Feed (Center) -->
+        <section class="timeline-card" aria-label="Histórico do Debate">
+          <div class="timeline-title">
+            <span>Transcrição Cronológica</span>
+            <span style="font-size: 0.75rem; color: var(--accent-purple);">Audit Feed</span>
+          </div>
+          <div id="timeline-feed" class="timeline-feed" data-timeline="feed">
+            <!-- Timeline entries rendered dynamically by ArenaView -->
+          </div>
+        </section>
+
+        <!-- Debater B Pod (Right - Antítese) -->
+        <article id="pod-debater-b" class="debater-pod pod-b" data-pod="debaterB">
+          <div class="debater-header">
+            <div id="avatar-debater-b" class="debater-avatar" data-avatar="debaterB">🌿</div>
+            <div class="debater-info">
+              <h2 id="name-debater-b" data-name="debaterB">Dra. Helena Rios</h2>
+              <p id="role-debater-b" class="debater-role" data-role="debaterB">A Humanista Deontológica</p>
+            </div>
+          </div>
+
+          <div class="debater-status-bar">
+            <span id="status-debater-b" data-status="debaterB">Aguardando</span>
+            <span>Antítese (Contra)</span>
+          </div>
+
+          <div id="bubble-debater-b" class="debater-speech-bubble" data-bubble="debaterB">
+            Pronta para defender os princípios éticos e a dignidade humana.
+          </div>
+        </article>
+      </div>
+
+      <!-- Audience Live Voting Bar -->
+      <section class="voting-bar-container" aria-label="Votação da Audiência">
+        <div class="voting-header">
+          <div class="vote-debater-label label-a">
+            <button id="btn-vote-a" class="vote-btn-quick btn-a" title="Votar no Debatedor A">+ Votar A</button>
+            <span id="vote-count-a" data-vote-count="debaterA">0</span> votos
+            (<span id="vote-pct-a" data-vote-pct="debaterA">50%</span>)
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Aprovação da Audiência</span>
+          <div class="vote-debater-label label-b">
+            (<span id="vote-pct-b" data-vote-pct="debaterB">50%</span>)
+            <span id="vote-count-b" data-vote-count="debaterB">0</span> votos
+            <button id="btn-vote-b" class="vote-btn-quick btn-b" title="Votar no Debatedor B">+ Votar B</button>
+          </div>
+        </div>
+        <div class="voting-progress-track">
+          <div id="vote-bar-a" class="vote-bar-segment bar-a" data-vote-bar="debaterA" style="width: 50%;"></div>
+          <div id="vote-bar-b" class="vote-bar-segment bar-b" data-vote-bar="debaterB" style="width: 50%;"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Moderation & Control Bar -->
+    <footer class="control-bar">
+      <!-- Topic Input & Presets -->
+      <div class="topic-row">
+        <div class="topic-input-wrap">
+          <input type="text" id="topic-input" class="topic-input" 
+                 placeholder="Digite o tema do debate..." 
+                 value="O avanço acelerado da Inteligência Artificial Geral (AGI) deve ser regulado e desacelerado por tratados globais?">
+        </div>
+      </div>
+
+      <!-- Preset Topic Chips -->
+      <div class="preset-topics">
+        <button class="preset-chip" data-topic="O avanço acelerado da Inteligência Artificial Geral (AGI) deve ser regulado e desacelerado por tratados globais?">
+          🤖 Regulação de AGI
+        </button>
+        <button class="preset-chip" data-topic="A automação integral do trabalho e substituição por IA exige a implementação de Renda Básica Universal?">
+          💼 Automação &amp; RBU
+        </button>
+        <button class="preset-chip" data-topic="O desenvolvimento de interfaces cérebro-computador e transumanismo deve ter limites bioéticos rígidos?">
+          🧠 Bioética &amp; Neuralink
+        </button>
+        <button class="preset-chip" data-topic="Modelos de IA de código aberto (Open Weights) oferecem mais democratização do que riscos de segurança?">
+          🔓 Open Source vs Riscos
+        </button>
+      </div>
+
+      <!-- Control Buttons & Actions -->
+      <div class="action-row">
+        <div class="primary-controls">
+          <button id="btn-start" class="btn-ctrl btn-primary" title="Iniciar Sessão de Debate">
+            <span>▶</span> Iniciar Debate
+          </button>
+          <button id="btn-pause" class="btn-ctrl btn-secondary" title="Pausar / Retomar Debate" disabled>
+            <span>⏸</span> Pausar
+          </button>
+          <button id="btn-next-turn" class="btn-ctrl btn-secondary" title="Avançar para o Próximo Turno Manualmente" disabled>
+            <span>⏭</span> Próximo Turno
+          </button>
+          <button id="btn-intervene" class="btn-ctrl btn-accent-pink" title="Injetar Pergunta da Audiência">
+            <span>💬</span> Intervir / Perguntar
+          </button>
+          <button id="btn-reset" class="btn-ctrl btn-secondary" title="Reiniciar Debate">
+            <span>🔄</span> Reiniciar
+          </button>
+        </div>
+
+        <div class="secondary-options">
+          <div class="speed-selector-wrap">
+            <span style="font-size: 0.78rem; color: var(--text-secondary); margin-right: 4px;">⚡ Turnos:</span>
+            <select id="select-turn-speed" class="select-turn-speed" title="Tamanho do discurso por turno">
+              <option value="micro" selected>⚡ Micro-Turnos (40-60 palavras / Ultra-Rápido ~5s)</option>
+              <option value="standard">⚖️ Padrão (70-90 palavras / ~15s)</option>
+              <option value="detailed">📜 Extenso (120+ palavras / ~40s)</option>
+            </select>
+          </div>
+          <label class="toggle-label">
+            <input type="checkbox" id="toggle-autoplay" checked>
+            <span>Reprodução Automática</span>
+          </label>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ==========================================================================
+         Modals
+         ========================================================================== -->
+
+    <!-- 1. Model Loading / Weight Download Modal -->
+    <div id="modal-model-loading" class="modal-overlay hidden" data-modal="model-loading" aria-hidden="true">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Carregando Modelo Local</h2>
+        </div>
+        <p id="model-loading-message" data-loading="message">Inicializando acelerador WebGPU e baixando pesos...</p>
+        <div class="loading-progress-container">
+          <div class="progress-track">
+            <div id="model-progress-bar" class="progress-fill" data-loading="progress-bar" style="width: 0%;"></div>
+          </div>
+          <div class="loading-stats-row">
+            <span>Progresso:</span>
+            <span id="model-progress-text" data-loading="progress-text">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Model Selector Modal -->
+    <div id="modal-model-select" class="modal-overlay hidden" data-modal="model-select" aria-hidden="true">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Selecione o Modelo Local</h2>
+          <button id="btn-close-model-select" class="modal-close-btn">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Os modelos rodam 100% no seu navegador via WebGPU / Web Worker sem enviar dados para a rede.
+        </p>
+        <div id="model-catalog-list" class="model-catalog-grid">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Persona Builder & Archetype Modal -->
+    <div id="modal-personas" class="modal-overlay hidden" data-modal="personas" aria-hidden="true">
+      <div class="modal-box" style="max-width: 680px;">
+        <div class="modal-header">
+          <h2>Editor de Personas &amp; Debatedores</h2>
+          <button id="btn-close-personas" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="form-group">
+          <label for="persona-target-slot">Atribuir ao Slot:</label>
+          <select id="persona-target-slot" class="form-control">
+            <option value="debaterA">Debatedor A (Tese / A Favor)</option>
+            <option value="debaterB">Debatedor B (Antítese / Contra)</option>
+            <option value="judge">Juiz &amp; Árbitro Neutro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="persona-preset-select">Arquétipos Rápidos:</label>
+          <select id="persona-preset-select" class="form-control">
+            <option value="">-- Selecione um arquétipo predefinido --</option>
+            <option value="utilitarian">Dr. Marcus Vance (Tecnocrata Utilitarista)</option>
+            <option value="deontological">Dra. Helena Rios (Humanista Deontológica)</option>
+            <option value="skeptic">Prof. Alexandre Thorne (Cético Metódico)</option>
+            <option value="analytical_judge">Lexis-9 (Juiz Analítico)</option>
+            <option value="futurist">Astraea Nova (Futurista Pós-Humanista)</option>
+            <option value="environmentalist">Kai Veridiano (Bio-Preservacionista)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="persona-custom-name">Nome do Agente:</label>
+          <input type="text" id="persona-custom-name" class="form-control" placeholder="Ex: Dr. Marcus Vance">
+        </div>
+        <div class="form-group">
+          <label for="persona-custom-role">Título / Papel:</label>
+          <input type="text" id="persona-custom-role" class="form-control" placeholder="Ex: O Tecnocrata Utilitarista">
+        </div>
+        <div class="form-group">
+          <label for="persona-custom-prompt">Prompt do Sistema (Instruções de Raciocínio):</label>
+          <textarea id="persona-custom-prompt" class="form-control" rows="3" placeholder="Defina a personalidade, tom e viés do debatedor..."></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="btn-save-persona" class="btn-ctrl btn-primary">Salvar &amp; Aplicar Persona</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Audience Intervention Modal -->
+    <div id="modal-intervene" class="modal-overlay hidden" data-modal="intervene" aria-hidden="true">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Intervenção da Audiência</h2>
+          <button id="btn-close-intervene" class="modal-close-btn">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Faça uma pergunta desafiadora ou aponte uma contradição para um dos debatedores responder na próxima rodada.
+        </p>
+        <div class="form-group">
+          <label for="intervene-target">Direcionar pergunta para:</label>
+          <select id="intervene-target" class="form-control">
+            <option value="debaterB">Debatedor B (Dra. Helena Rios)</option>
+            <option value="debaterA">Debatedor A (Dr. Marcus Vance)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="intervene-question">Pergunta ou Contestação:</label>
+          <textarea id="intervene-question" class="form-control" placeholder="Ex: Como sua proposta lida com os impactos nos trabalhadores mais vulneráveis?"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="btn-submit-intervene" class="btn-ctrl btn-accent-pink">Injetar no Debate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Final Verdict & Scoring Modal -->
+    <div id="modal-verdict" class="modal-overlay hidden" data-modal="verdict" aria-hidden="true">
+      <div class="modal-box" style="max-width: 640px;">
+        <div class="modal-header">
+          <h2>Veredito Final do Juiz Lexis-9</h2>
+          <button id="btn-close-verdict" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="verdict-banner">
+          <h3>Vencedor Declarado</h3>
+          <div id="verdict-winner" class="verdict-winner-name" data-verdict="winner">--</div>
+        </div>
+        <div class="verdict-scores-grid">
+          <div class="verdict-score-card card-a">
+            <h4>Debatedor A</h4>
+            <div id="verdict-score-a" class="score-val" data-verdict="scoreA" style="color: var(--accent-cyan);">--/100</div>
+          </div>
+          <div class="verdict-score-card card-b">
+            <h4>Debatedor B</h4>
+            <div id="verdict-score-b" class="score-val" data-verdict="scoreB" style="color: var(--accent-pink);">--/100</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Fundamentação e Análise Retórica:</label>
+          <div id="verdict-content" class="verdict-reasoning" data-verdict="content"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <button id="btn-verdict-export-md" class="btn-ctrl btn-secondary">Exportar (.MD)</button>
+          <button id="btn-verdict-export-json" class="btn-ctrl btn-secondary">Exportar (.JSON)</button>
+          <button id="btn-verdict-new-debate" class="btn-ctrl btn-primary">Novo Debate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Export Modal -->
+    <div id="modal-export" class="modal-overlay hidden" data-modal="export" aria-hidden="true">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Exportar Sessão de Debate</h2>
+          <button id="btn-close-export" class="modal-close-btn">&times;</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Baixe o relatório completo estruturado com histórico de falas, telemetria e pontuações do juiz.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="btn-export-md" class="btn-ctrl btn-secondary" style="justify-content: center;">
+            📄 Baixar Relatório Formatado em Markdown (.md)
+          </button>
+          <button id="btn-export-json" class="btn-ctrl btn-secondary" style="justify-content: center;">
+            💾 Baixar Dados Estruturados em JSON (.json)
+          </button>
+          <button id="btn-copy-transcript" class="btn-ctrl btn-primary" style="justify-content: center;">
+            📋 Copiar Transcrição para Área de Transferência
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Custom Glassmorphism Alert / Error Modal -->
+    <div id="modal-alert" class="modal-overlay hidden" data-modal="alert" aria-hidden="true">
+      <div class="modal-box modal-alert-box">
+        <div class="modal-header">
+          <div class="alert-icon-title-row">
+            <span id="modal-alert-icon" class="modal-alert-icon">⚠️</span>
+            <h2 id="modal-alert-title">Aviso do Sistema</h2>
+          </div>
+          <button id="btn-close-alert" class="modal-close-btn">&times;</button>
+        </div>
+        <p id="modal-alert-message" class="modal-alert-message">Mensagem de alerta do sistema.</p>
+        <div id="modal-alert-details-container" class="modal-alert-details hidden">
+          <label>Detalhes Técnicos:</label>
+          <pre id="modal-alert-details" class="modal-alert-code"></pre>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button id="btn-alert-ok" class="btn-ctrl btn-primary">Entendido</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Custom Confirmation Modal -->
+    <div id="modal-confirm" class="modal-overlay hidden" data-modal="confirm" aria-hidden="true">
+      <div class="modal-box modal-confirm-box">
+        <div class="modal-header">
+          <div class="alert-icon-title-row">
+            <span class="modal-alert-icon">❓</span>
+            <h2 id="modal-confirm-title">Confirmar Ação</h2>
+          </div>
+          <button id="btn-close-confirm" class="modal-close-btn">&times;</button>
+        </div>
+        <p id="modal-confirm-message" class="modal-alert-message">Tem certeza que deseja prosseguir?</p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button id="btn-confirm-cancel" class="btn-ctrl btn-secondary">Cancelar</button>
+          <button id="btn-confirm-ok" class="btn-ctrl btn-primary">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Toast Notifications Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  </div>
+
+  <!-- Main ES Module Application Script -->
+  <script type="module" src="js/app.js?v=20260828c"></script>
+</body>
+</html>
