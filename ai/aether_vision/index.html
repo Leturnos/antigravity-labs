@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Vision Sandbox — Síntese Espacial & Gestos Neurais</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- MediaPipe Hands & Camera Utils CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- App Header Navbar -->
+    <header class="app-header">
+        <div class="brand-section">
+            <h1 class="brand-title">
+                👁️ Aether <span class="accent">Vision Sandbox</span>
+            </h1>
+            <span class="brand-badge">Visão Computacional & Áudio Espacial</span>
+        </div>
+
+        <div class="header-controls">
+            <!-- Camera Stream Toggle -->
+            <button id="btn-toggle-camera" class="btn-action" title="Ligar ou desligar feed da câmera (Tecla C)">
+                📷 Câmera
+            </button>
+
+            <!-- Audio Output Mute Toggle -->
+            <button id="btn-toggle-mute" class="btn-action" title="Mutar ou desmutar sintetizador Web Audio (Tecla M)">
+                🔊 Áudio
+            </button>
+
+            <!-- Horizontal Mirror Flip -->
+            <button id="btn-toggle-mirror" class="btn-action active" title="Inverter espelhamento horizontal (Tecla F)">
+                🪞 Espelho (Ativo)
+            </button>
+
+            <!-- Back to Launcher Central Hub -->
+            <a href="../../index.html?view=view-ai" class="btn-action btn-back-hub" title="Voltar ao Painel Central Antigravity Labs">
+                ← Início
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+        <!-- Center/Left Viewport Stage -->
+        <section class="viewport-panel">
+            <div class="canvas-container">
+                <!-- Webcam Video Capture Element (Internal stream source) -->
+                <video id="webcam-video" playsinline autoplay muted></video>
+
+                <!-- Holographic Vision Canvas Overlay -->
+                <canvas id="vision-canvas" width="1280" height="720"></canvas>
+
+                <!-- Floating Canvas HUD Telemetry Overlay -->
+                <div class="hud-layer">
+                    <div class="hud-group">
+                        <span id="hud-status-badge" class="hud-status-badge">Standby</span>
+                        <span id="hud-mode-badge" class="hud-mode-badge">THEREMIN</span>
+                        <span class="hud-pill">FPS: <span id="hud-fps-val" class="val">-- FPS</span></span>
+                        <span class="hud-pill">Latência: <span id="hud-latency-val" class="val">-- ms</span></span>
+                    </div>
+                    <div class="hud-group">
+                        <span class="hud-pill">Mãos: <span id="hud-hands-val" class="val">0 detectadas</span></span>
+                        <span class="hud-pill">Confiança: <span id="hud-confidence-val" class="val">--%</span></span>
+                        <span class="hud-pill">Esq: <span id="hud-gesture-left" class="val">NONE</span></span>
+                        <span class="hud-pill">Dir: <span id="hud-gesture-right" class="val">NONE</span></span>
+                    </div>
+                </div>
+
+                <!-- Splash Screen / Permissions Overlay -->
+                <div id="splash-screen" class="splash-screen">
+                    <div class="splash-icon">🖐️✨</div>
+                    <h2 class="splash-title">Aether <span>Vision Sandbox</span></h2>
+                    <p class="splash-desc">
+                        Experimente controle gestual em tempo real: toque instrumentos virtuais com o <strong>Air Theremin</strong>, 
+                        desafie seus reflexos no <strong>Gesture Arcade</strong> ou inspecione a biomecânica das mãos com o <strong>Vision Debugger</strong>.
+                    </p>
+                    <button id="btn-start-camera" class="btn-start-camera">
+                        ⚡ Iniciar Visão Espacial
+                    </button>
+                    <div class="splash-tips">
+                        <span class="tip-item">📷 Requer acesso à webcam</span>
+                        <span class="tip-item">💡 Ilumine bem as mãos</span>
+                        <span class="tip-item">⚡ 100% processado no navegador</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Control Panel & Telemetry Sidebar -->
+        <aside class="sidebar">
+            <!-- 1. Mode Navigation Switcher -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🎮 Modos de Experiência</div>
+                </div>
+                <div class="mode-nav">
+                    <button class="mode-btn active" data-mode="theremin" id="btn-mode-theremin" title="Teclado / Síntese Espacial (Tecla 1)">
+                        <span class="mode-icon">🎵</span>
+                        <span>Theremin</span>
+                    </button>
+                    <button class="mode-btn" data-mode="arcade" id="btn-mode-arcade" title="Minijogos Arcade (Tecla 2)">
+                        <span class="mode-icon">🕹️</span>
+                        <span>Arcade</span>
+                    </button>
+                    <button class="mode-btn" data-mode="debugger" id="btn-mode-debugger" title="Diagnóstico e Biomecânica (Tecla 3)">
+                        <span class="mode-icon">🔬</span>
+                        <span>Debugger</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Mode Contextual Panel: Air Theremin -->
+            <div id="panel-theremin" class="card mode-panel active">
+                <div class="card-header">
+                    <div class="card-title">🎵 Parâmetros do Air Theremin</div>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Escala Musical:</span>
+                    <select id="scale-select" class="custom-select">
+                        <option value="pentatonic_major">Pentatônica Maior</option>
+                        <option value="pentatonic_minor">Pentatônica Menor</option>
+                        <option value="blues">Blues</option>
+                        <option value="major">Diatônica Maior</option>
+                        <option value="natural_minor">Menor Natural</option>
+                        <option value="dorian">Dórico</option>
+                        <option value="hirajoshi">Hirajoshi (Japonesa)</option>
+                        <option value="chromatic">Cromática</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Oitava Base:</span>
+                    <select id="octave-select" class="custom-select">
+                        <option value="2">Oitava 2 (Grave / Bass)</option>
+                        <option value="3" selected>Oitava 3 (Médio / Tenor)</option>
+                        <option value="4">Oitava 4 (Agudo / Lead)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Forma de Onda:</span>
+                    <select id="waveform-select" class="custom-select">
+                        <option value="sine">Senoidal (Pura / Flauta)</option>
+                        <option value="triangle">Triangular (Theremin Clássico)</option>
+                        <option value="sawtooth">Dente de Serra (Sintetizador)</option>
+                        <option value="square">Quadrada (Retro / Chiptune)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Quantização:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-quantize" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Mão das Notas:</span>
+                    <select id="lead-hand-select" class="custom-select">
+                        <option value="auto" selected>Auto (1 Mão / Destro)</option>
+                        <option value="right">Mão Direita</option>
+                        <option value="left">Mão Esquerda (Canhoto)</option>
+                    </select>
+                </div>
+
+                <div class="stat-row" style="margin-top: 10px;">
+                    <span class="stat-label">Nota Atual</span>
+                    <span id="hud-note-val" class="stat-value highlight">--</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Frequência</span>
+                    <span id="hud-freq-val" class="stat-value">-- Hz</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Escala Ativa</span>
+                    <span id="hud-scale-val" class="stat-value">PENTATONIC_MAJOR</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Filtro Cutoff (Esq Y)</span>
+                    <span id="hud-filter-val" class="stat-value">2.5 kHz</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Volume VCA (Dir Y)</span>
+                    <span id="hud-volume-val" class="stat-value">0%</span>
+                </div>
+
+                <div class="btn-grid-2">
+                    <button id="btn-toggle-grid" class="btn-action">
+                        🎼 Alternar Grade
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Mode Contextual Panel: Gesture Arcade -->
+            <div id="panel-arcade" class="card mode-panel">
+                <div class="card-header">
+                    <div class="card-title">🕹️ Gesture Arcade Minigames</div>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Minijogo:</span>
+                    <select id="arcade-submode-select" class="custom-select">
+                        <option value="deflect">Air Deflect (Cyber Pong)</option>
+                        <option value="slice">Particle Slash (Cyber Blade)</option>
+                    </select>
+                </div>
+
+                <div class="stat-row" style="margin-top: 10px;">
+                    <span class="stat-label">Pontuação</span>
+                    <span id="hud-score-val" class="stat-value highlight">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Combo Atual</span>
+                    <span id="hud-combo-val" class="stat-value accent">0x</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Multiplicador</span>
+                    <span id="hud-multiplier-val" class="stat-value gold">x1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Recorde (High Score)</span>
+                    <span id="hud-highscore-val" class="stat-value">0</span>
+                </div>
+
+                <div class="btn-grid-2">
+                    <button id="btn-reset-score" class="btn-action">
+                        🔄 Reiniciar Jogo
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Mode Contextual Panel: Vision Debugger -->
+            <div id="panel-debugger" class="card mode-panel">
+                <div class="card-header">
+                    <div class="card-title">🔬 Diagnóstico & Overlays</div>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Esqueleto da Mão:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-skeleton" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Índices dos Landmarks (0-20):</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-indices">
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Ângulos Articulares (PIP/DIP):</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-angles" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Linhas de Medição (Pinch/Span):</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-distances" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">Bounding Box Sci-Fi:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-bbox" checked>
+                        <span class="slider-round"></span>
+                    </label>
+                </div>
+                <div class="form-row" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 6px;">
+                    <span class="form-label">Suavização EMA (Alpha): <span id="smoothing-val" class="stat-value">0.60</span></span>
+                    <div class="range-slider-container">
+                        <input type="range" id="smoothing-slider" min="5" max="100" value="60" class="range-slider">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. General Master Volume Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🎚️ Volume Master</div>
+                </div>
+                <div class="range-slider-container">
+                    <span style="font-size: 0.9rem;">🔈</span>
+                    <input type="range" id="volume-slider" min="0" max="100" value="70" class="range-slider">
+                    <span style="font-size: 0.9rem;">🔊</span>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Toast Notification Overlay -->
+    <div id="aether-toast" class="aether-toast">
+        <span id="toast-icon">✨</span>
+        <span id="toast-message">Sistema Aether Vision Inicializado</span>
+    </div>
+
+    <!-- ES6 Orchestrator Application Script -->
+    <script type="module" src="js/app.js?v=2"></script>
+</body>
+</html>
