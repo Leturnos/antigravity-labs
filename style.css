@@ -184,6 +184,11 @@ header p {
   border-color: var(--color-raycaster);
   box-shadow: 0 12px 30px var(--color-raycaster-glow);
 }
+.game-card.agent-matrix:hover {
+  transform: translateY(-8px);
+  border-color: #00f3ff;
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.35);
+}
 
 
 .game-card .top-section {
@@ -556,6 +561,36 @@ header p {
   letter-spacing: 0.5px;
 }
 .game-card.vision-sandbox .btn-launch:hover {
+  background: linear-gradient(135deg, #00f3ff 0%, #38bdf8 100%) !important;
+  box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
+  transform: translateY(-2px);
+}
+
+.game-card.agent-matrix {
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 243, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-card.agent-matrix:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #00f3ff !important;
+  box-shadow: 0 14px 35px rgba(0, 243, 255, 0.4) !important;
+  background: linear-gradient(180deg, rgba(0, 243, 255, 0.08) 0%, rgba(16, 16, 28, 0.8) 100%);
+}
+
+.game-card.agent-matrix h2 { color: #00f3ff !important; }
+
+.game-card.agent-matrix .btn-launch {
+  background: linear-gradient(135deg, #00b4d8 0%, #00f3ff 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0, 243, 255, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-card.agent-matrix .btn-launch:hover {
   background: linear-gradient(135deg, #00f3ff 0%, #38bdf8 100%) !important;
   box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
   transform: translateY(-2px);
