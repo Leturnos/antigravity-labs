@@ -13,24 +13,30 @@ router = APIRouter(prefix="/api/collab-board", tags=["Aether Collab Board"])
 ws_manager = RoomConnectionManager()
 
 DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), "collab_board.db")
+_db_initialized = False
 
-@router.on_event("startup")
-async def startup_event():
-    await init_board_db(DEFAULT_DB_PATH)
+async def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        await init_board_db(DEFAULT_DB_PATH)
+        _db_initialized = True
 
 @router.get("/boards")
 async def list_boards():
+    await ensure_db_initialized()
     board = await get_or_create_board(DEFAULT_DB_PATH, "default", "Quadro Principal")
     return [board]
 
 @router.get("/boards/{board_id}")
 async def get_board(board_id: str):
+    await ensure_db_initialized()
     board = await get_or_create_board(DEFAULT_DB_PATH, board_id)
     state = await get_board_state(DEFAULT_DB_PATH, board_id)
     return {"board": board, **state}
 
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    await ensure_db_initialized()
     await ws_manager.connect(websocket, room_id)
     try:
         while True:

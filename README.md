@@ -38,7 +38,7 @@ antigravity-labs/
     ├── aether_collab_board/ # Aether Collab Board - Canvas infinito para diagramação e quadros interativos (Mermaid.js, WebSockets)
     ├── aether_motion_lab/ # Aether Motion Lab - Laboratório de arte gerativa e partículas em tempo real (TypedArrays Engine)
     ├── aether_synth/ # Aether Audio Synth - Estúdio de Síntese Modular (FM/AM), Gerador 8-Bit sfxr, Tracker, FX & Performance
-    └── world_generation/ # Gerador Procedural de Mundos (Fase 6: Visualização 3D)
+    └── world_generation/ # Aether World Generator - Gerador procedural de mundos 2D e 3D (Three.js)
 ```
 
 Abaixo está a visualização geral do repositório para novos projetos:
@@ -58,21 +58,21 @@ flowchart LR
     Launcher --> Backend["⚙️ Backend"]
 
     Games --> Raycaster["🕶️ Aether Raycaster 3D"]
-    Games --> CyberSlay["🃏 Aether Cyber Slay"]
-    Games --> Rogue["🎮 Aether Rogue"]
+    Games --> CyberSlay["🎴 Aether Cyber Slay"]
+    Games --> Rogue["🗡️ Aether Rogue"]
     Games --> Tactics["🕹️ Aether Cyber Tactics"]
     Games --> Chess["♟️ Aether Chess"]
     Games --> Sweeper["💣 Aether-Sweeper"]
-    Games --> Poker["♦️ Aether Poker"]
+    Games --> Poker["🃏 Aether Poker"]
     Games --> Snake["🐍 Aether Snake"]
-    Games --> Tetris["🌌 Aether Tetris"]
+    Games --> Tetris["🧱 Aether Tetris"]
     Games --> TicTacToe["❌ Aether Tic-Tac-Toe"]
 
-    Backend --> EventHub["⚙️ Aether Event Hub"]
-    Backend --> APIWorkbench["🛠️ Aether API Workbench"]
+    Backend --> EventHub["📡 Aether Event Hub"]
+    Backend --> APIWorkbench["🔌 Aether API Workbench"]
     Backend --> LibraryAPI["📚 Library API"]
     
-    Tools --> WorldGen["🗺️ World Generator"]
+    Tools --> WorldGen["🛸 Aether World Generator"]
     Tools --> AudioSynth["🎹 Aether Audio Synth"]
     Tools --> MotionLab["🌌 Aether Motion Lab"]
     Tools --> CollabBoard["📐 Aether Collab Board"]
@@ -120,13 +120,13 @@ flowchart LR
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
 | **Aether Raycaster 3D 🕶️** | [games/aether_raycaster](./games/aether_raycaster) | `Concluído` | Dungeon crawler pseudo-3D cyberpunk em primeira pessoa com raycasting DDA em Canvas 2D puro, mapas procedurais, portas deslizantes, drones com IA de linha de visão, áudio synthwave procedural e placar. | HTML5, CSS3, JS, Web Audio API, Python |
-| **Aether Cyber Slay 🃏** | [games/aether_cyber_slay](./games/aether_cyber_slay) | `Concluído` | Roguelike deckbuilder cyberpunk em turnos com gestão de RAM e Superaquecimento, mercado negro e combate contra Apex Neural Core. | HTML5, CSS3, JS, Web Audio API, Python |
-| **Aether Rogue 🎮** | [games/aether_rogue](./games/aether_rogue) | `Concluído` | Roguelike dungeon crawler 2D em turnos com geração procedual híbrida (BSP + Cavernas), raycasting FOV 360° com névoa de guerra, IA A*, habilidades Cyberware e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
+| **Aether Cyber Slay 🎴** | [games/aether_cyber_slay](./games/aether_cyber_slay) | `Concluído` | Roguelike deckbuilder cyberpunk em turnos com gestão de RAM e Superaquecimento, mercado negro e combate contra Apex Neural Core. | HTML5, CSS3, JS, Web Audio API, Python |
+| **Aether Rogue 🗡️** | [games/aether_rogue](./games/aether_rogue) | `Concluído` | Roguelike dungeon crawler 2D em turnos com geração procedual híbrida (BSP + Cavernas), raycasting FOV 360° com névoa de guerra, IA A*, habilidades Cyberware e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 | **Aether Cyber Tactics 🕹️** | [games/aether_cyber_tactics](./games/aether_cyber_tactics) | `Concluído` | Jogo tático 2.5D isométrico cyberpunk em turnos com esquadrão, elevação de terreno, ataques telegrafados e campanhas procedurais. | HTML5, CSS3, JS |
 | **Aether Chess ♟️** | [games/chess](./games/chess) | `Concluído` | Xadrez premium contra IA minimax local, glassmorphism, áudio sintetizado offline e suporte a temas. | HTML5, CSS3, JS, Python |
 | **Aether-Sweeper 💣** | [games/minesweeper](./games/minesweeper) | `Concluído` | Campo Minado com estética 8-bit retro arcade, primeiro clique seguro, chording, rumbles de explosão, confetes e som sintetizado offline. | HTML5, CSS3, JS, Python |
-| **Aether Tetris 🌌** | [games/tetris](./games/tetris) | `Concluído` | Jogo de Tetris premium inspirado no design da Linear.app. Conta com 3 modos (Clássico, Contrarrelógio e Zen), seleção de níveis e áudio chiptune sintetizado offline. | HTML5, CSS3, JS, Python |
-| **Aether Poker ♦️** | [games/poker](./games/poker) | `Concluído` | Jogo de Texas Hold'em premium com bots de perfis psicológicos (shark, fish, caller), side pots robustos e áudio sintetizado. | HTML5, CSS3, JS, Python |
+| **Aether Tetris 🧱** | [games/tetris](./games/tetris) | `Concluído` | Jogo de Tetris premium inspirado no design da Linear.app. Conta com 3 modos (Clássico, Contrarrelógio e Zen), seleção de níveis e áudio chiptune sintetizado offline. | HTML5, CSS3, JS, Python |
+| **Aether Poker 🃏** | [games/poker](./games/poker) | `Concluído` | Jogo de Texas Hold'em premium com bots de perfis psicológicos (shark, fish, caller), side pots robustos e áudio sintetizado. | HTML5, CSS3, JS, Python |
 | **Aether Snake 🐍** | [games/snake](./games/snake) | `Concluído` | Jogo da cobrinha com IA de busca de caminho (BFS + segurança e desvio de cauda) ou manual. | HTML5, CSS3, JS, Python |
 | **Aether Tic-Tac-Toe ❌** | [games/tictactoe](./games/tictactoe) | `Concluído` | Jogo da velha com IA Minimax e Poda Alpha-Beta, modo PvP local, simulação e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
 
@@ -145,8 +145,8 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
-| **Aether Event Hub ⚙️** | [backend/aether_event_hub](./backend/aether_event_hub) | `Concluído` | Sistema leve de agendamento de tarefas e fila de eventos distribuídos em background com monitoramento visual em tempo real via WebSockets, SQLite WAL e FastAPI. | Python, FastAPI, aiosqlite, WebSockets, HTML5, CSS3, JS |
-| **Aether API Workbench 🛠️** | [backend/aether_api_workbench](./backend/aether_api_workbench) | `Concluído` | Suíte completa de testes HTTP/REST, SSE e WebSocket em tempo real, gerador dinâmico de Mock Server com JSON Schema e análise gráfica de latência RTT. | Python, FastAPI, SQLite, HTML5, CSS3, JS |
+| **Aether Event Hub 📡** | [backend/aether_event_hub](./backend/aether_event_hub) | `Concluído` | Sistema leve de agendamento de tarefas e fila de eventos distribuídos em background com monitoramento visual em tempo real via WebSockets, SQLite WAL e FastAPI. | Python, FastAPI, aiosqlite, WebSockets, HTML5, CSS3, JS |
+| **Aether API Workbench 🔌** | [backend/aether_api_workbench](./backend/aether_api_workbench) | `Concluído` | Suíte completa de testes HTTP/REST, SSE e WebSocket em tempo real, gerador dinâmico de Mock Server com JSON Schema e análise gráfica de latência RTT. | Python, FastAPI, SQLite, HTML5, CSS3, JS |
 | **Library API 📚** | [backend/library_api](./backend/library_api) | `Concluído` | API RESTful para gerenciamento de biblioteca (catálogo de livros, controle de leitores, autenticação JWT e gestão atômica de empréstimos/devoluções). | Python, FastAPI, SQLite, SQLAlchemy, PyJWT, Pytest |
 
 ### Tools (Ferramentas)
@@ -156,7 +156,7 @@ flowchart LR
 | **Aether Audio Synth 🎹** | [tools/aether_synth](./tools/aether_synth) | `Concluído` | Estúdio de síntese de áudio retro em Web Audio API: Síntese Modular Dual (FM/AM), Gerador SFX 8-Bit (sfxr), Sequenciador 16 passos, Tracker / Arranjador de Músicas, Efeitos (Stereo Delay & Space Reverb), Mixer 5 faixas (Mute/Solo), Teclado Virtual QWERTY/MIDI, Osciloscópio & Espectrograma FFT CRT e exportação WAV/JSON. | HTML5, CSS3, JS, Web Audio API, Web MIDI API, Canvas |
 | **Aether Motion Lab 🌌** | [tools/aether_motion_lab](./tools/aether_motion_lab) | `Concluído` | Laboratório de arte gerativa e partículas em tempo real com campos de vetores, atratores caóticos e interações físicas táteis. | HTML5, CSS3, JS, Canvas 2D |
 | **Aether Collab Board 📐** | [tools/aether_collab_board](./tools/aether_collab_board) | `Concluído` | Canvas infinito para diagramação de arquitetura de software e quadros interativos com Mermaid.js, notas adesivas e modo apresentação. | HTML5, CSS3, JS, WebSockets, Python |
-| **World Generator 🗺️** | [tools/world_generation](./tools/world_generation) | `Concluído` | Gerador procedural de mundos 2D e 3D (Three.js) com relevo, rios, reinos, estradas (A*), recursos, simulação histórica interativa (logs clicáveis, timeline, partículas 3D) e exportação completa em JSON. | HTML5, CSS3, JS, Three.js, Python |
+| **Aether World Generator 🛸** | [tools/world_generation](./tools/world_generation) | `Concluído` | Gerador procedural de mundos 2D e 3D (Three.js) com relevo, rios, reinos, estradas (A*), recursos, simulação histórica interativa (logs clicáveis, timeline, partículas 3D) e exportação completa em JSON. | HTML5, CSS3, JS, Three.js, Python |
 
 ---
 
@@ -179,9 +179,9 @@ uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
 Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Raycaster 3D, Aether Cyber Slay, Aether Cyber Tactics, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
-    *   **Ferramentas (Tools)**: Aether Audio Synth e World Generator.
+    *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab e Aether Collab Board.
     *   **Inteligência Artificial (AI)**: Aether Agent Matrix, Aether Vision Sandbox, Aether Genetic Arena e Aether Neural Canvas.
-    *   **Backend**: Aether Event Hub & Task Queue.
+    *   **Backend**: Aether Event Hub & Task Queue e Aether API Workbench & Mock Server.
 
 ---
 

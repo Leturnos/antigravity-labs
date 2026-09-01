@@ -254,6 +254,7 @@ class AetherSweeper {
       }
     } catch (err) {
       console.warn('Backend API offline. Resetting local stats.', err);
+      localStorage.removeItem('aether_minesweeper_stats');
       localStorage.removeItem('minesweeper_stats');
       this.loadLocalStorageStats();
     }
@@ -271,7 +272,7 @@ class AetherSweeper {
 
   loadLocalStorageStats() {
     let stats = { vitorias: 0, derrotas: 0, tempo_recorde: 0 };
-    const saved = localStorage.getItem('minesweeper_stats');
+    const saved = localStorage.getItem('aether_minesweeper_stats') || localStorage.getItem('minesweeper_stats');
     if (saved) {
       try { stats = JSON.parse(saved); } catch(e){}
     }
@@ -280,7 +281,7 @@ class AetherSweeper {
 
   saveLocalStorageResult(result, time) {
     let stats = { vitorias: 0, derrotas: 0, tempo_recorde: 0 };
-    const saved = localStorage.getItem('minesweeper_stats');
+    const saved = localStorage.getItem('aether_minesweeper_stats') || localStorage.getItem('minesweeper_stats');
     if (saved) {
       try { stats = JSON.parse(saved); } catch(e){}
     }
@@ -292,7 +293,7 @@ class AetherSweeper {
     } else {
       stats.derrotas += 1;
     }
-    localStorage.setItem('minesweeper_stats', JSON.stringify(stats));
+    localStorage.setItem('aether_minesweeper_stats', JSON.stringify(stats));
     this.updateStatsDisplay(stats);
   }
 
