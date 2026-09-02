@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Shader Studio — Live WebGL2 Shader Editor</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Navigation & Status Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="../../index.html" class="btn-back">← Dashboard</a>
+      <div class="brand">
+        <span class="brand-icon" style="font-size: 1.1rem; line-height: 1;">🔮</span>
+        <span class="brand-title">AETHER SHADER STUDIO</span>
+        <span class="badge">v1.0</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div id="fps-pill" class="status-pill" title="Taxa de quadros por segundo">
+        <span class="pill-dot"></span>
+        <span class="pill-label">FPS:</span>
+        <span class="pill-value">60.0</span>
+      </div>
+
+      <div id="res-pill" class="status-pill" title="Resolução do Canvas">
+        <span class="pill-label">RES:</span>
+        <select id="resolution-scale-select" class="pill-select" title="Escala de Resolução">
+          <option value="0.5">0.5x</option>
+          <option value="1.0" selected>1.0x</option>
+          <option value="2.0">2.0x</option>
+        </select>
+        <span id="res-val" class="pill-value">1280×720</span>
+      </div>
+
+      <div id="time-pill" class="status-pill" title="Tempo decorrido e contagem de quadros">
+        <span class="pill-label">TEMPO:</span>
+        <span id="time-val" class="pill-value">0.00s</span>
+        <span id="frame-val" class="pill-sub">F: 0</span>
+      </div>
+
+      <div id="compile-pill" class="status-pill status-ok" title="Status de compilação do shader">
+        <span class="pulse-indicator"></span>
+        <span class="compile-text">OK</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="audio-controls">
+        <select id="audio-source-select" class="control-select" title="Fonte de Áudio (iChannel0)">
+          <option value="off">Áudio: Desativado</option>
+          <option value="mic">Microfone</option>
+          <option value="file">Arquivo de Áudio</option>
+        </select>
+        <button id="btn-audio-file" class="btn-icon" title="Carregar arquivo de áudio" style="display: none;">📁</button>
+        <input type="file" id="audio-file-input" accept="audio/*" style="display: none;">
+      </div>
+
+      <div class="action-buttons">
+        <button id="btn-play" class="btn-action" title="Pausar / Retomar (Espaço)">
+          <span class="icon">⏸</span>
+          <span class="btn-text">Pausar</span>
+        </button>
+        <button id="btn-reset" class="btn-action btn-secondary" title="Reiniciar Tempo (R)">
+          <span class="icon">↺</span>
+          <span class="btn-text">Reset</span>
+        </button>
+        <button id="btn-presets" class="btn-action btn-secondary" title="Biblioteca de Shaders">
+          <span class="icon">✦</span>
+          <span class="btn-text">Presets</span>
+        </button>
+        <button id="btn-export" class="btn-action btn-secondary" title="Gravar Vídeo ou Gerar GIF">
+          <span class="icon">⤓</span>
+          <span class="btn-text">Exportar</span>
+        </button>
+        <button id="btn-zen" class="btn-icon" title="Modo Zen Tela Cheia (Tecla H)">
+          <span>⛶</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Adaptive Navigation Tabs -->
+  <nav class="mobile-tabs">
+    <button data-tab="editor" class="active">Editor</button>
+    <button data-tab="canvas">Canvas</button>
+  </nav>
+
+  <!-- Main Split Workspace -->
+  <main id="workspace" class="workspace">
+    <!-- Code Editor Pane -->
+    <section id="editor-pane" class="editor-pane tab-active">
+      <div id="monaco-editor-container" class="editor-container"></div>
+
+      <!-- Retractable Error Drawer -->
+      <aside id="error-drawer" class="error-drawer collapsed" aria-label="Console de Erros">
+        <div class="error-header">
+          <div class="error-title">
+            <span>⚠️</span> Erros de Compilação
+            <span id="error-count-badge" class="error-badge">0</span>
+          </div>
+          <button id="btn-close-errors" class="btn-close-drawer" title="Fechar painel de erros">✕</button>
+        </div>
+        <ul id="error-list" class="error-list"></ul>
+      </aside>
+    </section>
+
+    <!-- Draggable Splitter -->
+    <div id="splitter" class="splitter" title="Arraste para redimensionar">
+      <div class="splitter-handle"></div>
+    </div>
+
+    <!-- WebGL2 Render Canvas Pane -->
+    <section id="canvas-pane" class="canvas-pane tab-hidden">
+      <canvas id="gl-canvas"></canvas>
+    </section>
+  </main>
+
+  <!-- Zen Mode Floating Notification -->
+  <div id="zen-exit-hint" class="zen-exit-hint">
+    Pressione <strong>ESC</strong> ou <strong>H</strong> para sair do modo Zen
+  </div>
+
+  <!-- Presets Gallery Modal -->
+  <div id="presets-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="presets-title">
+    <div class="modal-content modal-presets-width">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="presets-title">Biblioteca de Shaders</h2>
+          <p>Selecione um shader da galeria ou carregue arquivos externos</p>
+        </div>
+        <button id="btn-close-presets" class="btn-close-modal" title="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="preset-filter-bar">
+          <input type="text" id="preset-search-input" class="preset-search-input" placeholder="Buscar por título, autor, técnica ou tag...">
+          <div id="preset-tag-filters" class="tag-filter-list">
+            <button class="tag-filter-btn active" data-tag="all">Todos</button>
+            <button class="tag-filter-btn" data-tag="Raymarching">Raymarching</button>
+            <button class="tag-filter-btn" data-tag="Fractal">Fractal</button>
+            <button class="tag-filter-btn" data-tag="Audio">Audio</button>
+            <button class="tag-filter-btn" data-tag="FBM">FBM</button>
+            <button class="tag-filter-btn" data-tag="Starter">Starter</button>
+          </div>
+        </div>
+        <div id="preset-cards" class="preset-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <input type="file" id="preset-file-input" accept=".json,.glsl" style="display: none;">
+        <button id="btn-import-preset" class="btn-action btn-secondary">Carregar Arquivo</button>
+        <button id="btn-export-preset" class="btn-action btn-secondary">Salvar JSON</button>
+        <button id="btn-share-url" class="btn-action">Copiar Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video & GIF Export Modal -->
+  <div id="export-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <div class="modal-content modal-export-width">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="export-title">Exportar Animação</h2>
+          <p>Grave um vídeo WebM em tempo real ou renderize um GIF determinístico em loop</p>
+        </div>
+        <button id="btn-close-export" class="btn-close-modal" title="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Real-Time Video Recording -->
+        <div class="export-section">
+          <h3>Gravação de Vídeo WebM</h3>
+          <div class="export-row">
+            <span>Duração da gravação:</span>
+            <select id="export-video-duration" class="control-select">
+              <option value="5">5 segundos</option>
+              <option value="10" selected>10 segundos</option>
+              <option value="30">30 segundos</option>
+              <option value="0">Gravação Manual</option>
+            </select>
+          </div>
+          <div class="export-row">
+            <span>Incluir áudio:</span>
+            <input type="checkbox" id="export-include-audio" checked>
+          </div>
+          <button id="btn-record-video" class="btn-action">Iniciar Gravação WebM</button>
+        </div>
+
+        <!-- Deterministic GIF Loop Rendering -->
+        <div class="export-section">
+          <h3>Exportação de GIF em Loop Perfeito</h3>
+          <div class="export-row">
+            <span>Duração do Loop:</span>
+            <select id="export-gif-duration" class="control-select">
+              <option value="1.0">1.0 segundo</option>
+              <option value="2.0" selected>2.0 segundos</option>
+              <option value="3.0">3.0 segundos</option>
+            </select>
+          </div>
+          <div class="export-row">
+            <span>Taxa de Quadros (FPS):</span>
+            <select id="export-gif-fps" class="control-select">
+              <option value="15">15 FPS</option>
+              <option value="30" selected>30 FPS</option>
+            </select>
+          </div>
+          <div class="export-row">
+            <span>Resolução do GIF:</span>
+            <select id="export-gif-resolution" class="control-select">
+              <option value="320x180">320 × 180 (Leve)</option>
+              <option value="480x270" selected>480 × 270 (Padrão)</option>
+              <option value="640x360">640 × 360 (Alta)</option>
+            </select>
+          </div>
+          <button id="btn-export-gif" class="btn-action">Renderizar GIF</button>
+        </div>
+
+        <!-- Progress Tracking -->
+        <div id="export-progress-container" class="export-progress-container hidden">
+          <div class="progress-track">
+            <div id="export-progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="export-status-text" class="export-status-text">Pronto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Script Bootstrap -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>
