@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Flowfield TD — Cyberpunk Swarm Defense</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Root Game Wrapper -->
+  <div class="game-container">
+    
+    <!-- Top HUD Bar -->
+    <header class="hud-top">
+      <div class="hud-group-left">
+        <a href="../../index.html" class="btn-hub" title="Retornar ao Hub Central">
+          <span class="hub-icon">←</span> Voltar ao Hub
+        </a>
+        <div class="game-title">
+          <img src="favicon.svg" alt="Aether Flowfield TD" class="title-icon">
+          <span class="title-aether">AETHER</span> <span class="title-td">FLOWFIELD TD</span>
+        </div>
+      </div>
+
+      <!-- Vital Metrics -->
+      <div class="hud-group-center">
+        <!-- Core HP -->
+        <div class="metric-box hp-metric" title="Integridade do Núcleo Quântico">
+          <span class="metric-label">NÚCLEO HP</span>
+          <div class="hp-bar-track">
+            <div id="coreHpFill" class="hp-bar-fill" style="width: 100%;"></div>
+          </div>
+          <span id="coreHpText" class="metric-val">100 / 100</span>
+        </div>
+
+        <!-- Credits -->
+        <div class="metric-box" title="Créditos para Construção e Upgrades">
+          <span class="metric-label">CRÉDITOS</span>
+          <span id="creditsText" class="metric-val text-cyan">💰 450</span>
+        </div>
+
+        <!-- Wave -->
+        <div class="metric-box" title="Onda Atual">
+          <span class="metric-label">ONDA</span>
+          <span id="waveText" class="metric-val text-magenta">ONDA 1</span>
+        </div>
+
+        <!-- Active Creeps -->
+        <div class="metric-box" title="Enxame Ativo na Arena">
+          <span class="metric-label">ENXAME</span>
+          <span id="creepsCountText" class="metric-val text-yellow">0 / 10.000</span>
+        </div>
+
+        <!-- FPS -->
+        <div class="metric-box fps-metric" title="Desempenho da Renderização">
+          <span class="metric-label">FPS</span>
+          <span id="fpsText" class="metric-val text-green">60</span>
+        </div>
+      </div>
+
+      <!-- Controls Right -->
+      <div class="hud-group-right">
+        <!-- Speed Controls -->
+        <div class="speed-controls" title="Velocidade da Simulação">
+          <button id="btnSpeedPause" class="btn-speed" data-speed="0" title="Pausar [Espaço]">⏸</button>
+          <button id="btnSpeed1x" class="btn-speed active" data-speed="1" title="Velocidade Normal 1x">1x</button>
+          <button id="btnSpeed2x" class="btn-speed" data-speed="2" title="Velocidade Rápida 2x">2x</button>
+          <button id="btnSpeed4x" class="btn-speed" data-speed="4" title="Velocidade Turbo 4x">4x</button>
+        </div>
+
+        <!-- Flowfield Debug Toggle -->
+        <button id="btnFlowDebug" class="btn-hud" title="Visualizar Vetores de Fluxo Dijkstra [F]">
+          [F] Fluxo
+        </button>
+
+        <!-- Audio Mute Toggle -->
+        <button id="btnAudioToggle" class="btn-hud btn-audio" title="Alternar Áudio">
+          🔊 Som
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Viewport Section -->
+    <main class="viewport-area">
+      <div class="canvas-container">
+        <!-- Breach Alert Warning Banner -->
+        <div id="breachAlertBanner" class="breach-alert hidden">
+          ⚠️ ALERTA DE BRECHA // CAMINHO BLOQUEADO — ENXAME ATACANDO DEFESAS! ⚠️
+        </div>
+
+        <!-- Canvas 1280x720 -->
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+      </div>
+    </main>
+
+    <!-- Bottom Dock -->
+    <footer class="hud-bottom">
+      <!-- Tower Build Cards -->
+      <div class="dock-section dock-towers">
+        <span class="dock-title">CONSTRUIR:</span>
+        <div class="tower-cards">
+          <!-- Gatling Card -->
+          <button id="btnBuildGatling" class="tower-card card-gatling" data-type="GATLING" title="[1] Pulse Gatling: Plasma rápido de tiro direto">
+            <span class="key-badge">1</span>
+            <div class="card-icon icon-gatling">⚡</div>
+            <div class="card-info">
+              <div class="card-name">Pulse Gatling</div>
+              <div class="card-cost">100¢</div>
+            </div>
+          </button>
+
+          <!-- Mortar Card -->
+          <button id="btnBuildMortar" class="tower-card card-mortar" data-type="MORTAR" title="[2] Plasma Mortar: Artilharia pesada de impacto em área">
+            <span class="key-badge">2</span>
+            <div class="card-icon icon-mortar">💥</div>
+            <div class="card-info">
+              <div class="card-name">Plasma Mortar</div>
+              <div class="card-cost">175¢</div>
+            </div>
+          </button>
+
+          <!-- Stasis Card -->
+          <button id="btnBuildStasis" class="tower-card card-stasis" data-type="STASIS" title="[3] Stasis Field: Pulso criogênico que retarda o enxame">
+            <span class="key-badge">3</span>
+            <div class="card-icon icon-stasis">❄️</div>
+            <div class="card-info">
+              <div class="card-name">Stasis Field</div>
+              <div class="card-cost">140¢</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected Tower Inspector -->
+      <div id="towerInspector" class="dock-section dock-inspector hidden">
+        <div class="inspector-header">
+          <span id="inspectorTitle" class="inspector-name">TORRE SELECIONADA</span>
+          <span id="inspectorLevel" class="inspector-level">LVL 1</span>
+          <button id="inspectorCloseBtn" class="btn-close-inspector" title="Fechar [Esc]">✕</button>
+        </div>
+        <div id="inspectorStats" class="inspector-stats">
+          <!-- Stats injected dynamically -->
+        </div>
+        <div class="inspector-actions">
+          <button id="btnUpgradeTower" class="btn-action btn-upgrade">
+            [U] Upgrade (100¢)
+          </button>
+          <button id="btnSellTower" class="btn-action btn-sell">
+            [S] Vender (+75¢)
+          </button>
+        </div>
+      </div>
+
+      <!-- Wave Call Controls -->
+      <div class="dock-section dock-wave">
+        <button id="btnNextWave" class="btn-wave-call" title="[N] Chamar Próxima Onda Imediatamente">
+          <div class="wave-btn-main">CHAMAR PRÓXIMA ONDA</div>
+          <div id="waveTimerBadge" class="wave-timer-sub">Iniciando em 10s (+30¢ Bônus)</div>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-overlay hidden">
+      <div class="modal-panel">
+        <div class="modal-glitch-header">
+          <h2 class="modal-title text-magenta">NÚCLEO DESTRUÍDO // DERROTA</h2>
+          <p class="modal-subtitle">O fluxo do enxame superou os limites das suas defesas.</p>
+        </div>
+
+        <div class="modal-stats-grid">
+          <div class="modal-stat-card">
+            <span class="stat-title">ONDAS SOBREVIVIDAS</span>
+            <span id="modalWavesSurvived" class="stat-value text-cyan">0</span>
+          </div>
+          <div class="modal-stat-card">
+            <span class="stat-title">CREEPS ELIMINADOS</span>
+            <span id="modalTotalKills" class="stat-value text-yellow">0</span>
+          </div>
+          <div class="modal-stat-card">
+            <span class="stat-title">PONTUAÇÃO FINAL</span>
+            <span id="modalFinalScore" class="stat-value text-magenta">0</span>
+          </div>
+        </div>
+
+        <!-- Callsign & Submission Form -->
+        <div class="modal-form">
+          <label for="callsignInput" class="form-label">DIGITE SEU CALLSIGN (IDENTIFICAÇÃO NEURAL):</label>
+          <div class="input-row">
+            <input type="text" id="callsignInput" class="input-cyber" maxlength="16" placeholder="CYBER_DEFENDER" autocomplete="off" />
+            <button id="btnSubmitScore" class="btn-submit-score">ENVIAR PONTUAÇÃO</button>
+          </div>
+          <div id="scoreFeedbackMsg" class="score-feedback hidden"></div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-actions">
+          <button id="btnRestartGame" class="btn-modal btn-restart">🔄 REINICIAR DEFESA</button>
+          <a href="../../index.html" class="btn-modal btn-hub-modal">🏠 RETORNAR AO HUB</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
