@@ -48,6 +48,12 @@ DEFAULT_SCORES = {
         "pontuacao_maxima": 0,
         "maior_setor": 0,
     },
+    "aether_flowfield_td": {
+        "vitorias": 0,
+        "derrotas": 0,
+        "pontuacao_maxima": 0,
+        "maior_onda": 0,
+    },
 }
 
 VALID_GAMES = set(DEFAULT_SCORES.keys())
@@ -231,6 +237,21 @@ async def post_score(game: str, request: Request):
             db["aether_raycaster"]["maior_setor"] = sector
         _save_db(db)
         return {"success": True, "scores": db["aether_raycaster"]}
+
+    if game == "aether_flowfield_td":
+        result = data.get("result", "loss")
+        score = data.get("score", 0)
+        wave = data.get("wave", 1)
+        if result == "win":
+            db["aether_flowfield_td"]["vitorias"] += 1
+        elif result == "loss":
+            db["aether_flowfield_td"]["derrotas"] += 1
+        if score > db["aether_flowfield_td"].get("pontuacao_maxima", 0):
+            db["aether_flowfield_td"]["pontuacao_maxima"] = score
+        if wave > db["aether_flowfield_td"].get("maior_onda", 0):
+            db["aether_flowfield_td"]["maior_onda"] = wave
+        _save_db(db)
+        return {"success": True, "scores": db["aether_flowfield_td"]}
 
     raise HTTPException(status_code=400, detail="Invalid or missing game query parameter.")
 

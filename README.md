@@ -26,6 +26,7 @@ antigravity-labs/
 ├── games/       # Jogos interativos e experiências visuais
 │   ├── aether_cyber_slay/ # Aether Cyber Slay - Roguelike deckbuilder cyberpunk em turnos
 │   ├── aether_cyber_tactics/ # Aether Cyber Tactics - Jogo tático 2.5D isométrico cyberpunk
+│   ├── aether_flowfield_td/ # Aether Flowfield TD - Tower Defense cyberpunk de enxames massivos com Flow Field Dijkstra, TypedArrays e Web Audio
 │   ├── aether_raycaster/ # Aether Raycaster 3D - Cyberpunk FPS pseudo-3D com raycasting DDA e áudio procedural synthwave
 │   ├── aether_rogue/ # Aether Rogue - Roguelike 2D procedural
 │   ├── chess/   # Aether Chess - Xadrez Premium com IA local
@@ -37,6 +38,7 @@ antigravity-labs/
 └── tools/       # Ferramentas, scripts de automação e utilitários
     ├── aether_collab_board/ # Aether Collab Board - Canvas infinito para diagramação e quadros interativos (Mermaid.js, WebSockets)
     ├── aether_motion_lab/ # Aether Motion Lab - Laboratório de arte gerativa e partículas em tempo real (TypedArrays Engine)
+    ├── aether_shader_studio/ # Aether Shader Studio - Live WebGL2 Shader Editor (GLSL 300 es, Monaco, Audio FFT, Export)
     ├── aether_synth/ # Aether Audio Synth - Estúdio de Síntese Modular (FM/AM), Gerador 8-Bit sfxr, Tracker, FX & Performance
     └── world_generation/ # Aether World Generator - Gerador procedural de mundos 2D e 3D (Three.js)
 ```
@@ -57,6 +59,7 @@ flowchart LR
     Launcher --> AI["🤖 AI"]
     Launcher --> Backend["⚙️ Backend"]
 
+    Games --> FlowfieldTD["Aether Flowfield TD"]
     Games --> Raycaster["🕶️ Aether Raycaster 3D"]
     Games --> CyberSlay["🎴 Aether Cyber Slay"]
     Games --> Rogue["🗡️ Aether Rogue"]
@@ -76,6 +79,7 @@ flowchart LR
     Tools --> AudioSynth["🎹 Aether Audio Synth"]
     Tools --> MotionLab["🌌 Aether Motion Lab"]
     Tools --> CollabBoard["📐 Aether Collab Board"]
+    Tools --> ShaderStudio["🔮 Aether Shader Studio"]
 
     AI --> AgentMatrix["⚖️ Aether Agent Matrix"]
     AI --> VisionSandbox["👁️ Aether Vision Sandbox"]
@@ -88,6 +92,7 @@ flowchart LR
     style Backend fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
+    style FlowfieldTD fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style Raycaster fill:#00ffff,stroke:#fff,stroke-width:1px,color:#000
     style CyberSlay fill:#a855f7,stroke:#fff,stroke-width:1px,color:#fff
     style Rogue fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
@@ -105,6 +110,7 @@ flowchart LR
     style AudioSynth fill:#ec4899,stroke:#fff,stroke-width:1px,color:#fff
     style MotionLab fill:#00f2fe,stroke:#fff,stroke-width:1px,color:#000
     style CollabBoard fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
+    style ShaderStudio fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style AgentMatrix fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style VisionSandbox fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style GeneticArena fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
@@ -119,6 +125,7 @@ flowchart LR
 
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
+| **Aether Flowfield TD** | [games/aether_flowfield_td](./games/aether_flowfield_td) | `Concluído` | Tower Defense cyberpunk sem caminhos fixos com enxames massivos (10.000+ partículas a 60 FPS), pathfinding por Flow Field Dijkstra com Dynamic Breach Mode, Spatial Hash Grid e síntese Web Audio API. | HTML5, CSS3, JS, Web Audio API, Canvas 2D, Python |
 | **Aether Raycaster 3D 🕶️** | [games/aether_raycaster](./games/aether_raycaster) | `Concluído` | Dungeon crawler pseudo-3D cyberpunk em primeira pessoa com raycasting DDA em Canvas 2D puro, mapas procedurais, portas deslizantes, drones com IA de linha de visão, áudio synthwave procedural e placar. | HTML5, CSS3, JS, Web Audio API, Python |
 | **Aether Cyber Slay 🎴** | [games/aether_cyber_slay](./games/aether_cyber_slay) | `Concluído` | Roguelike deckbuilder cyberpunk em turnos com gestão de RAM e Superaquecimento, mercado negro e combate contra Apex Neural Core. | HTML5, CSS3, JS, Web Audio API, Python |
 | **Aether Rogue 🗡️** | [games/aether_rogue](./games/aether_rogue) | `Concluído` | Roguelike dungeon crawler 2D em turnos com geração procedual híbrida (BSP + Cavernas), raycasting FOV 360° com névoa de guerra, IA A*, habilidades Cyberware e áudio sintetizado offline. | HTML5, CSS3, JS, Python |
@@ -156,6 +163,7 @@ flowchart LR
 | **Aether Audio Synth 🎹** | [tools/aether_synth](./tools/aether_synth) | `Concluído` | Estúdio de síntese de áudio retro em Web Audio API: Síntese Modular Dual (FM/AM), Gerador SFX 8-Bit (sfxr), Sequenciador 16 passos, Tracker / Arranjador de Músicas, Efeitos (Stereo Delay & Space Reverb), Mixer 5 faixas (Mute/Solo), Teclado Virtual QWERTY/MIDI, Osciloscópio & Espectrograma FFT CRT e exportação WAV/JSON. | HTML5, CSS3, JS, Web Audio API, Web MIDI API, Canvas |
 | **Aether Motion Lab 🌌** | [tools/aether_motion_lab](./tools/aether_motion_lab) | `Concluído` | Laboratório de arte gerativa e partículas em tempo real com campos de vetores, atratores caóticos e interações físicas táteis. | HTML5, CSS3, JS, Canvas 2D |
 | **Aether Collab Board 📐** | [tools/aether_collab_board](./tools/aether_collab_board) | `Concluído` | Canvas infinito para diagramação de arquitetura de software e quadros interativos com Mermaid.js, notas adesivas e modo apresentação. | HTML5, CSS3, JS, WebSockets, Python |
+| **Aether Shader Studio 🔮** | [tools/aether_shader_studio](./tools/aether_shader_studio) | `Concluído` | Live WebGL2 shader editor inspirado no Shadertoy com Monaco Editor, reatividade a áudio em tempo real, biblioteca de presets e exportação em vídeo WebM e GIF em loop. | HTML5, CSS3, JS, WebGL2, GLSL, Web Audio API, Monaco Editor |
 | **Aether World Generator 🛸** | [tools/world_generation](./tools/world_generation) | `Concluído` | Gerador procedural de mundos 2D e 3D (Three.js) com relevo, rios, reinos, estradas (A*), recursos, simulação histórica interativa (logs clicáveis, timeline, partículas 3D) e exportação completa em JSON. | HTML5, CSS3, JS, Three.js, Python |
 
 ---
@@ -178,8 +186,8 @@ uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
 
 Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
-    *   **Jogos (Games)**: Aether Raycaster 3D, Aether Cyber Slay, Aether Cyber Tactics, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
-    *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab e Aether Collab Board.
+    *   **Jogos (Games)**: Aether Flowfield TD, Aether Raycaster 3D, Aether Cyber Slay, Aether Cyber Tactics, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
+    *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab, Aether Collab Board e Aether Shader Studio.
     *   **Inteligência Artificial (AI)**: Aether Agent Matrix, Aether Vision Sandbox, Aether Genetic Arena e Aether Neural Canvas.
     *   **Backend**: Aether Event Hub & Task Queue e Aether API Workbench & Mock Server.
 
