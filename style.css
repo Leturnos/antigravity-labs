@@ -179,6 +179,11 @@ header p {
   border-color: var(--color-collab-board);
   box-shadow: 0 12px 30px var(--color-collab-board-glow);
 }
+.game-card.shader-studio:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-shader-studio);
+  box-shadow: 0 12px 30px var(--color-shader-studio-glow);
+}
 .game-card.raycaster:hover {
   transform: translateY(-8px);
   border-color: var(--color-raycaster);
@@ -380,6 +385,7 @@ header p {
 .game-card.neural-canvas h2 { color: #a78bfa; }
 .game-card.audio-synth h2 { color: #c084fc; }
 .game-card.motion-lab h2 { color: #00f2fe; }
+.game-card.shader-studio h2 { color: #00f3ff; }
 
 .game-card p.description {
   font-size: 0.975rem;
@@ -531,6 +537,26 @@ header p {
 }
 .game-card.collab-board .btn-launch:hover {
   background: linear-gradient(135deg, #38bdf8 0%, #00f3ff 100%) !important;
+  box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
+  transform: translateY(-2px);
+}
+
+.game-card.shader-studio:hover {
+  transform: translateY(-8px);
+  border-color: #00f3ff !important;
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.35) !important;
+}
+.game-card.shader-studio h2 { color: #00f3ff !important; }
+.game-card.shader-studio .btn-launch {
+  background: linear-gradient(135deg, #5e6ad2 0%, #00f3ff 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(0, 243, 255, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-card.shader-studio .btn-launch:hover {
+  background: linear-gradient(135deg, #7c88ea 0%, #38bdf8 100%) !important;
   box-shadow: 0 6px 16px rgba(0, 243, 255, 0.6) !important;
   transform: translateY(-2px);
 }
