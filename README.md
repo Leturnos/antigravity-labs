@@ -173,13 +173,20 @@ flowchart LR
 O repositório utiliza um **Servidor Central Unificado** em Python para servir todos os projetos e um Painel Dashboard Launcher na raiz. O Dashboard Launcher oferece navegação dinâmica e categorizada entre **Games (Jogos)**, **Tools (Ferramentas)**, **AI (Inteligência Artificial)** e **Backend**.
 
 ### Inicializando o Servidor Central
-Execute a partir do diretório raiz:
+Execute a partir do diretório raiz utilizando **uv** (recomendado) ou **Python**:
 
 ```bash
+# 1. Configuração inicial do ambiente via uv (rápido e isolado)
+uv venv
+uv pip install -r backend/aether_event_hub/requirements.txt
+
+# 2. Inicialização do Servidor Central
+uv run python server.py
+# OU simplesmente:
 python server.py
 ```
 
-Ou para o **Aether Event Hub & Task Queue**:
+Ou para executar isoladamente o **Aether Event Hub & Task Queue**:
 ```bash
 uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
 ```
