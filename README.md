@@ -37,6 +37,7 @@ antigravity-labs/
 │   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
 └── tools/       # Ferramentas, scripts de automação e utilitários
     ├── aether_collab_board/ # Aether Collab Board - Canvas infinito para diagramação e quadros interativos (Mermaid.js, WebSockets)
+    ├── aether_logic_lab/ # Aether Logic Lab - Simulador de circuitos digitais, portas lógicas, osciloscópio e mini-ALU
     ├── aether_motion_lab/ # Aether Motion Lab - Laboratório de arte gerativa e partículas em tempo real (TypedArrays Engine)
     ├── aether_shader_studio/ # Aether Shader Studio - Live WebGL2 Shader Editor (GLSL 300 es, Monaco, Audio FFT, Export)
     ├── aether_synth/ # Aether Audio Synth - Estúdio de Síntese Modular (FM/AM), Gerador 8-Bit sfxr, Tracker, FX & Performance
@@ -80,6 +81,7 @@ flowchart LR
     Tools --> MotionLab["🌌 Aether Motion Lab"]
     Tools --> CollabBoard["📐 Aether Collab Board"]
     Tools --> ShaderStudio["🔮 Aether Shader Studio"]
+    Tools --> LogicLab["🖧 Aether Logic Lab"]
 
     AI --> AgentMatrix["⚖️ Aether Agent Matrix"]
     AI --> VisionSandbox["👁️ Aether Vision Sandbox"]
@@ -111,6 +113,7 @@ flowchart LR
     style MotionLab fill:#00f2fe,stroke:#fff,stroke-width:1px,color:#000
     style CollabBoard fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style ShaderStudio fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
+    style LogicLab fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style AgentMatrix fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style VisionSandbox fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style GeneticArena fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
@@ -165,6 +168,7 @@ flowchart LR
 | **Aether Collab Board 📐** | [tools/aether_collab_board](./tools/aether_collab_board) | `Concluído` | Canvas infinito para diagramação de arquitetura de software e quadros interativos com Mermaid.js, notas adesivas e modo apresentação. | HTML5, CSS3, JS, WebSockets, Python |
 | **Aether Shader Studio 🔮** | [tools/aether_shader_studio](./tools/aether_shader_studio) | `Concluído` | Live WebGL2 shader editor inspirado no Shadertoy com Monaco Editor, reatividade a áudio em tempo real, biblioteca de presets e exportação em vídeo WebM e GIF em loop. | HTML5, CSS3, JS, WebGL2, GLSL, Web Audio API, Monaco Editor |
 | **Aether World Generator 🛸** | [tools/world_generation](./tools/world_generation) | `Concluído` | Gerador procedural de mundos 2D e 3D (Three.js) com relevo, rios, reinos, estradas (A*), recursos, simulação histórica interativa (logs clicáveis, timeline, partículas 3D) e exportação completa em JSON. | HTML5, CSS3, JS, Three.js, Python |
+| **Aether Logic Lab 🖧** | [tools/aether_logic_lab](./tools/aether_logic_lab) | `Concluído` | Simulador interativo de circuitos digitais e computação lógica em tempo real com portas lógicas (ANSI), flip-flops (D/JK), contadores síncronos, barramentos hexadecimais, decodificadores de 7 segmentos, mini-ALU de 4 bits, analisador lógico de formas de onda (osciloscópio) e áudio procedural. | HTML5, CSS3, JS, Web Audio API, Canvas 2D |
 
 ---
 
@@ -194,7 +198,7 @@ uv run uvicorn backend.aether_event_hub.main:app --reload --port 8000
 Acesse no navegador:
 *   **Painel Dashboard Launcher (Central)**: [http://localhost:8000/](http://localhost:8000/) — Interface unificada com categorias:
     *   **Jogos (Games)**: Aether Flowfield TD, Aether Raycaster 3D, Aether Cyber Slay, Aether Cyber Tactics, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
-    *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab, Aether Collab Board e Aether Shader Studio.
+    *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab, Aether Collab Board, Aether Shader Studio e Aether Logic Lab.
     *   **Inteligência Artificial (AI)**: Aether Agent Matrix, Aether Vision Sandbox, Aether Genetic Arena e Aether Neural Canvas.
     *   **Backend**: Aether Event Hub & Task Queue e Aether API Workbench & Mock Server.
 
