@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Logic Lab — Simulador de Circuitos Digitais & Mini-CPU</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Navigation & Control Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="../../index.html" class="btn-back">← <span class="btn-text">Dashboard</span></a>
+      <div class="brand">
+        <span class="brand-icon" style="font-size: 1.25rem; line-height: 1;">🖧</span>
+        <span class="brand-title">AETHER LOGIC LAB</span>
+        <span class="badge">v1.0</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <!-- Play / Pause -->
+      <button id="btn-play" class="pill-btn active" title="Executar ou pausar a simulação lógica em tempo real">
+        <span class="btn-icon">⏸</span> <span class="btn-text">Pausar</span>
+      </button>
+
+      <!-- Step Once -->
+      <button id="btn-step" class="pill-btn" title="Executar um único ciclo de clock/tick da simulação">
+        <span class="btn-icon">⏭</span> <span class="btn-text">Passo</span>
+      </button>
+
+      <!-- Clock Frequency -->
+      <div class="status-pill clock-pill" title="Frequência global dos geradores de clock">
+        <span class="pill-label">CLK:</span>
+        <select id="clock-freq-select" class="pill-select">
+          <option value="0.5">0.5 Hz</option>
+          <option value="1.0" selected>1.0 Hz</option>
+          <option value="2.0">2.0 Hz</option>
+          <option value="5.0">5.0 Hz</option>
+          <option value="10.0">10.0 Hz</option>
+          <option value="20.0">20.0 Hz</option>
+        </select>
+      </div>
+
+      <!-- Oscillation warning pill -->
+      <div id="osc-pill" class="status-pill status-warn" style="display: none;" title="Circuito com realimentação instável detectado (loop sem atraso)">
+        ⚠️ Oscilação
+      </div>
+
+      <!-- FPS -->
+      <div class="status-pill fps-pill" title="Taxa de quadros de renderização por segundo">
+        <span class="pill-label">FPS:</span>
+        <span id="fps-val" class="pill-value">60.0</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="btn-sound" class="pill-btn" title="Alternar efeitos sonoros e buzinas">
+        <span class="btn-icon">🔊</span> <span class="btn-text">Áudio</span>
+      </button>
+      <button id="btn-presets" class="pill-btn primary" title="Explorar circuitos pré-construídos">
+        <span class="btn-icon">📚</span> <span class="btn-text">Presets</span>
+      </button>
+      <button id="btn-center-view" class="pill-btn" title="Centralizar visualização no canvas">
+        <span class="btn-icon">🎯</span> <span class="btn-text">Centralizar</span>
+      </button>
+
+      <div class="btn-group header-files-group">
+        <button id="btn-export-png" class="pill-btn" title="Exportar imagem PNG do esquema">
+          <span class="btn-icon">📷</span> <span class="btn-text">PNG</span>
+        </button>
+        <button id="btn-export-json" class="pill-btn" title="Baixar esquema como arquivo JSON">
+          <span class="btn-icon">💾</span> <span class="btn-text">Salvar</span>
+        </button>
+        <button id="btn-import-json" class="pill-btn" title="Carregar esquema de arquivo JSON">
+          <span class="btn-icon">📂</span> <span class="btn-text">Abrir</span>
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display: none;">
+      </div>
+
+      <button id="btn-clear-canvas" class="pill-btn danger" title="Limpar todo o circuito">
+        <span class="btn-icon">🗑</span> <span class="btn-text">Limpar</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace-layout">
+    <!-- Left Sidebar: Component Toolbox Palette -->
+    <aside class="toolbox-sidebar">
+      <div class="sidebar-header">
+        <h3>COMPONENTES</h3>
+        <p class="sidebar-subtitle">Arraste ou clique para adicionar</p>
+      </div>
+
+      <div class="toolbox-content">
+        <!-- 1. Entradas & Fontes -->
+        <div class="palette-group">
+          <div class="group-title">Fontes & Entradas</div>
+          <div class="palette-grid">
+            <div class="palette-item" draggable="true" data-type="SWITCH" title="Chave biestável (0 ou 1)">
+              <div class="item-icon">🔘</div>
+              <div class="item-name">Chave Liga/Desl</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="PUSH_BUTTON" title="Botão pulsador momentâneo">
+              <div class="item-icon">🔴</div>
+              <div class="item-name">Botão Pulsador</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="CLOCK" title="Gerador de clock contínuo">
+              <div class="item-icon">⏱</div>
+              <div class="item-name">Clock Pulse</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="VCC" title="Constante lógica 1 (VCC)">
+              <div class="item-icon">⚡</div>
+              <div class="item-name">VCC (1)</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="GND" title="Constante lógica 0 (GND)">
+              <div class="item-icon">⏚</div>
+              <div class="item-name">GND (0)</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="HEX_INPUT" title="Teclado Hexadecimal 4-bit (0x0 a 0xF)">
+              <div class="item-icon">🔢</div>
+              <div class="item-name">Teclado Hex</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Portas Lógicas -->
+        <div class="palette-group">
+          <div class="group-title">Portas Lógicas (ANSI)</div>
+          <div class="palette-grid">
+            <div class="palette-item" draggable="true" data-type="NOT" title="Porta Inversora NOT">
+              <div class="item-icon">▷○</div>
+              <div class="item-name">Porta NOT</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="BUFFER" title="Porta Buffer simples">
+              <div class="item-icon">▷</div>
+              <div class="item-name">BUFFER</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="AND" title="Porta Lógica AND (E)">
+              <div class="item-icon">⊓</div>
+              <div class="item-name">Porta AND</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="OR" title="Porta Lógica OR (OU)">
+              <div class="item-icon">⊔</div>
+              <div class="item-name">Porta OR</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="NAND" title="Porta Lógica NAND (Não E)">
+              <div class="item-icon">⊓○</div>
+              <div class="item-name">Porta NAND</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="NOR" title="Porta Lógica NOR (Não OU)">
+              <div class="item-icon">⊔○</div>
+              <div class="item-name">Porta NOR</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="XOR" title="Porta Lógica XOR (OU Exclusivo)">
+              <div class="item-icon">⊕</div>
+              <div class="item-name">Porta XOR</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="XNOR" title="Porta Lógica XNOR">
+              <div class="item-icon">⊙</div>
+              <div class="item-name">Porta XNOR</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="TRISTATE" title="Buffer de alta impedância Tri-State">
+              <div class="item-icon">⏵z</div>
+              <div class="item-name">Tri-State</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Saídas & Indicadores -->
+        <div class="palette-group">
+          <div class="group-title">Saídas & Visores</div>
+          <div class="palette-grid">
+            <div class="palette-item" draggable="true" data-type="LED" title="Diodo Emissor de Luz">
+              <div class="item-icon">💡</div>
+              <div class="item-name">LED Indicador</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="SEVEN_SEGMENT" title="Display digital de 7 segmentos (decodificador BCD)">
+              <div class="item-icon">🈩</div>
+              <div class="item-name">7-Segmentos</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="BUS_DISPLAY" title="Exibidor de barramento Hex/Dec/Bin">
+              <div class="item-icon">📟</div>
+              <div class="item-name">Display Bus</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="PROBE" title="Sonda de teste e inspeção de voltagem">
+              <div class="item-icon">🔍</div>
+              <div class="item-name">Sonda Lógica</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="BUZZER" title="Buzzer sonoro piezoelétrico (Web Audio)">
+              <div class="item-icon">📢</div>
+              <div class="item-name">Buzzer Sonoro</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Módulos & Memória -->
+        <div class="palette-group">
+          <div class="group-title">Memória & Módulos</div>
+          <div class="palette-grid">
+            <div class="palette-item" draggable="true" data-type="LATCH_SR" title="Célula de memória Latch SR">
+              <div class="item-icon">🔲</div>
+              <div class="item-name">Latch SR</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="FLIPFLOP_D" title="Flip-Flop D ativado por borda de subida">
+              <div class="item-icon">💾</div>
+              <div class="item-name">Flip-Flop D</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="FLIPFLOP_JK" title="Flip-Flop JK com função toggle">
+              <div class="item-icon">🔁</div>
+              <div class="item-name">Flip-Flop JK</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="COUNTER_4BIT" title="Contador binário síncrono de 4 bits">
+              <div class="item-icon">🔢</div>
+              <div class="item-name">Contador 4-Bit</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="HALF_ADDER" title="Meio Somador A + B">
+              <div class="item-icon">➕</div>
+              <div class="item-name">Half Adder</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="FULL_ADDER" title="Somador Completo A + B + Cin">
+              <div class="item-icon">🧮</div>
+              <div class="item-name">Full Adder</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="MUX_2TO1" title="Multiplexador 2 para 1">
+              <div class="item-icon">🔀</div>
+              <div class="item-name">MUX 2:1</div>
+            </div>
+            <div class="palette-item" draggable="true" data-type="ALU_4BIT" title="Unidade Lógica e Aritmética de 4 Bits">
+              <div class="item-icon">🧠</div>
+              <div class="item-name">ALU 4-Bit</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Canvas Area -->
+    <section class="canvas-container">
+      <canvas id="circuit-canvas"></canvas>
+
+      <!-- Bottom Retractable Waveform Drawer -->
+      <div id="waveform-drawer" class="waveform-drawer collapsed">
+        <div class="drawer-header" id="drawer-header" title="Clique para expandir ou recolher o osciloscópio">
+          <div class="drawer-title">
+            <span style="font-size: 1.1rem;">📈</span>
+            <span>ANALISADOR LÓGICO DE FORMAS DE ONDA DIGITAIS</span>
+            <span class="drawer-sub">Sondas ativas no circuito</span>
+          </div>
+          <div class="drawer-actions">
+            <button id="btn-clear-waves" class="pill-btn small" title="Limpar histórico de ondas">
+              Limpar Traços
+            </button>
+            <button id="btn-toggle-drawer" class="pill-btn small primary" title="Expandir/Recolher Analisador Lógico">
+              ▲ Expandir
+            </button>
+          </div>
+        </div>
+        <div class="drawer-body">
+          <canvas id="waveform-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Keyboard shortcuts overlay prompt -->
+      <div class="canvas-hints" id="canvas-hints">
+        <span><b>Espaço + Arrastar</b> ou <b>Botão do Meio</b>: Pan</span>
+        <span><b>Scroll</b>: Zoom</span>
+        <span><b>Del / Backspace</b>: Excluir</span>
+        <span><b>Ctrl+Z / Ctrl+Y</b>: Desfazer/Refazer</span>
+        <span><b>Botão Direito no Pino</b>: Sonda / Osciloscópio</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Presets Library -->
+  <div id="presets-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Biblioteca de Circuitos Pré-carregados</h2>
+        <button id="btn-close-presets" class="btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">Escolha um esquema clássico para carregar diretamente na bancada de testes:</p>
+        <div id="presets-list" class="presets-grid">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Custom Alert / Confirm Dialog (Replaces native browser alert/confirm) -->
+  <div id="dialog-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card dialog-card">
+      <div class="dialog-icon-box" id="dialog-icon">⚡</div>
+      <h3 class="dialog-title" id="dialog-title">Confirmação</h3>
+      <p class="dialog-message" id="dialog-message">Mensagem de aviso...</p>
+      <div class="dialog-buttons">
+        <button id="dialog-btn-cancel" class="pill-btn">Cancelar</button>
+        <button id="dialog-btn-confirm" class="pill-btn primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main ES Module Script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
