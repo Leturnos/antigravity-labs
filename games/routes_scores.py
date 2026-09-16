@@ -54,6 +54,12 @@ DEFAULT_SCORES = {
         "pontuacao_maxima": 0,
         "maior_onda": 0,
     },
+    "aether_conveyor": {
+        "vitorias": 0,
+        "derrotas": 0,
+        "pontuacao_maxima": 0,
+        "maior_setor": 0,
+    },
 }
 
 VALID_GAMES = set(DEFAULT_SCORES.keys())
@@ -100,8 +106,10 @@ async def get_score(game: str | None = None):
 # ── POST /api/score ─────────────────────────────────────────────────────────
 
 @router.post("/score")
-async def post_score(game: str, request: Request):
+async def post_score(request: Request, game: str | None = None):
     data = await request.json()
+    if not game:
+        game = data.get("game")
     db = _load_db()
 
     if game == "chess":
@@ -252,6 +260,21 @@ async def post_score(game: str, request: Request):
             db["aether_flowfield_td"]["maior_onda"] = wave
         _save_db(db)
         return {"success": True, "scores": db["aether_flowfield_td"]}
+
+    if game == "aether_conveyor":
+        result = data.get("result", "loss")
+        score = data.get("score", 0)
+        sector = data.get("sector", 1)
+        if result == "win":
+            db["aether_conveyor"]["vitorias"] += 1
+        elif result == "loss":
+            db["aether_conveyor"]["derrotas"] += 1
+        if score > db["aether_conveyor"].get("pontuacao_maxima", 0):
+            db["aether_conveyor"]["pontuacao_maxima"] = score
+        if sector > db["aether_conveyor"].get("maior_setor", 0):
+            db["aether_conveyor"]["maior_setor"] = sector
+        _save_db(db)
+        return {"success": True, "scores": db["aether_conveyor"]}
 
     raise HTTPException(status_code=400, detail="Invalid or missing game query parameter.")
 

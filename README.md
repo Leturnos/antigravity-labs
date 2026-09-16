@@ -25,6 +25,7 @@ antigravity-labs/
 │   ├── aether_storage_internals/ # Aether Storage Internals - Mini LSM-Tree KV Storage Engine (SkipList, WAL, SSTables, Bloom Filters, Compaction)
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
+│   ├── aether_conveyor/ # Aether Conveyor - Jogo de automação e logística contínua em grade 2D (Factorio-Lite) com esteiras físicas, inserters, montadoras e gestão energética
 │   ├── aether_cyber_slay/ # Aether Cyber Slay - Roguelike deckbuilder cyberpunk em turnos
 │   ├── aether_cyber_tactics/ # Aether Cyber Tactics - Jogo tático 2.5D isométrico cyberpunk
 │   ├── aether_flowfield_td/ # Aether Flowfield TD - Tower Defense cyberpunk de enxames massivos com Flow Field Dijkstra, TypedArrays e Web Audio
@@ -61,6 +62,7 @@ flowchart LR
     Launcher --> AI["🤖 AI"]
     Launcher --> Backend["⚙️ Backend"]
 
+    Games --> Conveyor["⚡ Aether Conveyor"]
     Games --> FlowfieldTD["Aether Flowfield TD"]
     Games --> Raycaster["🕶️ Aether Raycaster 3D"]
     Games --> CyberSlay["🎴 Aether Cyber Slay"]
@@ -96,6 +98,7 @@ flowchart LR
     style Backend fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
+    style Conveyor fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style FlowfieldTD fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
     style Raycaster fill:#00ffff,stroke:#fff,stroke-width:1px,color:#000
     style CyberSlay fill:#a855f7,stroke:#fff,stroke-width:1px,color:#fff
