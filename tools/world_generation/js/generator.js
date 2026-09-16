@@ -361,7 +361,7 @@ function finalizeWorldMetadata(grid, size, params) {
   // Cost distance BFS computes coastal moisture modifications and classifies biomes
   computeCoastalDistances(grid, size);
 
-  // Fase 3: Civilizações, Recursos, Reinos e Dungeons
+  // Phase 3: Civilizations, Resources, Kingdoms, and Dungeons
   generatePhase3Elements(grid, size, params);
 }
 
@@ -454,7 +454,7 @@ function generateRivers(grid, size, params) {
       }
       
       if (bestNeighbor.elevation < 0.26) {
-        // Desemboca no mar
+        // Flows into the sea
         cell.isRiver = true;
         riverPath.push({ x: bestNeighbor.x, y: bestNeighbor.y });
         break;
@@ -538,7 +538,7 @@ function propagateMoisture(grid, size, params) {
 }
 
 // ==========================================
-// FASE 3: CIVILIZAÇÕES, RECURSOS E REINOS
+// PHASE 3: CIVILIZATIONS, RESOURCES, AND KINGDOMS
 // ==========================================
 
 const CITY_PREFIXES = ['Oakhaven', 'Ironclad', 'Stonegard', 'Deepwater', 'Riverrun', 'Goldfield', 'Greenwall', 'Sanddrift', 'Winterhold', 'Fairbreeze', 'Shadowfen', 'Stormwatch'];
@@ -557,22 +557,22 @@ function generateCityName(seed, index) {
 }
 
 function generatePhase3Elements(grid, size, params) {
-  // 1. Recursos Naturais
+  // 1. Natural Resources
   generateNaturalResources(grid, size, params);
   
-  // 2. Cidades e Assentamentos
+  // 2. Cities and Settlements
   const cities = generateCities(grid, size, params);
   grid.cities = cities;
   
-  // 3. Reinos e Fronteiras (a partir das capitais das cidades)
+  // 3. Kingdoms and Borders (from city capitals)
   const kingdoms = generateKingdoms(grid, size, cities);
   grid.kingdoms = kingdoms;
   
-  // 4. Rotas comerciais (A*)
+  // 4. Trade routes (A*)
   const routes = generateRoutes(grid, size, cities);
   grid.routes = routes;
   
-  // 5. Dungeons e POIs
+  // 5. Dungeons and POIs
   const dungeons = generateDungeons(grid, size, params);
   grid.dungeons = dungeons;
 }
@@ -580,26 +580,26 @@ function generatePhase3Elements(grid, size, params) {
 function generateNaturalResources(grid, size, params) {
   const resSeed = hash32(params.seed + 11111);
   const resNoise = new ImprovedNoise(resSeed);
-  const scale = 0.06; // ruído de baixa frequência para depósitos
+  const scale = 0.06; // low-frequency noise for deposits
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const cell = grid[y][x];
       
-      // Apenas células terrestres
+      // Land cells only
       if (cell.elevation < 0.26) {
         cell.resource = null;
         cell.resourceDensity = 0;
         continue;
       }
 
-      // Pegamos o ruído de baixa frequência normalizado [0, 1]
+      // Normalized low-frequency noise [0, 1]
       const noiseVal = (resNoise.noise(x * scale, y * scale) + 1) / 2;
       
       let resource = null;
       let resourceDensity = 0;
       
-      if (noiseVal > 0.55) { // threshold para depósitos concentrados
+      if (noiseVal > 0.55) { // threshold for concentrated deposits
         const biome = cell.biome;
         if (biome === 'TEMP_FOREST' || biome === 'JUNGLE') {
           resource = 'wood';
@@ -614,7 +614,7 @@ function generateNaturalResources(grid, size, params) {
         }
         
         if (resource) {
-          resourceDensity = (noiseVal - 0.55) / 0.45; // normaliza densidade de 0 a 1
+          resourceDensity = (noiseVal - 0.55) / 0.45; // normalize density from 0 to 1
         }
       }
       
@@ -662,13 +662,13 @@ function generateCities(grid, size, params) {
     for (let x = 2; x < size - 2; x++) {
       const cell = grid[y][x];
       
-      // Critérios de exclusão
+      // Exclusion criteria
       if (cell.elevation < 0.26) continue;
       if (cell.biome === 'BEACH') continue;
       if (cell.biome === 'SNOW_MOUNTAIN') continue;
       if (cell.biome === 'SWAMP') continue;
       
-      // Declividade local (terreno plano)
+      // Local slope (flat terrain)
       const hCurrent = cell.elevation;
       const hR = grid[y][x + 1].elevation;
       const hL = grid[y][x - 1].elevation;
@@ -676,11 +676,11 @@ function generateCities(grid, size, params) {
       const hU = grid[y - 1][x].elevation;
       const slope = (Math.abs(hR - hCurrent) + Math.abs(hL - hCurrent) + Math.abs(hD - hCurrent) + Math.abs(hU - hCurrent)) / 4;
       
-      if (slope > 0.07) continue; // muito inclinado
+      if (slope > 0.07) continue; // too steep
       
-      let score = 50; // atratividade base
+      let score = 50; // base attractiveness
       
-      // Proximidade de água doce
+      // Fresh water proximity
       let hasRiverOrLake = false;
       const dirs4 = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
       for (const d of dirs4) {
@@ -699,7 +699,7 @@ function generateCities(grid, size, params) {
         score += 20;
       }
       
-      // Biomas favoráveis
+      // Favorable biomes
       if (cell.biome === 'GRASSLAND' || cell.biome === 'TEMP_FOREST') {
         score += 25;
       } else if (cell.biome === 'SAVANNA' || cell.biome === 'JUNGLE') {
@@ -708,12 +708,12 @@ function generateCities(grid, size, params) {
         score += 5;
       }
       
-      // Extra plano
+      // Extra flat
       if (slope < 0.03) {
         score += 15;
       }
       
-      // Pequeno ruído determinístico para quebrar empates e variar
+      // Small deterministic noise to break ties and add variance
       const valHash = hash32(params.seed + x * 83 + y * 19);
       score += (valHash % 100) / 10;
       
@@ -725,7 +725,7 @@ function generateCities(grid, size, params) {
     }
   }
   
-  // Ordenar candidatos por pontuação decrescente
+  // Sort candidates by descending score
   candidates.sort((a, b) => b.score - a.score);
   
   const selected = [];
@@ -748,7 +748,7 @@ function generateCities(grid, size, params) {
     }
   }
   
-  // Classificar reinos e tamanhos
+  // Classify kingdoms and sizes
   let numCapitals = 1;
   if (cityCount >= 5 && cityCount < 9) numCapitals = 2;
   else if (cityCount >= 9) numCapitals = 3;
@@ -758,7 +758,7 @@ function generateCities(grid, size, params) {
     if (i < numCapitals) {
       type = 'capital';
     } else {
-      // Suporte ecológico local
+      // Local ecological support
       let support = 0;
       let count = 0;
       const r = 3;
@@ -784,7 +784,7 @@ function generateCities(grid, size, params) {
         type = 'city';
       }
     }
-    // Analisar recursos circundantes para exportação (raio 4)
+    // Analyze surrounding resources for export (radius 4)
     const counts = { wood: 0, ore: 0, fish: 0, stone: 0, crops: 0 };
     const radiusRes = 4;
     for (let dy = -radiusRes; dy <= radiusRes; dy++) {
@@ -807,7 +807,7 @@ function generateCities(grid, size, params) {
       }
     }
     
-    // Complementaridade simples de importação
+    // Simple import complementarity
     let consumes = 'crops';
     if (produces === 'wood') consumes = 'ore';
     else if (produces === 'ore') consumes = 'wood';
@@ -818,7 +818,7 @@ function generateCities(grid, size, params) {
     const population = initialPops[type] || 150;
     const name = generateCityName(params.seed, i);
     
-    // Registrar dados na célula física
+    // Store data in physical cell
     c.cell.cityName = name;
     c.cell.cityType = type;
     c.cell.cityIndex = i;
@@ -905,7 +905,7 @@ function generateKingdoms(grid, size, cities) {
     }
   }
   
-  // Marcar as divisas de reinos (Fronteiras)
+  // Mark kingdom boundaries (Borders)
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const cell = grid[y][x];
@@ -927,7 +927,7 @@ function generateKingdoms(grid, size, cities) {
     }
   }
   
-  // Associar vilas/cidades sem capital ao reino territorial onde caíram
+  // Associate non-capital towns/cities to the territorial kingdom they fell into
   for (const city of cities) {
     if (city.type !== 'capital') {
       const cell = grid[city.y][city.x];
@@ -1005,27 +1005,27 @@ function findPathAStar(grid, size, start, end) {
       
       const neighbor = grid[ny][nx];
       
-      // Não atravessar água
+      // Do not cross water
       if (neighbor.elevation < 0.26 || neighbor.isLake) continue;
       if (neighbor.biome === 'DEEP_OCEAN' || neighbor.biome === 'SHALLOW_OCEAN') continue;
       
       const isDiagonal = d.dx !== 0 && d.dy !== 0;
       let cost = isDiagonal ? 1.414 : 1.0;
       
-      // Inclinação do terreno (diferença de altura)
+      // Terrain slope (elevation difference)
       const diffElev = Math.abs(neighbor.elevation - currentCell.elevation);
       cost += diffElev * 15.0;
       
-      // Penalidades de biomas difíceis
+      // Difficult biome penalties
       if (neighbor.biome === 'SNOW_MOUNTAIN') cost += 20.0;
       if (neighbor.biome === 'SWAMP') cost += 6.0;
       if (neighbor.biome === 'JUNGLE') cost += 2.0;
       if (neighbor.biome === 'DESERT') cost += 1.5;
       
-      // Cruzar rio
+      // River crossing
       if (neighbor.isRiver) cost += 4.0;
       
-      // Incentivo de estrada compartilhada
+      // Shared road incentive
       if (neighbor.isRoad) {
         cost = 0.15;
       }
@@ -1092,7 +1092,7 @@ function generateRoutes(grid, size, cities) {
 
 function generateDungeons(grid, size, params) {
   const dungeons = [];
-  const dungeonCount = 3 + (hash32(params.seed + 888) % 4); // de 3 a 6
+  const dungeonCount = 3 + (hash32(params.seed + 888) % 4); // 3 to 6
   
   const candidates = [];
   for (let y = 3; y < size - 3; y++) {
@@ -1117,7 +1117,7 @@ function generateDungeons(grid, size, params) {
   
   if (candidates.length === 0) return dungeons;
   
-  // Embaralhamento determinístico por semente
+  // Deterministic shuffle by seed
   const seededRandom = (s) => {
     let x = Math.sin(s) * 10000;
     return x - Math.floor(x);
@@ -1135,7 +1135,7 @@ function generateDungeons(grid, size, params) {
   for (const cand of candidates) {
     if (selectedCount >= dungeonCount) break;
     
-    // Distância das cidades
+    // Distance from cities
     let farEnough = true;
     if (grid.cities) {
       for (const city of grid.cities) {
@@ -1147,7 +1147,7 @@ function generateDungeons(grid, size, params) {
       }
     }
     
-    // Distância de outras dungeons
+    // Distance from other dungeons
     if (farEnough) {
       for (const dung of dungeons) {
         const dist = Math.sqrt((cand.x - dung.x) ** 2 + (cand.y - dung.y) ** 2);
@@ -1240,7 +1240,7 @@ export function simulateHistoryYear(grid, size, params) {
       const prevPop = city.population;
       city.population = Math.floor(city.population * growRate);
       
-      // Evoluções de categoria
+      // Category evolutions
       if (city.type === 'village' && city.population > 600) {
         city.type = 'city';
         const cell = grid[city.y][city.x];
@@ -1375,7 +1375,7 @@ export function simulateHistoryYear(grid, size, params) {
     }
   });
 
-  // 3. FASE DE GUERRA E GEOPOLÍTICA (Voronoi Geográfico Dinâmico)
+  // 3. WAR AND GEOPOLITICAL PHASE (Dynamic Geographic Voronoi)
   if (grid.activeWars.length === 0 && kingdoms.length > 1) {
     const chance = hash32(params.seed + year) % 100;
     if (chance < 8) {

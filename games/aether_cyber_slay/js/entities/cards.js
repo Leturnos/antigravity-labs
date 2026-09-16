@@ -8,7 +8,7 @@ export const CARD_TYPES = {
 };
 
 export const CARD_CATALOG = {
-    // 1. Ataque & Overclock
+    // 1. Attack & Overclock
     ping_strike: {
         id: 'ping_strike',
         name: 'Disparo Ping',
@@ -77,7 +77,7 @@ export const CARD_CATALOG = {
         }
     },
 
-    // 2. Malware & Injeção (DoT)
+    // 2. Malware & Injection (DoT)
     inject_worm: {
         id: 'inject_worm',
         name: 'Injetar Worm',
@@ -133,7 +133,7 @@ export const CARD_CATALOG = {
         }
     },
 
-    // 3. Defesa & Criptografia
+    // 3. Defense & Cryptography
     buffer_shield: {
         id: 'buffer_shield',
         name: 'Escudo de Buffer',
@@ -164,7 +164,7 @@ export const CARD_CATALOG = {
         }
     },
 
-    // 4. Exploits & Utilitários
+    // 4. Exploits & Utilities
     scan_exploit: {
         id: 'scan_exploit',
         name: 'Escanear Exploit',

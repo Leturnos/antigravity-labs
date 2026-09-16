@@ -15,22 +15,22 @@ class AetherSounds {
   }
 
   playHover() {
-    // Sutil click agudo
+    // Subtle sharp click
     this.engine.playTone(800, 800, 0.03, 'sine', 0.05);
   }
 
   playMoveX() {
-    // Som ríspido e agudo para o X (onda quadrada)
+    // Sharp and abrasive sound for X (square wave)
     this.engine.playTone(440, 550, 0.08, 'square', 0.06);
   }
 
   playMoveO() {
-    // Som redondo e macio para o O (onda triangular)
+    // Round and soft sound for O (triangle wave)
     this.engine.playTone(330, 220, 0.1, 'triangle', 0.08);
   }
 
   playWin() {
-    // Arpejo alegre ascendente em Dó Maior
+    // Cheerful ascending arpeggio in C Major
     const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
     notes.forEach((freq, index) => {
       this.engine.playTone(freq, freq * 1.01, 0.18, 'square', 0.07, (index * 60) / 1000);
@@ -38,7 +38,7 @@ class AetherSounds {
   }
 
   playLoss() {
-    // Arpejo melancólico descendente em Fá Menor
+    // Melancholic descending arpeggio in F Minor
     const notes = [349.23, 293.66, 261.63, 220.00]; // F4, D4, C4, A3
     notes.forEach((freq, index) => {
       this.engine.playTone(freq, freq - 20, 0.25, 'triangle', 0.1, (index * 120) / 1000);
@@ -46,7 +46,7 @@ class AetherSounds {
   }
 
   playDraw() {
-    // Dois clicks mecânicos rápidos
+    // Two quick mechanical clicks
     this.engine.playTone(180, 120, 0.06, 'triangle', 0.12, 0);
     this.engine.playTone(180, 120, 0.06, 'triangle', 0.12, 0.08);
   }

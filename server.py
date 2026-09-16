@@ -13,27 +13,27 @@ def _ensure_venv():
     except ImportError:
         pass
 
-    # Trava para evitar loop infinito caso o novo processo também não tenha as libs
+    # Guard against infinite loop if child process also lacks required libraries
     if os.getenv("_AETHER_REEXEC"):
-        print("\n[ERRO] 'fastapi' e 'uvicorn' não estão instalados no ambiente atual ou no uv.")
-        print("Instale as dependências executando:")
+        print("\n[ERROR] 'fastapi' and 'uvicorn' are not installed in the current environment or via uv.")
+        print("Install dependencies by running:")
         print("  uv venv && uv pip install -r backend/aether_event_hub/requirements.txt")
-        print("  OU: uv add fastapi uvicorn\n")
+        print("  OR: uv add fastapi uvicorn\n")
         sys.exit(1)
 
     os.environ["_AETHER_REEXEC"] = "1"
 
     venv_python = os.path.join(os.path.dirname(__file__), ".venv", "bin", "python")
     if os.path.exists(venv_python) and os.path.abspath(sys.executable) != os.path.abspath(venv_python):
-        print("Iniciando servidor via ambiente virtual (.venv)...")
+        print("Starting server via virtual environment (.venv)...")
         os.execv(venv_python, [venv_python] + sys.argv)
 
     if shutil.which("uv"):
-        print("Iniciando servidor via 'uv run'...")
+        print("Starting server via 'uv run'...")
         os.execvp("uv", ["uv", "run", "python"] + sys.argv)
 
-    print("\n[ERRO] O pacote 'fastapi' não foi encontrado no ambiente Python atual.")
-    print("Por favor, instale as dependências ou ative o ambiente virtual.\n")
+    print("\n[ERROR] The 'fastapi' package was not found in the current Python environment.")
+    print("Please install dependencies or activate the virtual environment.\n")
     sys.exit(1)
 
 _ensure_venv()

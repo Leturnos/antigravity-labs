@@ -173,7 +173,7 @@ function redrawWorld3D() {
   }
 }
 
-// Avança um ano da simulação ativa
+// Advances active simulation by one year
 function advanceYear() {
   if (!currentWorldData) return;
   

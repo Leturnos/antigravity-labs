@@ -138,21 +138,21 @@ export class VoiceSynth {
 
     switch (agentKey) {
       case 'debaterA':
-        // Dr. Marcus Vance: Tecnocrata firme, analítico, tom levemente mais grave e rápido
+        // Dr. Marcus Vance: Firm technocrat, analytical, slightly deeper and faster tone
         pitch = 0.92;
         rate = 1.08;
         genderPref = 'male';
         break;
 
       case 'debaterB':
-        // Dra. Helena Rios: Humanista expressiva, articulada, tom caloroso
+        // Dr. Helena Rios: Expressive humanist, articulate, warm tone
         pitch = 1.15;
         rate = 0.98;
         genderPref = 'female';
         break;
 
       case 'judge':
-        // Lexis-9: Juiz imparcial, tom mais solene, pausado e autoritário
+        // Lexis-9: Impartial judge, solemn tone, measured and authoritative
         pitch = 0.82;
         rate = 0.95;
         genderPref = 'male';
@@ -303,7 +303,7 @@ export class VoiceSynth {
 
     switch (agentKey) {
       case 'debaterA':
-        // Dr. Marcus Vance: Tecnocrata 165Hz, cybernetic resonance
+        // Dr. Marcus Vance: Technocrat 165Hz, cybernetic resonance
         baseFreq = 165;
         waveType = 'sawtooth';
         f1Freq = 620;
@@ -312,7 +312,7 @@ export class VoiceSynth {
         break;
 
       case 'debaterB':
-        // Dra. Helena Rios: Humanista 235Hz, warm melodic tone
+        // Dr. Helena Rios: Humanist 235Hz, warm melodic tone
         baseFreq = 235;
         waveType = 'triangle';
         f1Freq = 720;
@@ -321,7 +321,7 @@ export class VoiceSynth {
         break;
 
       case 'judge':
-        // Lexis-9: Árbitro 110Hz, deep synthetic vocoder
+        // Lexis-9: Arbiter 110Hz, deep synthetic vocoder
         baseFreq = 110;
         waveType = 'sawtooth';
         f1Freq = 420;

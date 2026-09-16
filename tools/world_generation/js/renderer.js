@@ -39,7 +39,7 @@ export function renderWorld(grid, mode, recentEvents = []) {
   
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // 1. Renderização base do grid
+  // 1. Base grid rendering
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const cell = grid[y][x];
@@ -67,21 +67,21 @@ export function renderWorld(grid, mode, recentEvents = []) {
     }
   }
 
-  // 2. Camadas adicionais da Fase 3 (somente na visualização de Biomas)
+  // 2. Additional Phase 3 layers (only in Biomes view)
   if (mode === 'biome') {
     const showKingdoms = document.getElementById('show-kingdoms')?.checked ?? false;
     const showResources = document.getElementById('show-resources')?.checked ?? false;
     const showCities = document.getElementById('show-cities-routes')?.checked ?? false;
     const showDungeons = document.getElementById('show-dungeons')?.checked ?? false;
 
-    // A. Reinos: territórios semitransparentes
+    // A. Kingdoms: semi-transparent territories
     if (showKingdoms && grid.kingdoms) {
       const KINGDOM_COLORS = [
-        'rgba(230, 57, 70, 0.15)',  // Vermelho
-        'rgba(69, 123, 157, 0.15)', // Azul
-        'rgba(131, 56, 236, 0.15)', // Roxo
-        'rgba(244, 162, 97, 0.15)', // Laranja
-        'rgba(42, 157, 143, 0.15)', // Verde-turquesa
+        'rgba(230, 57, 70, 0.15)',  // Red
+        'rgba(69, 123, 157, 0.15)', // Blue
+        'rgba(131, 56, 236, 0.15)', // Purple
+        'rgba(244, 162, 97, 0.15)', // Orange
+        'rgba(42, 157, 143, 0.15)', // Turquoise green
       ];
       
       for (let y = 0; y < size; y++) {
@@ -94,7 +94,7 @@ export function renderWorld(grid, mode, recentEvents = []) {
         }
       }
 
-      // Fronteiras
+      // Borders
       const KINGDOM_BORDER_COLORS = ['#e63946', '#457b9d', '#8338ec', '#f4a261', '#2a9d8f'];
       for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
@@ -108,7 +108,7 @@ export function renderWorld(grid, mode, recentEvents = []) {
       }
     }
 
-    // B. Recursos Naturais
+    // B. Natural Resources
     if (showResources) {
       const resourceEmojis = { wood: '🪵', ore: '⛏️', fish: '🐟', stone: '🧱', crops: '🌾' };
       const resourceColors = { wood: '#8b5a2b', ore: '#a9a9a9', fish: '#90e0ef', stone: '#d3d3d3', crops: '#ffd166' };
@@ -136,17 +136,17 @@ export function renderWorld(grid, mode, recentEvents = []) {
       }
     }
 
-    // C. Rotas Comerciais (Estradas)
+    // C. Trade Routes (Roads)
     if (showCities && grid.routes) {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
       for (const route of grid.routes) {
         if (route.isTradeRoute) {
-          ctx.strokeStyle = '#eab308'; // Dourado para rotas comerciais ativas
+          ctx.strokeStyle = '#eab308'; // Gold for active trade routes
           ctx.lineWidth = Math.max(2.2, cellSize * 0.35);
         } else {
-          ctx.strokeStyle = '#4a3728'; // Marrom padrão para estradas
+          ctx.strokeStyle = '#4a3728'; // Standard brown for roads
           ctx.lineWidth = Math.max(1.5, cellSize * 0.25);
         }
 
@@ -164,7 +164,7 @@ export function renderWorld(grid, mode, recentEvents = []) {
       }
     }
 
-    // D. Dungeons e POIs
+    // D. Dungeons and POIs
     if (showDungeons && grid.dungeons) {
       for (const dung of grid.dungeons) {
         const cx = dung.x * cellSize + cellSize / 2;
@@ -186,13 +186,13 @@ export function renderWorld(grid, mode, recentEvents = []) {
       }
     }
 
-    // E. Cidades e Assentamentos
+    // E. Cities and Settlements
     if (showCities && grid.cities) {
       for (const city of grid.cities) {
         const cx = city.x * cellSize + cellSize / 2;
         const cy = city.y * cellSize + cellSize / 2;
 
-        // Se for abandonada
+        // If abandoned
         if (city.isAbandoned) {
           if (cellSize >= 8) {
             ctx.textAlign = 'center';
@@ -200,7 +200,7 @@ export function renderWorld(grid, mode, recentEvents = []) {
             ctx.font = `${Math.floor(cellSize * 1.3)}px Arial`;
             ctx.fillText('💀', cx, cy);
           } else {
-            ctx.fillStyle = '#475569'; // Cinza escuro
+            ctx.fillStyle = '#475569'; // Dark gray
             ctx.strokeStyle = '#000000';
             ctx.lineWidth = 1;
             const r = Math.max(2, cellSize * 0.6);

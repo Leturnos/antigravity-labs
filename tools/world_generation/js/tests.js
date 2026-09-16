@@ -248,11 +248,11 @@ export function runPhase3Tests() {
 
   const grid = generateWorldData(params);
 
-  // Test 1: Cidades geradas e contadas corretamente
+  // Test 1: Cities correctly generated and counted
   console.assert(grid.cities !== undefined, "Error: Cities must be generated.");
   console.assert(grid.cities.length === params.cityCount, `Error: Expected ${params.cityCount} cities, got ${grid.cities.length}`);
 
-  // Test 2: Posicionamento ecológico e regras de cidades
+  // Test 2: Ecological positioning and city rules
   grid.cities.forEach(city => {
     const cell = grid[city.y][city.x];
     console.assert(cell.elevation >= 0.26, `Error: City ${city.name} placed on water at ${city.x},${city.y}`);
@@ -260,7 +260,7 @@ export function runPhase3Tests() {
     console.assert(cell.biome !== 'SWAMP', `Error: City ${city.name} placed on swamp`);
   });
 
-  // Test 3: Distância mínima respeitada
+  // Test 3: Minimum distance respected
   const minDist = Math.max(6, Math.floor(50 / (Math.sqrt(params.cityCount) * 1.6)));
   for (let i = 0; i < grid.cities.length; i++) {
     for (let j = i + 1; j < grid.cities.length; j++) {
@@ -271,12 +271,12 @@ export function runPhase3Tests() {
     }
   }
 
-  // Test 4: Reinos e capitais definidos
+  // Test 4: Kingdoms and capitals defined
   console.assert(grid.kingdoms !== undefined && grid.kingdoms.length > 0, "Error: Kingdoms must be generated.");
   const capitals = grid.cities.filter(c => c.type === 'capital');
   console.assert(capitals.length === grid.kingdoms.length, "Error: Number of kingdoms must match number of capitals.");
 
-  // Test 5: A* Pathfinding de estradas comerciais
+  // Test 5: A* Pathfinding for trade roads
   console.assert(grid.routes !== undefined, "Error: Routes must be generated.");
   grid.routes.forEach(route => {
     route.path.forEach(pt => {
@@ -286,7 +286,7 @@ export function runPhase3Tests() {
     });
   });
 
-  // Test 6: Recursos naturais coerentes com biomas
+  // Test 6: Natural resources consistent with biomes
   let resourceCount = 0;
   for (let y = 0; y < 50; y++) {
     for (let x = 0; x < 50; x++) {
@@ -307,7 +307,7 @@ export function runPhase3Tests() {
   }
   console.assert(resourceCount > 0, "Error: No natural resources generated.");
 
-  // Test 7: Dungeons geradas corretamente
+  // Test 7: Dungeons correctly generated
   console.assert(grid.dungeons !== undefined && grid.dungeons.length >= 3, "Error: Expected at least 3 dungeons.");
   grid.dungeons.forEach(dung => {
     const cell = grid[dung.y][dung.x];
