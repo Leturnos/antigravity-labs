@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Storage Internals — Mini LSM-Tree KV Storage Engine</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="../../../index.html" class="btn-back" title="Voltar ao Dashboard Central">
+        ← <span class="btn-text">Dashboard</span>
+      </a>
+      <div class="brand">
+        <span class="brand-icon">📦</span>
+        <div class="brand-info">
+          <h1 class="brand-title">AETHER STORAGE INTERNALS</h1>
+          <span class="brand-sub">Mini LSM-Tree KV Engine • RocksDB/LevelDB Architecture</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Stats Header -->
+    <div class="header-center">
+      <div class="stat-pill" title="Status da Conexão em Tempo Real">
+        <span class="status-dot" id="ws-status-dot"></span>
+        <span id="ws-status-text">Conectando...</span>
+      </div>
+      <div class="stat-pill" title="Escritas Totais (PUT / DEL)">
+        <span class="stat-label">ESCRITAS:</span>
+        <span class="stat-val" id="stat-writes">0</span>
+      </div>
+      <div class="stat-pill" title="Leituras Totais (GET / SCAN)">
+        <span class="stat-label">LEITURAS:</span>
+        <span class="stat-val" id="stat-reads">0</span>
+      </div>
+      <div class="stat-pill" title="Leituras em disco evitadas pelo Filtro de Bloom">
+        <span class="stat-label">BLOOM FILTER:</span>
+        <span class="stat-val text-cyan" id="stat-bloom">0 hits / 0 evitadas</span>
+      </div>
+      <div class="stat-pill" title="Tamanho total ocupado em disco (WAL + SSTables)">
+        <span class="stat-label">DISCO:</span>
+        <span class="stat-val text-amber" id="stat-disk-bytes">0 KB</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="btn-refresh" class="pill-btn" title="Recarregar estado da storage engine">
+        <span class="btn-icon">🔄</span> <span class="btn-text">Sincronizar</span>
+      </button>
+      <button id="btn-help" class="pill-btn" title="Explicação didática da arquitetura LSM-Tree">
+        <span class="btn-icon">❓</span> <span class="btn-text">Como Funciona</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Container -->
+  <main class="dashboard-layout">
+
+    <!-- Top: Interactive Pipeline Architecture Flow -->
+    <section class="pipeline-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="section-icon">⚡</span>
+          <span>PIPELINE ARQUITETURAL EM TEMPO REAL</span>
+        </div>
+        <div class="pipeline-legend">
+          <span class="legend-item"><span class="dot dot-write"></span> Escrita</span>
+          <span class="legend-item"><span class="dot dot-flush"></span> Flush</span>
+          <span class="legend-item"><span class="dot dot-compact"></span> Compactação</span>
+        </div>
+      </div>
+
+      <div class="pipeline-track" id="pipeline-track">
+        <!-- Node 1: Client Request -->
+        <div class="pipeline-node" id="node-client">
+          <div class="node-icon">💻</div>
+          <div class="node-name">Cliente / API</div>
+          <div class="node-sub">PUT, GET, DEL</div>
+          <div class="node-status" id="client-node-status">Pronto</div>
+        </div>
+
+        <div class="pipeline-arrow" id="arrow-client-wal">➜</div>
+
+        <!-- Node 2: Write-Ahead Log (WAL) -->
+        <div class="pipeline-node" id="node-wal">
+          <div class="node-badge disk-badge">DISCO</div>
+          <div class="node-icon">📜</div>
+          <div class="node-name">Write-Ahead Log</div>
+          <div class="node-sub" id="pipeline-wal-info">wal_active.log (0 B)</div>
+          <div class="node-meta">Append-only • CRC32</div>
+        </div>
+
+        <div class="pipeline-arrow" id="arrow-wal-mem">➜</div>
+
+        <!-- Node 3: Active MemTable (RAM) -->
+        <div class="pipeline-node" id="node-memtable">
+          <div class="node-badge ram-badge">RAM</div>
+          <div class="node-icon">🧠</div>
+          <div class="node-name">Active MemTable</div>
+          <div class="node-sub" id="pipeline-mem-info">0 chaves (0 B)</div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="mem-progress" style="width: 0%;"></div>
+          </div>
+          <div class="node-meta">SkipList O(log n)</div>
+        </div>
+
+        <div class="pipeline-arrow" id="arrow-mem-frozen">➜</div>
+
+        <!-- Node 4: Immutable MemTable (RAM) -->
+        <div class="pipeline-node" id="node-frozen">
+          <div class="node-badge ram-badge">RAM</div>
+          <div class="node-icon">❄️</div>
+          <div class="node-name">Frozen Buffer</div>
+          <div class="node-sub" id="pipeline-frozen-info">Vazio</div>
+          <div class="node-meta">Aguardando Flush</div>
+        </div>
+
+        <div class="pipeline-arrow" id="arrow-frozen-l0">➜</div>
+
+        <!-- Node 5: Level 0 SSTables (Disk) -->
+        <div class="pipeline-node" id="node-l0">
+          <div class="node-badge disk-badge">DISCO</div>
+          <div class="node-icon">📁</div>
+          <div class="node-name">Level 0 SSTables</div>
+          <div class="node-sub" id="pipeline-l0-info">0 arquivos</div>
+          <div class="node-meta">Faixas Sobrepostas</div>
+        </div>
+
+        <div class="pipeline-arrow" id="arrow-l0-l1">➜</div>
+
+        <!-- Node 6: Level 1 SSTables (Disk) -->
+        <div class="pipeline-node" id="node-l1">
+          <div class="node-badge disk-badge">DISCO</div>
+          <div class="node-icon">🗄️</div>
+          <div class="node-name">Level 1 SSTables</div>
+          <div class="node-sub" id="pipeline-l1-info">0 arquivos</div>
+          <div class="node-meta">Faixas Disjuntas</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace Columns -->
+    <div class="workspace-grid">
+
+      <!-- Left Column: Operations, Query Tracer & Chaos Lab -->
+      <div class="workspace-col left-col">
+
+        <!-- Panel 1: Interactive Query Console -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">⌨️</span>
+              <span>CONSOLE DE OPERAÇÕES KV</span>
+            </div>
+            <div class="tab-pills">
+              <button class="tab-pill active" data-tab="tab-put">PUT</button>
+              <button class="tab-pill" data-tab="tab-get">GET & TRACE</button>
+              <button class="tab-pill" data-tab="tab-del">DELETE</button>
+              <button class="tab-pill" data-tab="tab-scan">SCAN</button>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <!-- Tab PUT -->
+            <div class="tab-content active" id="tab-put">
+              <form id="form-put" class="kv-form">
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label>Chave (Key):</label>
+                    <input type="text" id="put-key" placeholder="ex: user:1001, config:theme" required>
+                  </div>
+                  <div class="form-group flex-2">
+                    <label>Valor (Value):</label>
+                    <input type="text" id="put-val" placeholder="ex: Leandro, {'status': 'active'}" required>
+                  </div>
+                </div>
+                <button type="submit" class="pill-btn primary">
+                  <span class="btn-icon">💾</span> Gravar Registro (PUT)
+                </button>
+              </form>
+            </div>
+
+            <!-- Tab GET & TRACE -->
+            <div class="tab-content" id="tab-get">
+              <form id="form-get" class="kv-form">
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label>Chave para Consulta com Rastreamento:</label>
+                    <input type="text" id="get-key" placeholder="ex: user:1001" required>
+                  </div>
+                </div>
+                <button type="submit" class="pill-btn cyan">
+                  <span class="btn-icon">🔍</span> Consultar & Rastrear (GET)
+                </button>
+              </form>
+            </div>
+
+            <!-- Tab DELETE -->
+            <div class="tab-content" id="tab-del">
+              <form id="form-del" class="kv-form">
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label>Chave para Exclusão (Gravação de Tombstone):</label>
+                    <input type="text" id="del-key" placeholder="ex: user:1001" required>
+                  </div>
+                </div>
+                <button type="submit" class="pill-btn danger">
+                  <span class="btn-icon">🗑️</span> Excluir Registro (DELETE)
+                </button>
+              </form>
+            </div>
+
+            <!-- Tab SCAN -->
+            <div class="tab-content" id="tab-scan">
+              <form id="form-scan" class="kv-form">
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label>Chave Inicial (Opcional):</label>
+                    <input type="text" id="scan-start" placeholder="ex: user:">
+                  </div>
+                  <div class="form-group flex-1">
+                    <label>Chave Final (Opcional):</label>
+                    <input type="text" id="scan-end" placeholder="ex: user:~">
+                  </div>
+                  <div class="form-group flex-small">
+                    <label>Limite:</label>
+                    <input type="number" id="scan-limit" value="25" min="1" max="100">
+                  </div>
+                </div>
+                <button type="submit" class="pill-btn primary">
+                  <span class="btn-icon">📑</span> Varrer Intervalo (SCAN)
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Visual Query Execution Tracer -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">🔬</span>
+              <span>QUERY EXECUTION TRACER (PASSO A PASSO)</span>
+            </div>
+            <span class="badge" id="tracer-duration">Aguardando consulta</span>
+          </div>
+          <div class="panel-body">
+            <p class="panel-hint">
+              Observe o caminho exato de um <code>GET</code> atravessando a memória RAM, os Filtros de Bloom e os blocos em disco.
+            </p>
+            <div class="tracer-timeline" id="tracer-timeline">
+              <div class="tracer-placeholder">
+                Execute uma consulta GET acima para ver o raio-X da busca em tempo real.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 3: Chaos Lab & Storage Actions -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">☣️</span>
+              <span>LABORATÓRIO DE CAOS & AÇÕES DE DISCO</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="actions-grid">
+              <button id="btn-action-flush" class="action-card" title="Grava imediatamente a MemTable ativa em uma nova SSTable L0">
+                <div class="action-icon">📤</div>
+                <div class="action-title">Forçar Flush</div>
+                <div class="action-desc">RAM ➜ Nova SSTable L0 no disco</div>
+              </button>
+
+              <button id="btn-action-compact" class="action-card" title="Executa a fusão ordenada de arquivos e remoção de tombstones">
+                <div class="action-icon">🗜️</div>
+                <div class="action-title">Compactar L0 ➜ L1</div>
+                <div class="action-desc">k-way merge sort & purga tombstones</div>
+              </button>
+
+              <button id="btn-action-crash" class="action-card danger" title="Simula desligamento abrupto (corte de energia), esvaziando a RAM sem flush">
+                <div class="action-icon">💥</div>
+                <div class="action-title">Simular Crash</div>
+                <div class="action-desc">Perde dados em RAM, preserva WAL</div>
+              </button>
+
+              <button id="btn-action-recover" class="action-card success" title="Reexecuta o log de transações (WAL) para restaurar o estado da MemTable">
+                <div class="action-icon">🛡️</div>
+                <div class="action-title">Replay do WAL</div>
+                <div class="action-desc">Recuperação de integridade com CRC32</div>
+              </button>
+            </div>
+
+            <!-- Benchmark Generator -->
+            <div class="bench-box">
+              <div class="bench-title">
+                <span>🚀 Gerador de Carga & Benchmarking:</span>
+              </div>
+              <div class="bench-buttons">
+                <button class="pill-btn small" id="btn-bench-seq" data-workload="sequential">
+                  100 Escritas Sequenciais
+                </button>
+                <button class="pill-btn small" id="btn-bench-rnd" data-workload="random">
+                  100 Escritas Aleatórias
+                </button>
+                <button class="pill-btn small" id="btn-bench-churn" data-workload="churn">
+                  100 Ops Mistas (60% W / 20% D / 20% R)
+                </button>
+              </div>
+              <div id="bench-feedback" class="bench-result hidden"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: SkipList Visualizer & SSTables Explorer -->
+      <div class="workspace-col right-col">
+
+        <!-- Panel 4: Interactive SkipList In-Memory Visualizer -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">🧬</span>
+              <span>MEMTABLE — TOPOLOGIA DA SKIPLIST (RAM)</span>
+            </div>
+            <div class="header-meta">
+              <span class="badge cyan" id="memtable-badge-nodes">0 nós</span>
+              <span class="badge purple" id="memtable-badge-bytes">0 B</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="skiplist-visualizer-container">
+              <div class="skiplist-canvas" id="skiplist-canvas">
+                <div class="empty-state">MemTable vazia. Insira registros para ver as torres da SkipList!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 5: SSTables Disk Storage Explorer -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">💾</span>
+              <span>SSTABLES NO DISCO POR NÍVEL (L0 / L1 / L2)</span>
+            </div>
+            <span class="badge amber" id="badge-total-sst">0 SSTables</span>
+          </div>
+          <div class="panel-body">
+            <div class="levels-container" id="levels-container">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 6: Scan Results / Query Output Box -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span class="panel-icon">📊</span>
+              <span>SAÍDA DE CONSULTAS / LOG DE OPERAÇÕES</span>
+            </div>
+            <button id="btn-clear-log" class="pill-btn small">Limpar</button>
+          </div>
+          <div class="panel-body">
+            <div class="console-output" id="console-output">
+              <div class="log-line info">Sistema inicializado. Conexão WebSocket pronta para receber telemetria.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal 1: Hex Dump & Binary Block Inspector -->
+  <div id="hex-modal" class="modal-backdrop hidden">
+    <div class="modal-card hex-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span style="font-size: 1.3rem;">🔍</span>
+          <span id="hex-modal-filename">Inspecionar Arquivo em Disco</span>
+        </div>
+        <button class="btn-close-modal" id="btn-close-hex-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="hex-info-bar" id="hex-info-bar">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Section Legend -->
+        <div class="hex-legend">
+          <span class="hex-tag data">Data Block</span>
+          <span class="hex-tag index">Sparse Index</span>
+          <span class="hex-tag filter">Bloom Filter</span>
+          <span class="hex-tag footer">SSTable Footer</span>
+        </div>
+
+        <!-- Hex View Pre -->
+        <div class="hex-dump-wrapper">
+          <pre class="hex-dump-content" id="hex-dump-content">Carregando bytes do disco...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Architecture Explanation -->
+  <div id="help-modal" class="modal-backdrop hidden">
+    <div class="modal-card help-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span style="font-size: 1.3rem;">📖</span>
+          <span>Como Funciona uma LSM-Tree (Log-Structured Merge-tree)</span>
+        </div>
+        <button class="btn-close-modal" id="btn-close-help-modal">✕</button>
+      </div>
+      <div class="modal-body help-body">
+        <h3>1. Escrita de Alta Performance (Sem I/O Randômico)</h3>
+        <p>Bancos relacionais tradicionais (B-Trees) gravam em páginas aleatórias do disco, causando alta latência. LSM-Trees (RocksDB, Cassandra) transformam qualquer gravação em <b>I/O sequencial</b>:</p>
+        <ul>
+          <li><b>WAL (Write-Ahead Log):</b> O registro é imediatamente gravado no final do arquivo de log com CRC32 para recuperação de desastres.</li>
+          <li><b>MemTable:</b> O registro é inserido em memória em uma <b>SkipList</b> ordenada em tempo O(log n).</li>
+        </ul>
+
+        <h3>2. Flush de Memória para Disco</h3>
+        <p>Quando a MemTable atinge seu limite (threshold), ela é congelada (Immutable) e gravada no disco como uma <b>SSTable (Sorted String Table)</b> imutável no Nível 0 (L0). O arquivo anterior do WAL é então descartado.</p>
+
+        <h3>3. Anatomia de uma SSTable</h3>
+        <ul>
+          <li><b>Data Block:</b> Registros ordenados consecutivamente em binário.</li>
+          <li><b>Sparse Index:</b> Amostragem de chaves e offsets a cada N registros. Permite busca binária sem carregar o arquivo todo.</li>
+          <li><b>Bloom Filter:</b> Vetor de bits probabilístico. Se o filtro disser que a chave NÃO está na SSTable, o disco <b>nem é tocado</b> (zero leituras!).</li>
+          <li><b>Footer (32 bytes):</b> Contém os offsets e o número mágico <code>AETH</code>.</li>
+        </ul>
+
+        <h3>4. Compactação em Background</h3>
+        <p>Conforme novas SSTables são criadas, arquivos velhos contêm chaves repetidas e lápides (Tombstones). A compactação roda uma <b>fusão ordenada (k-way merge sort)</b>, descartando dados obsoletos e gerando SSTables densas no Nível 1.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

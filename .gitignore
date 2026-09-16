@@ -36,3 +36,8 @@ design-md/
 # MCPs and plugins
 .playwright-mcp/
 superpowers/
+
+# Storage Engine data
+backend/aether_storage_internals/data/
+*.sst
+wal_*.log
