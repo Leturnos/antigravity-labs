@@ -539,6 +539,22 @@
             Abrir API Workbench
           </a>
         </div>
+
+        <!-- Aether Storage Internals -->
+        <div class="game-card storage-internals" onclick="location.href='backend/aether_storage_internals/static/index.html'" style="--color-storage-internals: #f59e0b; --color-storage-internals-glow: rgba(245, 158, 11, 0.3);" role="link" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">📦</div>
+            <h2>Aether Storage Internals</h2>
+            <p class="description">Engine artesanal de banco de dados chave-valor baseada em LSM-Tree (estilo RocksDB/LevelDB). Inspecione em tempo real o fluxo entre MemTable (SkipList), WAL, SSTables com Bloom Filters e compactação em disco.</p>
+          </div>
+          <div class="game-stats">
+            LSM-Tree • SkipList • WAL CRC32<br>
+            SSTables • Bloom Filters • Compaction
+          </div>
+          <a href="backend/aether_storage_internals/static/index.html" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir Storage Engine
+          </a>
+        </div>
       </div>
 
       <footer>

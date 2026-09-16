@@ -74,6 +74,14 @@ try:
 except Exception as err:
     print(f"[Warning] Could not load Aether API Workbench router: {err}")
 
+try:
+    from backend.aether_storage_internals.api.router import router as storage_router
+    from backend.aether_storage_internals.main import websocket_telemetry_endpoint
+    app.include_router(storage_router)
+    app.add_api_websocket_route("/ws/storage", websocket_telemetry_endpoint)
+except Exception as err:
+    print(f"[Warning] Could not load Aether Storage Internals router: {err}")
+
 # Ensure catch-all static mount is evaluated last so API routes take priority
 static_routes = [r for r in app.routes if getattr(r, "name", "") == "root_static"]
 for sr in static_routes:

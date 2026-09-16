@@ -606,6 +606,26 @@ header p {
   transform: translateY(-2px);
 }
 
+.game-card.storage-internals:hover {
+  transform: translateY(-8px);
+  border-color: #f59e0b !important;
+  box-shadow: 0 12px 30px rgba(245, 158, 11, 0.35) !important;
+}
+.game-card.storage-internals h2 { color: #fbbf24 !important; }
+.game-card.storage-internals .btn-launch {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #040408 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.game-card.storage-internals .btn-launch:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.6) !important;
+  transform: translateY(-2px);
+}
+
 .game-card.genetic-arena:hover {
   transform: translateY(-8px);
   border-color: #00f3ff !important;
