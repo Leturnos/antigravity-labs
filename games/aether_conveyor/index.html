@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Conveyor — Factorio-Lite & Supply Chain Logistics</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Game Canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Top Status Bar & Mission Control -->
+  <header id="top-hud">
+    <div class="hud-left">
+      <button id="btn-hub-exit" class="btn-hub" title="Voltar ao Painel Geral">← Hub</button>
+      <div class="hud-brand">
+        <span class="brand-title">AETHER CONVEYOR</span>
+        <span class="brand-subtitle">FACTORIO-LITE</span>
+      </div>
+    </div>
+
+    <!-- Center: Base Power Shield & Objective -->
+    <div class="hud-center">
+      <div class="energy-widget">
+        <div class="energy-label">
+          <span>⚡ Escudo da Base:</span>
+          <strong id="base-energy-txt">100% (3:00)</strong>
+        </div>
+        <div class="energy-track">
+          <div id="base-energy-fill" class="energy-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="sector-widget">
+        <div id="sector-title" class="sector-title">Setor 1: Extração & Metalurgia Primária</div>
+        <div id="sector-requirements" class="sector-reqs">Placa de Ferro: 0/25</div>
+      </div>
+    </div>
+
+    <!-- Right: Telemetry & Controls -->
+    <div class="hud-right">
+      <div class="telemetry-box">
+        <div class="telemetry-item">
+          <span class="label">Vazão:</span>
+          <span id="throughput-rate" class="val">0.0/min</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Rede:</span>
+          <span id="power-gen-txt" class="val">80W / 0W</span>
+          <span id="power-ratio-txt" class="val-ratio">100%</span>
+        </div>
+      </div>
+
+      <div class="hud-btn-group">
+        <button id="btn-pause" class="btn-ctrl" title="Pausar / Retomar (P)">⏸ Pausa</button>
+        <button id="btn-speed-1x" class="btn-ctrl" title="Velocidade Normal">1x</button>
+        <button id="btn-speed-2x" class="btn-ctrl" title="Velocidade 2x">2x</button>
+        <button id="btn-speed-5x" class="btn-ctrl" title="Velocidade 5x">5x</button>
+        <button id="btn-sound" class="btn-ctrl" title="Alternar Áudio">🔊 Som</button>
+        <button id="btn-research" class="btn-ctrl btn-tech" title="Árvore de Pesquisa Tecnológica">🔬 Pesquisa</button>
+        <button id="btn-guide" class="btn-ctrl btn-accent" title="Guia & Árvore de Receitas">📖 Guia</button>
+        <button id="btn-restart" class="btn-ctrl" title="Recomeçar Setor Atual">🔄 Recomeçar</button>
+        <button id="btn-menu" class="btn-ctrl" title="Menu Principal do Jogo (Esc)">⚙️ Menu</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Resource Stockpile Bar -->
+  <div id="stockpile-bar" class="stockpile-bar">
+    <div class="stockpile-label">📦 Armazém Hub:</div>
+    <div id="stockpile-items" class="stockpile-items">
+      <!-- Injected dynamically by HUD -->
+    </div>
+  </div>
+
+  <!-- Side Inspector Panel -->
+  <aside id="inspector-panel" class="inspector-panel">
+    <div class="inspector-header">
+      <h3 id="inspector-title">Inspetor de Máquina</h3>
+      <button id="btn-close-inspector" class="btn-close-modal" aria-label="Fechar">✕</button>
+    </div>
+    <div id="inspector-body" class="inspector-body">
+      <!-- Injected dynamically by HUD -->
+    </div>
+  </aside>
+
+  <!-- Bottom Build Hotbar -->
+  <nav id="build-hotbar" class="build-hotbar">
+    <div class="hotbar-slot active" data-tool="CONVEYOR" title="[1] Esteira Rolante (Arraste para Linha Contínua)">
+      <span class="hotbar-key">1</span>
+      <span class="hotbar-icon">➔</span>
+      <span class="hotbar-label">Esteira</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="UNDERGROUND_BELT" title="[2] Túnel Subterrâneo (Cruzar Linhas)">
+      <span class="hotbar-key">2</span>
+      <span class="hotbar-icon">⮑</span>
+      <span class="hotbar-label">Túnel</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="SPLITTER" title="[3] Divisor de Fluxo 1:1">
+      <span class="hotbar-key">3</span>
+      <span class="hotbar-icon">⑂</span>
+      <span class="hotbar-label">Divisor</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="INSERTER" title="[4] Braço Mecânico Inserter">
+      <span class="hotbar-key">4</span>
+      <span class="hotbar-icon">🦾</span>
+      <span class="hotbar-label">Inserter</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="MINER" title="[5] Mineradora Elétrica">
+      <span class="hotbar-key">5</span>
+      <span class="hotbar-icon">⛏️</span>
+      <span class="hotbar-label">Mineradora</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="SMELTER" title="[6] Fornalha Elétrica">
+      <span class="hotbar-key">6</span>
+      <span class="hotbar-icon">🔥</span>
+      <span class="hotbar-label">Fornalha</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="ASSEMBLER" title="[7] Montadora / Fabricador">
+      <span class="hotbar-key">7</span>
+      <span class="hotbar-icon">⚙️</span>
+      <span class="hotbar-label">Montadora</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="POWER_POLE" title="[8] Poste de Energia Substation">
+      <span class="hotbar-key">8</span>
+      <span class="hotbar-icon">⚡</span>
+      <span class="hotbar-label">Poste</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="DYNAMO_GENERATOR" title="[9] Dínamo a Carvão (160W)">
+      <span class="hotbar-key">9</span>
+      <span class="hotbar-icon">🔋</span>
+      <span class="hotbar-label">Dínamo</span>
+    </div>
+
+    <div class="hotbar-slot" data-tool="SOLAR_PANEL" title="[0] Painel Solar (50W)">
+      <span class="hotbar-key">0</span>
+      <span class="hotbar-icon">☀️</span>
+      <span class="hotbar-label">Solar</span>
+    </div>
+
+    <div class="hotbar-slot danger" data-tool="DEMOLISH" title="[X] Modo Demolição">
+      <span class="hotbar-key">X</span>
+      <span class="hotbar-icon">🗑️</span>
+      <span class="hotbar-label">Demolir</span>
+    </div>
+
+    <div class="hotbar-rotation-badge" title="Pressione [R] para Rotacionar">
+      <span class="rot-label">DIR [R]</span>
+      <span id="current-dir-txt" class="rot-dir">→</span>
+    </div>
+  </nav>
+
+  <!-- Help & Recipe Tree Modal -->
+  <div id="guide-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Manual de Engenharia da Base & Árvore de Produção</h2>
+        <button id="btn-close-guide" class="btn-close-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <section class="guide-section">
+          <h3>🕹️ Controles Principais</h3>
+          <ul class="guide-list">
+            <li><strong>Mover Câmera (Pan):</strong> Segure <strong>Espaço + Botão Esquerdo</strong> e arraste o mouse, ou clique e arraste com o <em>botão direito ou do meio</em>, ou use as teclas <strong>WASD / Setas</strong>.</li>
+            <li><strong>Zoom:</strong> Gire a roda do mouse (Scroll).</li>
+            <li><strong>Construção de Esteiras por Arraste:</strong> Clique com o <em>botão esquerdo</em> e arraste na horizontal ou vertical para criar uma linha reta contínua de esteiras apontando automaticamente na direção do arrasto!</li>
+            <li><strong>Demolição Contínua:</strong> Selecione o Demolidor [X], clique e arraste sobre qualquer estrutura para desmanchar em série.</li>
+            <li><strong>Rotacionar (Tecla R):</strong> Gira a orientação do edifício antes da colocação.</li>
+            <li><strong>Pipeta / Copiar (Tecla Q):</strong> Pressione Q sobre qualquer máquina para selecioná-la imediatamente.</li>
+            <li><strong>Pausar / Retomar (Tecla P):</strong> Pausa a simulação da fábrica.</li>
+            <li><strong>Inspecionar Máquina:</strong> Clique com o botão esquerdo em qualquer mineradora, fornalha ou montadora para abrir o painel de inspeção e alterar receitas.</li>
+          </ul>
+        </section>
+
+        <section class="guide-section">
+          <h3>⚡ Cadeia de Suprimentos & Receitas</h3>
+          <div class="recipe-grid">
+            <div class="recipe-card">
+              <h4>Fornalha Elétrica (Smelter)</h4>
+              <p>• Minério de Ferro ➔ <strong>Placa de Ferro</strong> (2.0s)</p>
+              <p>• Minério de Cobre ➔ <strong>Lingote de Cobre</strong> (2.0s)</p>
+              <p>• Minério de Silício ➔ <strong>Wafer de Silício</strong> (3.0s)</p>
+            </div>
+            <div class="recipe-card">
+              <h4>Montadora (Assembler)</h4>
+              <p>• 1 Lingote de Cobre ➔ <strong>2x Fios de Cobre</strong> (1.0s)</p>
+              <p>• 1 Placa de Ferro + 2 Fios de Cobre ➔ <strong>Placa de Circuito</strong> (2.0s)</p>
+              <p>• 1 Wafer de Silício + 2 Fios de Cobre ➔ <strong>Microchip Avançado</strong> (3.0s)</p>
+              <p>• 2 Placas de Ferro + 1 Carvão + 1 Fio ➔ <strong>Bateria Aether</strong> (4.0s)</p>
+              <p>• 2 Microchips + 1 Bateria ➔ <strong>Núcleo Warp</strong> (6.0s)</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <h3>⛏️ Minérios e Recursos Naturais</h3>
+          <div class="recipe-grid">
+            <div class="recipe-card" style="border-left: 3px solid #94a3b8;">
+              <h4>[Fe] Minério de Ferro (Iron Ore)</h4>
+              <p>• Identificação: Manchas cinza-aço com cristais prateados e símbolo <strong>[Fe]</strong>.</p>
+              <p>• Aplicação: Fundido em <strong>Placas de Ferro</strong> para esteiras, estruturas e circuitos.</p>
+            </div>
+            <div class="recipe-card" style="border-left: 3px solid #f97316;">
+              <h4>[Cu] Minério de Cobre (Copper Ore)</h4>
+              <p>• Identificação: Depósitos alaranjados brilhantes com símbolo <strong>[Cu]</strong>.</p>
+              <p>• Aplicação: Fundido em Lingotes para manufatura de <strong>Fios de Cobre</strong>.</p>
+            </div>
+            <div class="recipe-card" style="border-left: 3px solid #475569;">
+              <h4>[C] Carvão Mineral (Coal)</h4>
+              <p>• Identificação: Depósitos escuros com fagulhas de brasa e símbolo <strong>[C]</strong>.</p>
+              <p>• Aplicação: Combustível para <strong>Dínamos</strong> elétricos e confecção de <strong>Baterias</strong>.</p>
+            </div>
+            <div class="recipe-card" style="border-left: 3px solid #06b6d4;">
+              <h4>[Si] Minério de Silício (Silicon Ore)</h4>
+              <p>• Identificação: Cristais azul-ciano cintilantes com símbolo <strong>[Si]</strong>.</p>
+              <p>• Aplicação: Fundido em Wafers para produção de <strong>Microchips</strong> de alta tecnologia.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <h3>💡 Dicas Estratégicas de Logística</h3>
+          <p>• Os <strong>Inserters</strong> recolhem itens do tile <em>atrás deles</em> e giram 180° para depositar no tile <em>à frente</em>.</p>
+          <p>• Entregar itens refinados no <strong>Tech Hub (Núcleo Central)</strong> recarrega os escudos da base e concede pontuações massivas.</p>
+          <p>• Mantenha geradores (Painéis Solares ou Dínamos a carvão) interligados por Postes de Energia para que todas as máquinas operem a 100% de velocidade.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technology Research Tree Modal -->
+  <div id="research-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2>🔬 Centro de Pesquisas Tecnológicas Aether</h2>
+        <button id="btn-close-research" class="btn-close-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 8px;">
+          Entregue insumos ao <strong>Tech Hub</strong> para abastecer o armazém e pesquisar melhorias permanentes de velocidade, energia e capacidade de escudo.
+        </p>
+        <div id="research-cards-list" class="research-cards-list">
+          <!-- Injected dynamically by HUD -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sector Victory / Game Over Overlay Modal -->
+  <div id="status-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h2 id="status-modal-title">STATUS DA MISSÃO</h2>
+      </div>
+      <div class="modal-content" style="align-items: center;">
+        <div id="status-modal-icon" style="font-size: 48px;">⚠️</div>
+        <p id="status-modal-message" style="font-size: 14px; line-height: 1.6; color: var(--text-dim); margin: 8px 0;"></p>
+        <button id="btn-status-action" class="btn-ctrl btn-accent" style="padding: 10px 24px; font-size: 14px; margin-top: 8px;">Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Menu / Pause Modal -->
+  <div id="game-menu-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 420px; text-align: center;">
+      <div class="modal-header" style="justify-content: space-between;">
+        <h2>⚙️ MENU DO JOGO</h2>
+        <button id="btn-close-game-menu" class="btn-close-modal" aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-content" style="gap: 12px;">
+        <div style="font-size: 13px; color: var(--text-dim); padding-bottom: 4px;">
+          <span id="menu-sector-name">Setor 1: Extração & Metalurgia</span>
+        </div>
+        <button id="btn-menu-resume" class="btn-ctrl btn-accent" style="padding: 12px; font-size: 14px; font-weight: 700;">▶ Retomar Jogo</button>
+        <button id="btn-menu-restart" class="btn-ctrl" style="padding: 10px; font-size: 13px;">🔄 Recomeçar Setor Atual</button>
+        <button id="btn-menu-new-game" class="btn-ctrl" style="padding: 10px; font-size: 13px;">✨ Novo Jogo (Setor 1)</button>
+        <button id="btn-menu-sound" class="btn-ctrl" style="padding: 10px; font-size: 13px;">🔊 Alternar Áudio</button>
+        <div style="border-top: 1px solid var(--border-color); margin: 4px 0;"></div>
+        <button id="btn-menu-exit" class="btn-ctrl btn-demolish-modal" style="padding: 10px; font-size: 13px; margin: 0;">🚪 Sair para o Hub Principal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exit Confirmation Modal -->
+  <div id="exit-confirm-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h2 style="color: var(--accent-red);">⚠️ AVISO: SAIR PARA O HUB</h2>
+      </div>
+      <div class="modal-content" style="align-items: center; gap: 14px;">
+        <div style="font-size: 44px;">⚠️</div>
+        <p style="font-size: 14px; line-height: 1.6; color: var(--text-dim); margin: 0;">
+          O seu progresso no setor atual (fábricas, esteiras e insumos) <strong>NÃO será salvo</strong> ao retornar para o portal central.
+        </p>
+        <p style="font-size: 12px; color: var(--text-dim); margin: 0;">
+          Deseja realmente abandonar a operação em andamento?
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; width: 100%; margin-top: 6px;">
+          <button id="btn-cancel-exit" class="btn-ctrl" style="flex: 1; padding: 10px 16px;">Continuar Jogando</button>
+          <button id="btn-confirm-exit" class="btn-ctrl btn-demolish-modal" style="flex: 1; padding: 10px 16px; margin: 0;">Sair sem Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restart Confirmation Modal -->
+  <div id="restart-confirm-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <h2 style="color: var(--accent-amber);">🔄 REINICIAR SETOR</h2>
+      </div>
+      <div class="modal-content" style="align-items: center; gap: 14px;">
+        <div style="font-size: 44px;">🔄</div>
+        <p style="font-size: 14px; line-height: 1.6; color: var(--text-dim); margin: 0;">
+          Tem certeza de que deseja recomeçar este setor? Todas as construções serão desfeitas e a linha de suprimentos voltará ao início.
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; width: 100%; margin-top: 6px;">
+          <button id="btn-cancel-restart" class="btn-ctrl" style="flex: 1; padding: 10px 16px;">Cancelar</button>
+          <button id="btn-confirm-restart" class="btn-ctrl btn-accent" style="flex: 1; padding: 10px 16px;">Confirmar Reinício</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js?v=3"></script>
+</body>
+</html>
