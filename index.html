@@ -70,6 +70,18 @@
             Explorar Backend
           </div>
         </div>
+
+        <!-- Systems Category Card -->
+        <div class="category-card systems" onclick="showView('view-systems')" role="button" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">🧬</div>
+            <h2>Systems</h2>
+            <p class="description">Explore a reimplementação artesanal das peças que existem por baixo dos serviços: storage engines, bancos de dados e sistemas distribuídos, como o Aether Storage Internals (LSM-Tree).</p>
+          </div>
+          <div class="btn-launch">
+            Explorar Systems
+          </div>
+        </div>
       </div>
 
       <footer>
@@ -555,9 +567,29 @@
             Abrir API Workbench
           </a>
         </div>
+      </div>
 
+      <footer>
+        <p>Aether Backend &copy; 2026. Desenvolvido para microsserviços e processamento em background.</p>
+      </footer>
+    </section>
+
+    <!-- 6. SYSTEMS VIEW -->
+    <section id="view-systems" class="dashboard-view">
+      <header>
+        <div class="logo" style="font-size: 2.25rem;">AETHER SYSTEMS</div>
+        <p>Internals construídos do zero: storage engines, bancos de dados e sistemas distribuídos para entender como as coisas funcionam por dentro.</p>
+      </header>
+
+      <div class="view-header">
+        <button class="btn-back" onclick="showView('view-categories')">
+          <span style="font-size: 1.45rem; font-weight: bold; line-height: 1;">←</span> Voltar ao Início
+        </button>
+      </div>
+
+      <div class="tools-grid">
         <!-- Aether Storage Internals -->
-        <div class="game-card storage-internals" onclick="location.href='backend/aether_storage_internals/static/index.html'" style="--color-storage-internals: #f59e0b; --color-storage-internals-glow: rgba(245, 158, 11, 0.3);" role="link" tabindex="0">
+        <div class="game-card storage-internals" onclick="location.href='systems/aether_storage_internals/static/index.html'" style="--color-storage-internals: #f59e0b; --color-storage-internals-glow: rgba(245, 158, 11, 0.3);" role="link" tabindex="0">
           <div class="top-section">
             <div class="icon-box">📦</div>
             <h2>Aether Storage Internals</h2>
@@ -567,14 +599,14 @@
             LSM-Tree • SkipList • WAL CRC32<br>
             SSTables • Bloom Filters • Compaction
           </div>
-          <a href="backend/aether_storage_internals/static/index.html" class="btn-launch" onclick="event.stopPropagation()">
+          <a href="systems/aether_storage_internals/static/index.html" class="btn-launch" onclick="event.stopPropagation()">
             Abrir Storage Engine
           </a>
         </div>
       </div>
 
       <footer>
-        <p>Aether Backend &copy; 2026. Desenvolvido para microsserviços e processamento em background.</p>
+        <p>Aether Systems &copy; 2026. Desenvolvido para explorar systems programming e internals.</p>
       </footer>
     </section>
   </main>

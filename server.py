@@ -75,8 +75,8 @@ except Exception as err:
     print(f"[Warning] Could not load Aether API Workbench router: {err}")
 
 try:
-    from backend.aether_storage_internals.api.router import router as storage_router
-    from backend.aether_storage_internals.main import websocket_telemetry_endpoint
+    from systems.aether_storage_internals.api.router import router as storage_router
+    from systems.aether_storage_internals.main import websocket_telemetry_endpoint
     app.include_router(storage_router)
     app.add_api_websocket_route("/ws/storage", websocket_telemetry_endpoint)
 except Exception as err:

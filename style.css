@@ -1010,6 +1010,21 @@ footer {
   box-shadow: 0 6px 16px rgba(6, 182, 212, 0.5);
 }
 
+.category-card.systems:hover {
+  transform: translateY(-8px);
+  border-color: #10b981;
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
+}
+.category-card.systems h2 { color: #34d399; }
+.category-card.systems .btn-launch {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.category-card.systems .btn-launch:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+}
+
 .game-card.event-hub:hover {
   transform: translateY(-8px);
   border-color: #06b6d4;

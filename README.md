@@ -22,7 +22,6 @@ antigravity-labs/
 ├── backend/     # APIs, microsserviços e utilitários de servidor
 │   ├── aether_api_workbench/ # Aether API Workbench & Mock Server (FastAPI, SQLite, REST/WS Proxy, JSON Schema Mocks & Latency Analytics)
 │   ├── aether_event_hub/ # Aether Event Hub & Task Queue - Fila de eventos e agendamento async (FastAPI, SQLite WAL, WebSockets)
-│   ├── aether_storage_internals/ # Aether Storage Internals - Mini LSM-Tree KV Storage Engine (SkipList, WAL, SSTables, Bloom Filters, Compaction)
 │   └── library_api/ # API de Biblioteca (FastAPI, SQLite, SQLAlchemy)
 ├── games/       # Jogos interativos e experiências visuais
 │   ├── aether_conveyor/ # Aether Conveyor - Jogo de automação e logística contínua em grade 2D (Factorio-Lite) com esteiras físicas, inserters, montadoras e gestão energética
@@ -37,6 +36,8 @@ antigravity-labs/
 │   ├── snake/   # Aether Snake - Cobrinha com IA Autopilot (BFS + Cauda) e modo Manual
 │   ├── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 │   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
+├── systems/     # Internals construídos do zero (storage engines, bancos de dados, sistemas distribuídos)
+│   └── aether_storage_internals/ # Aether Storage Internals - Mini LSM-Tree KV Storage Engine (SkipList, WAL, SSTables, Bloom Filters, Compaction)
 └── tools/       # Ferramentas, scripts de automação e utilitários
     ├── aether_collab_board/ # Aether Collab Board - Canvas infinito para diagramação e quadros interativos (Mermaid.js, WebSockets)
     ├── aether_logic_lab/ # Aether Logic Lab - Simulador de circuitos digitais, portas lógicas, osciloscópio e mini-ALU
@@ -56,11 +57,13 @@ flowchart LR
     Root --> Launcher
     Root --> Backend["⚙️ Backend"]
     Root --> AI["🤖 AI"]
+    Root --> Systems["🧬 Systems"]
 
     Launcher --> Games["🎮 Games"]
     Launcher --> Tools["🛠️ Tools"]
     Launcher --> AI["🤖 AI"]
     Launcher --> Backend["⚙️ Backend"]
+    Launcher --> Systems["🧬 Systems"]
 
     Games --> Conveyor["⚡ Aether Conveyor"]
     Games --> FlowfieldTD["Aether Flowfield TD"]
@@ -77,8 +80,9 @@ flowchart LR
 
     Backend --> EventHub["📡 Aether Event Hub"]
     Backend --> APIWorkbench["🔌 Aether API Workbench"]
-    Backend --> StorageInternals["📦 Aether Storage Internals"]
     Backend --> LibraryAPI["📚 Library API"]
+
+    Systems --> StorageInternals["📦 Aether Storage Internals"]
     
     Tools --> WorldGen["🛸 Aether World Generator"]
     Tools --> AudioSynth["🎹 Aether Audio Synth"]
@@ -96,6 +100,7 @@ flowchart LR
     style Launcher fill:#6366f1,stroke:#fff,stroke-width:1.5px,color:#fff
     style Games fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff
     style Backend fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
+    style Systems fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style AI fill:#8b5cf6,stroke:#fff,stroke-width:1px,color:#fff
     style Tools fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#fff
     style Conveyor fill:#00f3ff,stroke:#fff,stroke-width:1px,color:#000
@@ -163,8 +168,13 @@ flowchart LR
 | :--- | :--- | :--- | :--- | :--- |
 | **Aether Event Hub 📡** | [backend/aether_event_hub](./backend/aether_event_hub) | `Concluído` | Sistema leve de agendamento de tarefas e fila de eventos distribuídos em background com monitoramento visual em tempo real via WebSockets, SQLite WAL e FastAPI. | Python, FastAPI, aiosqlite, WebSockets, HTML5, CSS3, JS |
 | **Aether API Workbench 🔌** | [backend/aether_api_workbench](./backend/aether_api_workbench) | `Concluído` | Suíte completa de testes HTTP/REST, SSE e WebSocket em tempo real, gerador dinâmico de Mock Server com JSON Schema e análise gráfica de latência RTT. | Python, FastAPI, SQLite, HTML5, CSS3, JS |
-| **Aether Storage Internals 📦** | [backend/aether_storage_internals](./backend/aether_storage_internals) | `Concluído` | Storage Engine chave-valor artesanal LSM-Tree (estilo RocksDB/LevelDB) com MemTable em SkipList O(log n), WAL append-only com CRC32, SSTables binárias com Sparse Index e Bloom Filters, compactação k-way merge e inspetor de disco. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
 | **Library API 📚** | [backend/library_api](./backend/library_api) | `Concluído` | API RESTful para gerenciamento de biblioteca (catálogo de livros, controle de leitores, autenticação JWT e gestão atômica de empréstimos/devoluções). | Python, FastAPI, SQLite, SQLAlchemy, PyJWT, Pytest |
+
+### Systems (Internals e Sistemas)
+
+| Projeto | Caminho | Status | Descrição | Tecnologias |
+| :--- | :--- | :--- | :--- | :--- |
+| **Aether Storage Internals 📦** | [systems/aether_storage_internals](./systems/aether_storage_internals) | `Concluído` | Storage Engine chave-valor artesanal LSM-Tree (estilo RocksDB/LevelDB) com MemTable em SkipList O(log n), WAL append-only com CRC32, SSTables binárias com Sparse Index e Bloom Filters, compactação k-way merge e inspetor de disco. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
 
 ### Tools (Ferramentas)
 
@@ -207,7 +217,8 @@ Acesse no navegador:
     *   **Jogos (Games)**: Aether Flowfield TD, Aether Raycaster 3D, Aether Cyber Slay, Aether Cyber Tactics, Aether Rogue, Aether Chess, Aether-Sweeper, Aether Tetris, Aether Snake, Aether Tic-Tac-Toe e Aether Poker.
     *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab, Aether Collab Board, Aether Shader Studio e Aether Logic Lab.
     *   **Inteligência Artificial (AI)**: Aether Agent Matrix, Aether Vision Sandbox, Aether Genetic Arena e Aether Neural Canvas.
-    *   **Backend**: Aether Event Hub & Task Queue, Aether API Workbench & Mock Server e Aether Storage Internals.
+    *   **Backend**: Aether Event Hub & Task Queue e Aether API Workbench & Mock Server.
+    *   **Systems**: Aether Storage Internals.
 
 ---
 

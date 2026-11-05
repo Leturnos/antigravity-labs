@@ -93,7 +93,7 @@ python server.py
 ```
 
 Acesse no navegador:
-* **Dashboard do Banco de Dados:** [http://localhost:8000/backend/aether_storage_internals/static/index.html](http://localhost:8000/backend/aether_storage_internals/static/index.html)
+* **Dashboard do Banco de Dados:** [http://localhost:8000/systems/aether_storage_internals/static/index.html](http://localhost:8000/systems/aether_storage_internals/static/index.html)
 * **Documentação Swagger/OpenAPI:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
@@ -123,5 +123,5 @@ Acesse no navegador:
 Para rodar todos os testes unitários e de integração do motor:
 
 ```bash
-python -m unittest discover backend/aether_storage_internals/tests/
+python -m unittest discover systems/aether_storage_internals/tests/
 ```

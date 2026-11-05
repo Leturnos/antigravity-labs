@@ -38,6 +38,6 @@ design-md/
 superpowers/
 
 # Storage Engine data
-backend/aether_storage_internals/data/
+systems/aether_storage_internals/data/
 *.sst
 wal_*.log

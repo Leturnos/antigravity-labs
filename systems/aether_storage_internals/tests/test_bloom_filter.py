@@ -1,7 +1,7 @@
 """Unit tests for BloomFilter probabilistic indexing."""
 
 import unittest
-from backend.aether_storage_internals.engine.bloom_filter import BloomFilter
+from systems.aether_storage_internals.engine.bloom_filter import BloomFilter
 
 
 class TestBloomFilter(unittest.TestCase):
