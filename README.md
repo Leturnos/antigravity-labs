@@ -37,7 +37,8 @@ antigravity-labs/
 │   ├── tetris/  # Aether Tetris - Tetris Premium inspirado no design da Linear.app
 │   └── tictactoe/ # Aether Tic-Tac-Toe - Jogo da Velha com IA Minimax
 ├── systems/     # Internals construídos do zero (storage engines, bancos de dados, sistemas distribuídos)
-│   └── aether_storage_internals/ # Aether Storage Internals - Mini LSM-Tree KV Storage Engine (SkipList, WAL, SSTables, Bloom Filters, Compaction)
+│   ├── aether_storage_internals/ # Aether Storage Internals - Mini LSM-Tree KV Storage Engine (SkipList, WAL, SSTables, Bloom Filters, Compaction)
+│   └── aether_quorum_db/ # Aether QuorumDB - Banco SQL distribuído sobre consenso Raft (Simulação Determinística, Leader Election, Log Replication, ReadIndex, Snapshots)
 └── tools/       # Ferramentas, scripts de automação e utilitários
     ├── aether_collab_board/ # Aether Collab Board - Canvas infinito para diagramação e quadros interativos (Mermaid.js, WebSockets)
     ├── aether_logic_lab/ # Aether Logic Lab - Simulador de circuitos digitais, portas lógicas, osciloscópio e mini-ALU
@@ -83,6 +84,7 @@ flowchart LR
     Backend --> LibraryAPI["📚 Library API"]
 
     Systems --> StorageInternals["📦 Aether Storage Internals"]
+    Systems --> QuorumDB["🗳️ Aether QuorumDB"]
     
     Tools --> WorldGen["🛸 Aether World Generator"]
     Tools --> AudioSynth["🎹 Aether Audio Synth"]
@@ -118,6 +120,7 @@ flowchart LR
     style EventHub fill:#06b6d4,stroke:#fff,stroke-width:1px,color:#fff
     style APIWorkbench fill:#6366f1,stroke:#fff,stroke-width:1px,color:#fff
     style StorageInternals fill:#f59e0b,stroke:#fff,stroke-width:1px,color:#000
+    style QuorumDB fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style LibraryAPI fill:#10b981,stroke:#fff,stroke-width:1px,color:#fff
     style WorldGen fill:#6366f1,stroke:#fff,stroke-width:1px,color:#fff
     style AudioSynth fill:#ec4899,stroke:#fff,stroke-width:1px,color:#fff
@@ -175,6 +178,7 @@ flowchart LR
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
 | **Aether Storage Internals 📦** | [systems/aether_storage_internals](./systems/aether_storage_internals) | `Concluído` | Storage Engine chave-valor artesanal LSM-Tree (estilo RocksDB/LevelDB) com MemTable em SkipList O(log n), WAL append-only com CRC32, SSTables binárias com Sparse Index e Bloom Filters, compactação k-way merge e inspetor de disco. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
+| **Aether QuorumDB 🗳️** | [systems/aether_quorum_db](./systems/aether_quorum_db) | `Em desenvolvimento` | Banco de dados SQL distribuído construído do zero: consenso Raft (eleição, replicação de log, ReadIndex, snapshots) em cluster simulado de forma determinística com injeção de falhas. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
 
 ### Tools (Ferramentas)
 
@@ -218,7 +222,7 @@ Acesse no navegador:
     *   **Ferramentas (Tools)**: Aether World Generator, Aether Audio Synth, Aether Motion Lab, Aether Collab Board, Aether Shader Studio e Aether Logic Lab.
     *   **Inteligência Artificial (AI)**: Aether Agent Matrix, Aether Vision Sandbox, Aether Genetic Arena e Aether Neural Canvas.
     *   **Backend**: Aether Event Hub & Task Queue e Aether API Workbench & Mock Server.
-    *   **Systems**: Aether Storage Internals.
+    *   **Systems**: Aether Storage Internals e Aether QuorumDB.
 
 ---
 

@@ -1069,3 +1069,18 @@ footer {
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateX(-4px);
 }
+
+.game-card.quorum-db:hover {
+  transform: translateY(-8px);
+  border-color: #10b981;
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
+}
+.game-card.quorum-db h2 { color: #34d399 !important; }
+.game-card.quorum-db .btn-launch {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.game-card.quorum-db .btn-launch:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+}

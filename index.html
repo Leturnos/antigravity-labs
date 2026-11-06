@@ -76,7 +76,7 @@
           <div class="top-section">
             <div class="icon-box">🧬</div>
             <h2>Systems</h2>
-            <p class="description">Explore a reimplementação artesanal das peças que existem por baixo dos serviços: storage engines, bancos de dados e sistemas distribuídos, como o Aether Storage Internals (LSM-Tree).</p>
+            <p class="description">Explore a reimplementação artesanal das peças que existem por baixo dos serviços: storage engines, bancos de dados e sistemas distribuídos, como o Aether Storage Internals (LSM-Tree) e o Aether QuorumDB (Raft + SQL).</p>
           </div>
           <div class="btn-launch">
             Explorar Systems
@@ -601,6 +601,22 @@
           </div>
           <a href="systems/aether_storage_internals/static/index.html" class="btn-launch" onclick="event.stopPropagation()">
             Abrir Storage Engine
+          </a>
+        </div>
+
+        <!-- Aether QuorumDB -->
+        <div class="game-card quorum-db" onclick="location.href='systems/aether_quorum_db/static/index.html'" role="link" tabindex="0">
+          <div class="top-section">
+            <div class="icon-box">🗳️</div>
+            <h2>Aether QuorumDB</h2>
+            <p class="description">Banco de dados SQL distribuído construído do zero sobre consenso Raft. Cluster simulado de forma determinística com eleição de líder, replicação de log, snapshots e injeção de falhas (crash, partição e perda de pacotes).</p>
+          </div>
+          <div class="game-stats">
+            Raft • Leader Election • Log Replication<br>
+            ReadIndex • Snapshots • Fault Injection
+          </div>
+          <a href="systems/aether_quorum_db/static/index.html" class="btn-launch" onclick="event.stopPropagation()">
+            Abrir QuorumDB
           </a>
         </div>
       </div>

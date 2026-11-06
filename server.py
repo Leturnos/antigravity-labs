@@ -82,6 +82,12 @@ try:
 except Exception as err:
     print(f"[Warning] Could not load Aether Storage Internals router: {err}")
 
+try:
+    from systems.aether_quorum_db.api.router import router as quorum_router
+    app.include_router(quorum_router)
+except Exception as err:
+    print(f"[Warning] Could not load Aether QuorumDB router: {err}")
+
 # Ensure catch-all static mount is evaluated last so API routes take priority
 static_routes = [r for r in app.routes if getattr(r, "name", "") == "root_static"]
 for sr in static_routes:
