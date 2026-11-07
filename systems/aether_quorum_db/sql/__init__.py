@@ -26,24 +26,34 @@ from .ast import (
     UnaryOp,
     Update,
 )
+from .btree import BPlusTree
+from .catalog import Catalog, ColumnSchema, IndexSchema, TableSchema
+from .database import ConstraintViolation, Database, ExecutionError, ResultSet
 from .errors import LexError, ParseError, SqlError
 from .lexer import Lexer
 from .parser import Parser
 from .tokens import Token, TokenType
 
 __all__ = [
+    "BPlusTree",
     "Between",
     "BinaryOp",
+    "Catalog",
     "ColumnDef",
     "ColumnRef",
+    "ColumnSchema",
+    "ConstraintViolation",
     "CreateIndex",
     "CreateTable",
+    "Database",
     "Delete",
     "DropTable",
+    "ExecutionError",
     "Explain",
     "Expression",
     "FunctionCall",
     "InList",
+    "IndexSchema",
     "Insert",
     "IsNull",
     "JoinClause",
@@ -54,11 +64,13 @@ __all__ = [
     "ParseError",
     "Parser",
     "Projection",
+    "ResultSet",
     "Select",
     "SqlError",
     "Star",
     "Statement",
     "TableRef",
+    "TableSchema",
     "Token",
     "TokenType",
     "UnaryOp",
