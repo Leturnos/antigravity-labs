@@ -3,28 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aether QuorumDB — Raft + SQL</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #0b0f14;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
-      text-align: center;
-    }
-    h1 { color: #34d399; letter-spacing: -0.02em; }
-    p { color: #94a3b8; max-width: 36rem; line-height: 1.6; }
-    a { color: #34d399; }
-  </style>
+  <title>Aether QuorumDB — Distributed Raft SQL Database</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <h1>🗳️ Aether QuorumDB</h1>
-    <p>Banco de dados SQL distribuído sobre um consenso Raft artesanal. O dashboard de visualização do cluster está em construção.</p>
-    <p><a href="/">← Voltar ao Aether Suite</a></p>
-  </main>
+
+  <!-- Top Header -->
+  <header>
+    <div class="logo-section">
+      <h1>🗳️ AETHER QUORUMDB</h1>
+      <p>Banco de dados SQL distribuído sobre algoritmo de consenso Raft determinístico</p>
+    </div>
+
+    <div class="header-badges">
+      <span class="badge" id="clock-badge">Clock: 0 ticks</span>
+      <span class="badge" id="leader-badge">Leader: None</span>
+      <span class="badge ws-disconnected" id="ws-badge">● Desconectado</span>
+      <a href="/?view=view-systems" class="btn-back">← Voltar ao Início</a>
+    </div>
+  </header>
+
+  <!-- Simulation Control Bar -->
+  <section class="controls-bar">
+    <button class="btn-ctrl btn-primary" onclick="stepSimulation(1)">▶ Step +1</button>
+    <button class="btn-ctrl" onclick="stepSimulation(5)">⏩ Step +5</button>
+    <button class="btn-ctrl" onclick="stepSimulation(20)">⏭️ Step +20</button>
+    <button class="btn-ctrl" id="auto-tick-btn" onclick="toggleAutoTick()">⏱️ Auto-Tick: Desligado</button>
+    <button class="btn-ctrl btn-danger" onclick="resetCluster()">🔄 Reset Cluster</button>
+  </section>
+
+  <!-- Raft Node Cards (Cluster View) -->
+  <section class="nodes-grid" id="nodes-container">
+    <!-- Populated dynamically by app.js -->
+  </section>
+
+  <!-- Main Split View: SQL Console & Network/Faults -->
+  <div class="dashboard-grid">
+    <!-- SQL Console Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>💻 SQL Console</span>
+        <span style="font-size: 0.8rem; font-weight: normal; color: var(--color-text-muted);">Ctrl+Enter para executar</span>
+      </div>
+
+      <!-- Quick SQL Templates -->
+      <div class="sql-templates">
+        <button class="template-btn" onclick="setQuery('SELECT * FROM users;')">users</button>
+        <button class="template-btn" onclick="setQuery('SELECT * FROM logs;')">logs</button>
+        <button class="template-btn" onclick="setQuery('INSERT INTO users (id, name, role, balance) VALUES (4, \'David\', \'DevOps\', 1100);')">+insert</button>
+        <button class="template-btn" onclick="setQuery('UPDATE users SET balance = balance + 100 WHERE role = \'Engineer\';')">+update</button>
+        <button class="template-btn" onclick="setQuery('SELECT role, COUNT(*), AVG(balance) FROM users GROUP BY role;')">group by</button>
+        <button class="template-btn" onclick="setQuery('EXPLAIN SELECT * FROM users WHERE id = 1;')">explain</button>
+      </div>
+
+      <textarea id="sql-input" class="sql-editor" spellcheck="false" placeholder="Digite uma query SQL (ex: SELECT * FROM users;)"></textarea>
+
+      <div class="sql-footer">
+        <button class="btn-ctrl btn-primary" onclick="runQuery()">⚡ Executar Query</button>
+        <span class="query-status" id="query-status">Pronto</span>
+      </div>
+
+      <!-- Results Table Container -->
+      <div class="results-wrapper" id="results-wrapper">
+        <div style="padding: 1rem; color: var(--color-text-muted); text-align: center;">Nenhum resultado ainda. Execute uma query acima.</div>
+      </div>
+    </div>
+
+    <!-- Right Column: Network & Chaos Fault Injection -->
+    <div class="card" style="display: flex; flex-direction: column; gap: 1rem;">
+      <div>
+        <div class="card-title">
+          <span>🌪️ Injeção de Falhas &amp; Rede</span>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+          <button class="btn-ctrl" onclick="injectFault('isolate_leader')">⚡ Isolar Líder</button>
+          <button class="btn-ctrl" onclick="injectFault('flaky_network')">🌊 Rede Flaky (Jitter/Drop)</button>
+          <button class="btn-ctrl" onclick="injectFault('heal')">🩹 Restaurar Rede</button>
+        </div>
+
+        <!-- Network Stats -->
+        <table class="node-stats-table" style="margin-bottom: 0;">
+          <tr>
+            <td style="color: var(--color-text-muted);">Mensagens Enviadas:</td>
+            <td id="net-sent">0</td>
+          </tr>
+          <tr>
+            <td style="color: var(--color-text-muted);">Mensagens Entregues:</td>
+            <td id="net-delivered">0</td>
+          </tr>
+          <tr>
+            <td style="color: var(--color-text-muted);">Mensagens Perdidas (Drop):</td>
+            <td id="net-dropped" style="color: var(--color-crashed);">0</td>
+          </tr>
+          <tr>
+            <td style="color: var(--color-text-muted);">Bloqueadas por Partição:</td>
+            <td id="net-blocked">0</td>
+          </tr>
+          <tr>
+            <td style="color: var(--color-text-muted);">Mensagens em Trânsito (In-Flight):</td>
+            <td id="net-inflight" style="color: var(--color-follower);">0</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Live Event Stream Log -->
+      <div>
+        <div class="card-title">
+          <span>📜 Telemetria em Tempo Real</span>
+          <button class="template-btn" onclick="clearEventLog()">Limpar</button>
+        </div>
+        <div class="event-log-container" id="event-log">
+          <!-- Populated live by app.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
