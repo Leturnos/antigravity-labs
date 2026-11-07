@@ -513,13 +513,16 @@ class Database:
         return None
 
     def _exec_explain(self, stmt: Explain) -> ResultSet:
-        plan = "Sequential Scan on Table"
-        if isinstance(stmt.statement, Select) and stmt.statement.from_table:
-            tbl_name = stmt.statement.from_table.name
-            plan = f"SeqScan(Table: {tbl_name})"
-            if stmt.statement.where:
-                plan = f"Filter(Predicate: {stmt.statement.where}) -> {plan}"
-            plan = f"Project(Projections: {[str(p.expr) for p in stmt.statement.projections]}) -> {plan}"
+        if isinstance(stmt.statement, Select):
+            from .optimizer import QueryPlanner
+
+            planner = QueryPlanner(self.catalog, self.tables)
+            logical = planner.build_logical_plan(stmt.statement)
+            physical = planner.optimize(logical)
+            lines = physical.format_tree().split("\n")
+            return ResultSet(columns=["EXPLAIN"], rows=[(line,) for line in lines])
+
+        plan = "Sequential Statement Execution"
         return ResultSet(columns=["EXPLAIN"], rows=[(plan,)])
 
     # ---- Expression Evaluator --------------------------------------------

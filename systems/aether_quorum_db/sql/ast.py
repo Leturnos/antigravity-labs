@@ -32,6 +32,9 @@ class Statement(ASTNode):
 class Literal(Expression):
     value: Any
 
+    def __str__(self) -> str:
+        return repr(self.value) if isinstance(self.value, str) else str(self.value)
+
 
 @dataclass(frozen=True)
 class ColumnRef(Expression):
@@ -55,6 +58,9 @@ class UnaryOp(Expression):
     op: str
     operand: Expression
 
+    def __str__(self) -> str:
+        return f"{self.op} {self.operand}"
+
 
 @dataclass(frozen=True)
 class BinaryOp(Expression):
@@ -62,12 +68,21 @@ class BinaryOp(Expression):
     left: Expression
     right: Expression
 
+    def __str__(self) -> str:
+        return f"{self.left} {self.op} {self.right}"
+
 
 @dataclass(frozen=True)
 class FunctionCall(Expression):
     name: str
     args: list[Expression] = field(default_factory=list)
     is_star: bool = False
+
+    def __str__(self) -> str:
+        if self.is_star:
+            return f"{self.name}(*)"
+        args_str = ", ".join(str(a) for a in self.args)
+        return f"{self.name}({args_str})"
 
 
 @dataclass(frozen=True)

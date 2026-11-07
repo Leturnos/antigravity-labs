@@ -31,7 +31,28 @@ from .catalog import Catalog, ColumnSchema, IndexSchema, TableSchema
 from .database import ConstraintViolation, Database, ExecutionError, ResultSet
 from .errors import LexError, ParseError, SqlError
 from .lexer import Lexer
+from .logical_plan import (
+    LogicalAggregate,
+    LogicalFilter,
+    LogicalJoin,
+    LogicalLimit,
+    LogicalOperator,
+    LogicalProject,
+    LogicalScan,
+    LogicalSort,
+)
+from .optimizer import QueryPlanner
 from .parser import Parser
+from .physical_plan import (
+    PhysicalFilter,
+    PhysicalHashJoin,
+    PhysicalIndexScan,
+    PhysicalLimit,
+    PhysicalOperator,
+    PhysicalProject,
+    PhysicalSeqScan,
+    PhysicalSort,
+)
 from .tokens import Token, TokenType
 
 __all__ = [
@@ -60,10 +81,27 @@ __all__ = [
     "LexError",
     "Lexer",
     "Literal",
+    "LogicalAggregate",
+    "LogicalFilter",
+    "LogicalJoin",
+    "LogicalLimit",
+    "LogicalOperator",
+    "LogicalProject",
+    "LogicalScan",
+    "LogicalSort",
     "OrderItem",
     "ParseError",
     "Parser",
+    "PhysicalFilter",
+    "PhysicalHashJoin",
+    "PhysicalIndexScan",
+    "PhysicalLimit",
+    "PhysicalOperator",
+    "PhysicalProject",
+    "PhysicalSeqScan",
+    "PhysicalSort",
     "Projection",
+    "QueryPlanner",
     "ResultSet",
     "Select",
     "SqlError",
