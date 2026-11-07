@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import random
-from typing import Callable, Iterable, Optional, Sequence
+from typing import Any, Callable, Iterable, Optional, Sequence
 
-from ..raft.events import Role, RoleChanged
+from ..raft.events import EntryApplied, EntryCommitted, Role, RoleChanged
 from ..raft.messages import Envelope, LogEntry, NodeId
-from ..raft.node import RaftConfig, RaftNode
+from ..raft.node import NotLeaderError, RaftConfig, RaftNode
 from ..raft.persistent_state import PersistentState
+from ..replication.state_machine import KVStateMachine, StateMachine
 from .clock import VirtualClock
 from .invariants import InvariantChecker
 from .network import NetworkConfig, SimulatedNetwork
@@ -38,6 +39,9 @@ class SimulationCluster:
         self.storages: dict[NodeId, PersistentState] = {
             node_id: PersistentState() for node_id in self.node_ids
         }
+        self.state_machines: dict[NodeId, StateMachine] = {
+            node_id: KVStateMachine() for node_id in self.node_ids
+        }
         self.running_nodes: set[NodeId] = set(self.node_ids)
         self.nodes: dict[NodeId, RaftNode] = {}
         self._node_rngs: dict[NodeId, random.Random] = {}
@@ -57,6 +61,7 @@ class SimulationCluster:
             storage=self.storages[node_id],
             rng=self._node_rngs[node_id],
             config=self.raft_config,
+            state_machine=self.state_machines[node_id],
         )
         self.nodes[node_id] = node
         return node
@@ -72,8 +77,10 @@ class SimulationCluster:
                 self.nodes[node_id].take_events()
 
     def restart_node(self, node_id: NodeId) -> RaftNode:
-        """Restart a crashed node with fresh volatile memory but same persistent state."""
+        """Restart a crashed node with fresh volatile memory and fresh state machine."""
         self.crash_node(node_id)
+        # Reset state machine to simulate re-applying from log / snapshot on recovery
+        self.state_machines[node_id] = KVStateMachine()
         node = self._spawn_node(node_id)
         self.running_nodes.add(node_id)
         return node
@@ -88,6 +95,15 @@ class SimulationCluster:
 
     def heal_network(self) -> None:
         self.network.heal()
+
+    # ---- Proposing Commands ----------------------------------------------
+
+    def propose(self, command: Any) -> LogEntry:
+        """Propose a command through the current leader."""
+        leader = self.leader
+        if leader is None:
+            raise NotLeaderError("No active leader in the cluster to propose command to")
+        return leader.propose(command)
 
     # ---- Stepping & Execution -------------------------------------------
 
@@ -122,6 +138,11 @@ class SimulationCluster:
                     self.event_log.append((now, event))
                     if isinstance(event, RoleChanged):
                         self.invariants.on_role_changed(event.node_id, event.role, event.term)
+                    elif isinstance(event, EntryCommitted):
+                        if node.role is Role.LEADER:
+                            self.invariants.on_commit(event.entry)
+                    elif isinstance(event, EntryApplied):
+                        self.invariants.on_apply(event.node_id, event.index, event.command)
 
             # 5. Check ongoing invariants
             active_leaders = [
@@ -130,6 +151,15 @@ class SimulationCluster:
                 if node.node_id in self.running_nodes and node.role is Role.LEADER
             ]
             self.invariants.check_election_safety(active_leaders)
+            self.invariants.check_log_matching(
+                {n_id: n.storage.entries for n_id, n in self.nodes.items()}
+            )
+            leaders_with_logs = [
+                (node.node_id, node.current_term, node.storage.entries)
+                for node in self.nodes.values()
+                if node.node_id in self.running_nodes and node.role is Role.LEADER
+            ]
+            self.invariants.check_leader_completeness(leaders_with_logs)
 
     def run_until(self, predicate: Callable[[SimulationCluster], bool], max_ticks: int = 500) -> bool:
         """Step the cluster until predicate returns True, or max_ticks is reached."""

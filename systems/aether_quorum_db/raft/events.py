@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
-from .messages import NodeId
+from .messages import LogEntry, NodeId
 
 
 class Role(str, Enum):
@@ -21,3 +21,17 @@ class RoleChanged:
     role: Role
     term: int
     leader_id: Optional[NodeId] = None
+
+
+@dataclass(frozen=True)
+class EntryCommitted:
+    node_id: NodeId
+    entry: LogEntry
+
+
+@dataclass(frozen=True)
+class EntryApplied:
+    node_id: NodeId
+    index: int
+    command: Any
+    result: Any = None
