@@ -178,7 +178,7 @@ flowchart LR
 | Projeto | Caminho | Status | Descrição | Tecnologias |
 | :--- | :--- | :--- | :--- | :--- |
 | **Aether Storage Internals 📦** | [systems/aether_storage_internals](./systems/aether_storage_internals) | `Concluído` | Storage Engine chave-valor artesanal LSM-Tree (estilo RocksDB/LevelDB) com MemTable em SkipList O(log n), WAL append-only com CRC32, SSTables binárias com Sparse Index e Bloom Filters, compactação k-way merge e inspetor de disco. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
-| **Aether QuorumDB 🗳️** | [systems/aether_quorum_db](./systems/aether_quorum_db) | `Em desenvolvimento` | Banco de dados SQL distribuído construído do zero: consenso Raft (eleição, replicação de log, ReadIndex, snapshots) em cluster simulado de forma determinística com injeção de falhas. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
+| **Aether QuorumDB 🗳️** | [systems/aether_quorum_db](./systems/aether_quorum_db) | `Concluído` | Banco de dados SQL distribuído construído do zero: consenso Raft (eleição, replicação de log, ReadIndex, snapshots, deduplicação de clientes) e motor SQL relacional (Lexer, Pratt Parser, B+Tree, Otimizador RBO e Execução Volcano) em cluster simulado deterministicamente com injeção de falhas e dashboard interativo. | Python, FastAPI, WebSockets, HTML5, CSS3, JS |
 
 ### Tools (Ferramentas)
 
