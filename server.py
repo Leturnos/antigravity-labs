@@ -100,7 +100,7 @@ PORT = int(os.getenv("PORT", 8000))
 if __name__ == '__main__':
     import uvicorn
     print(f"Central Aether Suite Server running at: http://localhost:{PORT}")
-    uvicorn.run("server:app", host="0.0.0.0", port=PORT)
+    uvicorn.run("server:app", host="0.0.0.0", port=PORT, reload=True)
 
 
 

@@ -275,12 +275,22 @@ class SimulationCluster:
 
     @property
     def leader(self) -> RaftNode | None:
-        """Returns the leader if there is exactly one active leader."""
+        """Returns the leader if there is exactly one active leader.
+
+        If multiple leaders exist due to network partitions, returns the leader
+        with the highest term.
+        """
         leaders = [
             n for n in self.nodes.values()
             if n.node_id in self.running_nodes and n.role is Role.LEADER
         ]
-        return leaders[0] if len(leaders) == 1 else None
+        if not leaders:
+            return None
+        if len(leaders) == 1:
+            return leaders[0]
+        max_term = max(n.current_term for n in leaders)
+        highest = [n for n in leaders if n.current_term == max_term]
+        return highest[0] if len(highest) == 1 else None
 
     def get_leaders(self) -> list[tuple[NodeId, int]]:
         return [

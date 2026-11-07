@@ -40,6 +40,9 @@ class NetworkState(BaseModel):
     blocked: int = 0
     in_flight_count: int = 0
     partitions: list[list[int]] = Field(default_factory=list)
+    drop_rate: float = 0.0
+    max_latency: int = 2
+    is_degraded: bool = False
 
 
 class ClusterStateResponse(BaseModel):

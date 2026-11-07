@@ -84,6 +84,10 @@ def build_cluster_state(c: SimulationCluster) -> ClusterStateResponse:
     partitions_raw = c.network.partitions
     partitions_int = [[int(x) for x in grp] for grp in partitions_raw]
 
+    drop_rate = c.network.config.drop_rate
+    max_latency = c.network.config.max_latency
+    is_degraded = drop_rate > 0.05 or max_latency > 3
+
     net_state = NetworkState(
         sent=c.network.stats.sent,
         delivered=c.network.stats.delivered,
@@ -91,6 +95,9 @@ def build_cluster_state(c: SimulationCluster) -> ClusterStateResponse:
         blocked=c.network.stats.blocked,
         in_flight_count=len(c.network.in_flight()),
         partitions=partitions_int,
+        drop_rate=drop_rate,
+        max_latency=max_latency,
+        is_degraded=is_degraded,
     )
 
     return ClusterStateResponse(
@@ -166,18 +173,23 @@ def inject_fault(req: FaultRequest) -> ClusterStateResponse:
 
     if action == "isolate_leader":
         faults.isolate_leader(c)
+        c.step(ticks=35)
     elif action == "crash_node":
         if req.node_id is None:
             raise HTTPException(status_code=400, detail="node_id required for crash_node")
         c.crash_node(req.node_id)
+        c.step(ticks=15)
     elif action == "restart_node":
         if req.node_id is None:
             raise HTTPException(status_code=400, detail="node_id required for restart_node")
         c.restart_node(req.node_id)
+        c.step(ticks=15)
     elif action == "flaky_network":
-        faults.flaky_network(c, drop_rate=0.25, max_latency=6)
+        faults.flaky_network(c, drop_rate=0.40, max_latency=10)
+        c.step(ticks=15)
     elif action in ("reset_network", "heal"):
         faults.reset_network(c)
+        c.step(ticks=15)
     else:
         raise HTTPException(status_code=400, detail=f"Unknown fault action: {req.action}")
 

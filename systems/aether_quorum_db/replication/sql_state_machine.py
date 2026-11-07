@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from ..sql.ast import Select
+from ..sql.ast import Explain, Select
 from ..sql.database import Database, ResultSet
 from ..sql.errors import SqlError
 from ..sql.parser import Parser
@@ -37,10 +37,10 @@ class SqlStateMachine:
         return res
 
     def query(self, sql: str) -> ResultSet:
-        """Execute a read-only SELECT query directly on the local database."""
+        """Execute a read-only SELECT or EXPLAIN query directly on the local database."""
         stmt = Parser.parse_sql(sql)
-        if not isinstance(stmt, Select):
-            raise SqlError("Only SELECT queries can be executed via query()")
+        if not isinstance(stmt, (Select, Explain)):
+            raise SqlError("Only SELECT and EXPLAIN queries can be executed via query()")
         return self.db.execute(stmt)
 
     def create_snapshot(self) -> bytes:

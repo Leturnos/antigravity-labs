@@ -139,3 +139,17 @@ def test_distributed_sql_snapshot_compaction_and_catchup():
     sm_slow = cluster.state_machines[slow_follower_id]
     res = sm_slow.query("SELECT COUNT(*) FROM ledger;")
     assert res.rows == [(10,)]
+
+
+def test_explain_query_execution():
+    cluster = SimulationCluster(
+        node_ids=[0, 1, 2],
+        seed=42,
+        state_machine_factory=SqlStateMachine,
+    )
+    cluster.run_until_leader(max_ticks=100)
+    cluster.execute_sql("CREATE TABLE users (id INT PRIMARY KEY, name TEXT);")
+
+    res = cluster.execute_sql("EXPLAIN SELECT * FROM users WHERE id = 1;")
+    assert res.columns == ["EXPLAIN"]
+    assert any("IndexScan" in row[0] for row in res.rows)

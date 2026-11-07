@@ -77,14 +77,27 @@
           <span>🌪️ Injeção de Falhas &amp; Rede</span>
         </div>
 
+        <!-- Network Status Indicator Banner -->
+        <div id="net-status-banner" class="net-status-banner net-healthy">
+          🟢 Rede Saudável: Comunicação bidirecional sem perda de pacotes
+        </div>
+
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-          <button class="btn-ctrl" onclick="injectFault('isolate_leader')">⚡ Isolar Líder</button>
-          <button class="btn-ctrl" onclick="injectFault('flaky_network')">🌊 Rede Flaky (Jitter/Drop)</button>
-          <button class="btn-ctrl" onclick="injectFault('heal')">🩹 Restaurar Rede</button>
+          <button id="btn-isolate-leader" class="btn-ctrl" onclick="injectFault('isolate_leader')">⚡ Isolar Líder</button>
+          <button id="btn-flaky-net" class="btn-ctrl" onclick="injectFault('flaky_network')">🌊 Rede Flaky (Jitter/Drop)</button>
+          <button id="btn-heal-net" class="btn-ctrl" onclick="injectFault('heal')">🩹 Restaurar Rede</button>
         </div>
 
         <!-- Network Stats -->
         <table class="node-stats-table" style="margin-bottom: 0;">
+          <tr>
+            <td style="color: var(--color-text-muted);">Topologia / Partição:</td>
+            <td id="net-topology" style="color: var(--color-leader);">Mesh Completa (Saudável)</td>
+          </tr>
+          <tr>
+            <td style="color: var(--color-text-muted);">Taxa de Perda / Jitter:</td>
+            <td id="net-loss-rate">0% / 1-3 ticks</td>
+          </tr>
           <tr>
             <td style="color: var(--color-text-muted);">Mensagens Enviadas:</td>
             <td id="net-sent">0</td>
@@ -117,6 +130,23 @@
         <div class="event-log-container" id="event-log">
           <!-- Populated live by app.js -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Modal Dialog (Replaces native browser "localhost disse") -->
+  <div id="custom-modal-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">Confirmação</h3>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-message">Mensagem de confirmação...</p>
+      </div>
+      <div class="modal-footer" id="modal-footer">
+        <button class="btn-ctrl" id="modal-cancel-btn">Cancelar</button>
+        <button class="btn-ctrl btn-primary" id="modal-confirm-btn">Confirmar</button>
       </div>
     </div>
   </div>

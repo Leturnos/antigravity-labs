@@ -37,13 +37,13 @@ def crash_and_recover(cluster: SimulationCluster, node_id: NodeId, down_ticks: i
     cluster.restart_node(node_id)
 
 
-def flaky_network(cluster: SimulationCluster, drop_rate: float = 0.25, max_latency: int = 6) -> None:
+def flaky_network(cluster: SimulationCluster, drop_rate: float = 0.40, max_latency: int = 10) -> None:
     """Apply high latency and packet loss to simulate a degraded network."""
     cluster.network.config = NetworkConfig(
-        min_latency=1,
+        min_latency=2,
         max_latency=max_latency,
         drop_rate=drop_rate,
-        duplicate_rate=0.05,
+        duplicate_rate=0.08,
     )
 
 
