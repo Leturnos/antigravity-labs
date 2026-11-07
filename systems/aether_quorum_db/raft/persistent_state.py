@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .messages import LogEntry, NodeId
 
@@ -17,5 +16,8 @@ class PersistentState:
     """
 
     current_term: int = 0
-    voted_for: Optional[NodeId] = None
+    voted_for: NodeId | None = None
     entries: list[LogEntry] = field(default_factory=list)
+    last_included_index: int = 0
+    last_included_term: int = 0
+    snapshot_data: bytes = b""

@@ -1,9 +1,10 @@
-"""Raft RPC messages (Figure 2 of the Raft paper) as immutable dataclasses."""
+"""Raft RPC messages (Figure 2 and Figure 13 of the Raft paper) as immutable dataclasses."""
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from dataclasses import dataclass, field
-from typing import Any, Hashable, Union
+from typing import Any
 
 NodeId = Hashable
 
@@ -14,6 +15,8 @@ class LogEntry:
     index: int
     # None marks the no-op entry a new leader appends to commit entries from older terms.
     command: Any = None
+    client_id: str | None = None
+    sequence_num: int | None = None
 
 
 @dataclass(frozen=True)
@@ -53,7 +56,29 @@ class AppendEntriesResponse:
     round: int = 0
 
 
-Message = Union[RequestVote, RequestVoteResponse, AppendEntries, AppendEntriesResponse]
+@dataclass(frozen=True)
+class InstallSnapshot:
+    term: int
+    leader_id: NodeId
+    last_included_index: int
+    last_included_term: int
+    data: bytes
+
+
+@dataclass(frozen=True)
+class InstallSnapshotResponse:
+    term: int
+    last_included_index: int
+
+
+Message = (
+    RequestVote
+    | RequestVoteResponse
+    | AppendEntries
+    | AppendEntriesResponse
+    | InstallSnapshot
+    | InstallSnapshotResponse
+)
 
 
 @dataclass(frozen=True)

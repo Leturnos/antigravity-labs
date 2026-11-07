@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Callable, Iterable, Optional, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any
 
 from ..raft.events import EntryApplied, EntryCommitted, Role, RoleChanged
 from ..raft.messages import Envelope, LogEntry, NodeId
@@ -47,7 +48,6 @@ class SimulationCluster:
         self._node_rngs: dict[NodeId, random.Random] = {}
 
         for node_id in self.node_ids:
-            # Deterministic child RNG for each node based on master seed and node_id
             node_seed = self._rng.randint(0, 2**31 - 1)
             self._node_rngs[node_id] = random.Random(node_seed)
             self._spawn_node(node_id)
@@ -77,10 +77,14 @@ class SimulationCluster:
                 self.nodes[node_id].take_events()
 
     def restart_node(self, node_id: NodeId) -> RaftNode:
-        """Restart a crashed node with fresh volatile memory and fresh state machine."""
+        """Restart a crashed node with fresh volatile memory and durable snapshot/log."""
         self.crash_node(node_id)
-        # Reset state machine to simulate re-applying from log / snapshot on recovery
-        self.state_machines[node_id] = KVStateMachine()
+        # Restore state machine from durable snapshot if present
+        sm = KVStateMachine()
+        if self.storages[node_id].snapshot_data:
+            sm.restore_snapshot(self.storages[node_id].snapshot_data)
+        self.state_machines[node_id] = sm
+
         node = self._spawn_node(node_id)
         self.running_nodes.add(node_id)
         return node
@@ -96,14 +100,47 @@ class SimulationCluster:
     def heal_network(self) -> None:
         self.network.heal()
 
-    # ---- Proposing Commands ----------------------------------------------
+    # ---- Proposing Commands & Queries ------------------------------------
 
-    def propose(self, command: Any) -> LogEntry:
+    def propose(
+        self,
+        command: Any,
+        client_id: str | None = None,
+        sequence_num: int | None = None,
+    ) -> LogEntry:
         """Propose a command through the current leader."""
         leader = self.leader
         if leader is None:
             raise NotLeaderError("No active leader in the cluster to propose command to")
-        return leader.propose(command)
+        return leader.propose(command, client_id=client_id, sequence_num=sequence_num)
+
+    def linearizable_read(
+        self,
+        query_fn: Callable[[StateMachine], Any],
+        max_ticks: int = 100,
+    ) -> Any:
+        """Execute a linearizable read via the ReadIndex protocol (§8)."""
+        leader = self.leader
+        if leader is None:
+            raise NotLeaderError("No active leader in the cluster for linearizable read")
+
+        round_id = leader.request_read_index()
+
+        def is_ready(c: SimulationCluster) -> bool:
+            curr_leader = c.leader
+            if curr_leader is None or curr_leader.node_id != leader.node_id:
+                raise NotLeaderError("Leader lost during ReadIndex confirmation")
+            return curr_leader.get_ready_read_index(round_id) is not None
+
+        if not self.run_until(is_ready, max_ticks=max_ticks):
+            raise TimeoutError(f"ReadIndex round {round_id} timed out after {max_ticks} ticks")
+
+        return query_fn(self.state_machines[leader.node_id])
+
+    def compact_log(self, node_id: NodeId, up_to_index: int) -> None:
+        """Force a node to snapshot and compact its log up to the specified index."""
+        if node_id in self.nodes:
+            self.nodes[node_id].compact_log(up_to_index)
 
     # ---- Stepping & Execution -------------------------------------------
 
@@ -155,7 +192,7 @@ class SimulationCluster:
                 {n_id: n.storage.entries for n_id, n in self.nodes.items()}
             )
             leaders_with_logs = [
-                (node.node_id, node.current_term, node.storage.entries)
+                (node.node_id, node.current_term, node.log.last_included_index, node.storage.entries)
                 for node in self.nodes.values()
                 if node.node_id in self.running_nodes and node.role is Role.LEADER
             ]
@@ -169,7 +206,7 @@ class SimulationCluster:
             self.step(1)
         return predicate(self)
 
-    def run_until_leader(self, max_ticks: int = 500) -> Optional[RaftNode]:
+    def run_until_leader(self, max_ticks: int = 500) -> RaftNode | None:
         """Convenience method: step until a single undisputed leader is established."""
         def has_leader(c: SimulationCluster) -> bool:
             leaders = [
@@ -185,7 +222,7 @@ class SimulationCluster:
     # ---- State Inspection ------------------------------------------------
 
     @property
-    def leader(self) -> Optional[RaftNode]:
+    def leader(self) -> RaftNode | None:
         """Returns the leader if there is exactly one active leader."""
         leaders = [
             n for n in self.nodes.values()

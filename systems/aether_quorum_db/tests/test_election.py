@@ -1,10 +1,7 @@
 """Tests for Raft leader election and safety invariants."""
 
-import random
-import pytest
 
 from systems.aether_quorum_db.raft.events import Role
-from systems.aether_quorum_db.raft.node import RaftConfig
 from systems.aether_quorum_db.simulation.cluster import SimulationCluster
 from systems.aether_quorum_db.simulation.network import NetworkConfig
 

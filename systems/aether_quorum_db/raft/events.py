@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from .messages import LogEntry, NodeId
 
@@ -20,7 +20,7 @@ class RoleChanged:
     node_id: NodeId
     role: Role
     term: int
-    leader_id: Optional[NodeId] = None
+    leader_id: NodeId | None = None
 
 
 @dataclass(frozen=True)

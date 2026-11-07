@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import heapq
 import random
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass, field
-from typing import Generic, Hashable, Iterable, Protocol, TypeVar
+from typing import Generic, Protocol, TypeVar
 
 
 class Addressed(Protocol):

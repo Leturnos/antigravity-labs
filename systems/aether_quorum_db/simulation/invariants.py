@@ -13,7 +13,8 @@ Checks the invariants defined in Section 5.2 / Figure 3 of the Raft paper:
 
 from __future__ import annotations
 
-from typing import Any, Hashable, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from ..raft.events import Role
 from ..raft.messages import LogEntry, NodeId
@@ -29,9 +30,9 @@ class InvariantChecker:
     def __init__(self) -> None:
         # term -> leader_id who was elected in that term
         self._leaders_by_term: dict[int, NodeId] = {}
-        # (node_id, index) -> applied entry
+        # index -> {node_id -> applied command}
         self._applied_entries: dict[int, dict[NodeId, Any]] = {}
-        # index -> set of (term, command) committed
+        # index -> committed entry
         self._committed_entries: dict[int, LogEntry] = {}
 
     def on_role_changed(self, node_id: NodeId, role: Role, term: int) -> None:
@@ -57,21 +58,20 @@ class InvariantChecker:
 
     def check_log_matching(self, logs: dict[NodeId, Sequence[LogEntry]]) -> None:
         """If two logs contain an entry with same index & term, prefix must match."""
-        # Map (index, term) -> expected entry up to that index
         nodes = list(logs.keys())
         for i in range(len(nodes)):
-            log_a = logs[nodes[i]]
+            map_a = {e.index: e for e in logs[nodes[i]]}
             for j in range(i + 1, len(nodes)):
-                log_b = logs[nodes[j]]
-                min_len = min(len(log_a), len(log_b))
-                for idx in range(min_len):
-                    ea = log_a[idx]
-                    eb = log_b[idx]
-                    if ea.index == eb.index and ea.term == eb.term:
-                        # Prior entries must match
-                        for p in range(idx):
-                            pa = log_a[p]
-                            pb = log_b[p]
+                map_b = {e.index: e for e in logs[nodes[j]]}
+                common_indices = sorted(set(map_a.keys()) & set(map_b.keys()))
+                for idx in common_indices:
+                    ea = map_a[idx]
+                    eb = map_b[idx]
+                    if ea.term == eb.term:
+                        # Prior common entries must match
+                        for prior_idx in [p for p in common_indices if p < idx]:
+                            pa = map_a[prior_idx]
+                            pb = map_b[prior_idx]
                             if (pa.term, pa.command) != (pb.term, pb.command):
                                 raise InvariantViolation(
                                     f"Log Matching violated between {nodes[i]} and {nodes[j]} "
@@ -99,12 +99,21 @@ class InvariantChecker:
                 )
         node_map[node_id] = command
 
-    def check_leader_completeness(self, leaders: Sequence[tuple[NodeId, int, Sequence[LogEntry]]]) -> None:
-        """Entries committed in term T must be present in leaders of term > T."""
-        for leader_id, leader_term, leader_log in leaders:
+    def check_leader_completeness(
+        self,
+        leaders: Sequence[tuple[NodeId, int, int, Sequence[LogEntry]]],
+    ) -> None:
+        """Entries committed in term T must be present in leaders of term > T (§5.4.3).
+
+        Tuple is: (leader_id, leader_term, last_included_index, leader_log_entries)
+        """
+        for leader_id, leader_term, last_included_idx, leader_log in leaders:
             leader_entries = {e.index: e for e in leader_log}
             for committed_idx, committed_entry in self._committed_entries.items():
                 if committed_entry.term < leader_term:
+                    # If entry has been compacted into leader's snapshot, it is preserved
+                    if committed_idx <= last_included_idx:
+                        continue
                     if committed_idx not in leader_entries:
                         raise InvariantViolation(
                             f"Leader Completeness violated: leader {leader_id} in term {leader_term} "
