@@ -83,8 +83,9 @@ except Exception as err:
     print(f"[Warning] Could not load Aether Storage Internals router: {err}")
 
 try:
-    from systems.aether_quorum_db.api.router import router as quorum_router
+    from systems.aether_quorum_db.api.router import quorum_ws_endpoint, router as quorum_router
     app.include_router(quorum_router)
+    app.add_api_websocket_route("/ws/quorum", quorum_ws_endpoint)
 except Exception as err:
     print(f"[Warning] Could not load Aether QuorumDB router: {err}")
 

@@ -1,5 +1,7 @@
 """Standalone FastAPI application for Aether QuorumDB."""
 
+import asyncio
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -8,14 +10,25 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
+from .api.router import quorum_ws_endpoint
 from .api.router import router as quorum_router
+from .api.ws import ws_manager
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    loop = asyncio.get_running_loop()
+    ws_manager.set_event_loop(loop)
+    yield
+
 
 app = FastAPI(
     title="Aether QuorumDB",
     description="Distributed SQL database on a handwritten Raft consensus core",
     version=__version__,
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -27,6 +40,7 @@ app.add_middleware(
 )
 
 app.include_router(quorum_router)
+app.add_api_websocket_route("/ws/quorum", quorum_ws_endpoint)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 
