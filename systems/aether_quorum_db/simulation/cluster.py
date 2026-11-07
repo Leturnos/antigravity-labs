@@ -25,12 +25,14 @@ class SimulationCluster:
         seed: int = 42,
         network_config: NetworkConfig | None = None,
         raft_config: RaftConfig | None = None,
+        state_machine_factory: Callable[[], StateMachine] = KVStateMachine,
     ) -> None:
         self.node_ids = tuple(node_ids)
         self.seed = seed
         self._rng = random.Random(seed)
         self.network_config = network_config or NetworkConfig()
         self.raft_config = raft_config or RaftConfig()
+        self.state_machine_factory = state_machine_factory
 
         self.clock = VirtualClock()
         self.network = SimulatedNetwork[Envelope](self._rng, self.network_config)
@@ -41,7 +43,7 @@ class SimulationCluster:
             node_id: PersistentState() for node_id in self.node_ids
         }
         self.state_machines: dict[NodeId, StateMachine] = {
-            node_id: KVStateMachine() for node_id in self.node_ids
+            node_id: self.state_machine_factory() for node_id in self.node_ids
         }
         self.running_nodes: set[NodeId] = set(self.node_ids)
         self.nodes: dict[NodeId, RaftNode] = {}
@@ -80,7 +82,7 @@ class SimulationCluster:
         """Restart a crashed node with fresh volatile memory and durable snapshot/log."""
         self.crash_node(node_id)
         # Restore state machine from durable snapshot if present
-        sm = KVStateMachine()
+        sm = self.state_machine_factory()
         if self.storages[node_id].snapshot_data:
             sm.restore_snapshot(self.storages[node_id].snapshot_data)
         self.state_machines[node_id] = sm
@@ -141,6 +143,56 @@ class SimulationCluster:
         """Force a node to snapshot and compact its log up to the specified index."""
         if node_id in self.nodes:
             self.nodes[node_id].compact_log(up_to_index)
+
+    # ---- SQL Execution & State Checksums ---------------------------------
+
+    def execute_sql(
+        self,
+        sql: str,
+        client_id: str | None = None,
+        sequence_num: int | None = None,
+        max_ticks: int = 100,
+    ) -> Any:
+        """Executes a SQL query or statement on the distributed cluster."""
+        from ..sql.ast import Explain, Select
+        from ..sql.parser import Parser
+
+        stmt = Parser.parse_sql(sql)
+        if isinstance(stmt, (Select, Explain)):
+            return self.linearizable_read(
+                lambda sm: sm.query(sql) if hasattr(sm, "query") else sm.apply(sql),
+                max_ticks=max_ticks,
+            )
+
+        entry = self.propose(sql, client_id=client_id, sequence_num=sequence_num)
+
+        def is_committed(c: SimulationCluster) -> bool:
+            curr_leader = c.leader
+            return curr_leader is not None and curr_leader.commit_index >= entry.index
+
+        if not self.run_until(is_committed, max_ticks=max_ticks):
+            raise TimeoutError(f"SQL statement timed out waiting for commit: {sql}")
+
+        # Extract result from leader's application
+        leader = self.leader
+        if leader is not None:
+            # Let remaining running nodes catch up to the committed entry
+            self.step(ticks=10)
+
+        # Look for the applied result in recent event log
+        for _, event in reversed(self.event_log):
+            if isinstance(event, EntryApplied) and event.index == entry.index:
+                return event.result
+
+        return None
+
+    def get_state_checksums(self) -> dict[NodeId, str]:
+        """Compute state hash for all nodes that support state_checksum()."""
+        return {
+            nid: sm.state_checksum()
+            for nid, sm in self.state_machines.items()
+            if hasattr(sm, "state_checksum")
+        }
 
     # ---- Stepping & Execution -------------------------------------------
 
